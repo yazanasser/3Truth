@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | Aetheris</title>
+  <link rel="icon" href="assets/Logo.png">
+  <!-- Tailwind -->
+  <link rel="stylesheet" href="css/tailwind.css">
+  <!-- GSAP + plugins -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="bg-[var(--bg-primary)] text-white overflow-x-hidden">
+
+  <!-- Film Grain Overlay -->
+  <div class="film-grain"></div>
+
+  <!-- Fixed aurora background with cinematic flares -->
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" style="background: radial-gradient(circle at 50% 0%, #0a0a0c 0%, #000 100%);">
+    <div class="cinematic-flare w-[800px] h-[800px] bg-cyan-600/30 -top-96 -left-96"></div>
+    <div class="cinematic-flare w-[600px] h-[600px] bg-purple-600/20 top-1/4 -right-64" style="animation-delay:-5s;"></div>
+    <div class="aurora-bg absolute inset-0 opacity-40"></div>
+    <div class="tilted-grid opacity-10"><div class="tilted-grid-inner"></div></div>
+  </div>
+
+  <div class="relative min-h-screen flex items-center justify-center p-6 z-10">
+    <div class="w-full max-w-xl mt-20">
+      <div id="auth-card" class="holo-panel p-8 md:p-12 rounded-[2.5rem] shadow-[0_0_40px_rgba(6,182,212,0.08)] relative" style="transform-style: preserve-3d;">
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center justify-center w-20 h-20 bg-[var(--accent-1)]/10 rounded-3xl border border-[var(--accent-1)]/20 mb-6 group hover:scale-110 transition-transform duration-500 shadow-[0_0_25px_rgba(0,229,255,0.15)]">
+            <i data-lucide="shield-check" class="text-[var(--accent-1)] w-10 h-10"></i>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 whitespace-nowrap" id="auth-title">
+            Secure Access
+          </h2>
+          <div class="h-0.5 w-16 mx-auto bg-[var(--accent-1)]/50 mb-6 shadow-[0_0_10px_var(--accent-1)]"></div>
+          <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">
+            <span class="animate-fade-in text-gray-400" id="auth-subtitle">Verify your email to enter</span>
+          </p>
+        </div>
+
+        <div id="error-msg" class="hidden mb-8 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-black flex items-center justify-center gap-2">
+        </div>
+
+        <div id="success-msg" class="hidden mb-8 p-5 bg-green-500/10 border border-green-500/30 rounded-2xl text-green-400 text-center font-black flex items-center justify-center gap-2">
+        </div>
+
+        <form id="signin-form" class="space-y-8">
+          <!-- Email Field -->
+          <div class="space-y-2" id="email-section">
+            <label for="signin-email" class="text-xs font-semibold text-gray-400 ml-1 flex items-center gap-2">
+              <i data-lucide="mail" class="w-3 h-3"></i> Email Address
+            </label>
+            <input
+              id="signin-email"
+              type="email"
+              required
+              autofocus
+              class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-mono focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all text-lg"
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <!-- OTP Field (Hidden Initially) -->
+          <div class="space-y-2 hidden" id="otp-section">
+            <div class="flex justify-between items-center">
+              <label for="signin-otp" class="text-xs font-semibold text-gray-400 ml-1 flex items-center gap-2">
+                <i data-lucide="key-round" class="w-3 h-3"></i> Verification Code
+              </label>
+              <button
+                type="button"
+                id="resend-btn"
+                class="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors disabled:opacity-50 disabled:text-gray-500"
+                disabled
+              >
+                Resend in 60s
+              </button>
+            </div>
+            <input
+              id="signin-otp"
+              type="text"
+              maxlength="6"
+              class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-mono text-center tracking-[0.5em] focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all text-2xl font-black"
+              placeholder="••••••"
+            />
+          </div>
+
+          <div class="pt-6">
+            <button 
+              type="submit" 
+              id="submit-btn"
+              class="w-full py-5 text-black bg-[var(--accent-1)] font-black rounded-2xl hover:bg-[var(--accent-1)]/80 transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-3 text-xl group shadow-[0_0_25px_rgba(0,229,255,0.3)]"
+            >
+              <i data-lucide="send" class="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" id="submit-icon"></i>
+              <span id="submit-text">Send Code</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-12 text-center">
+          <p class="text-gray-500 font-bold uppercase tracking-widest text-xs">
+            Secured by Aetheris Cryptography
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="js/i18n.js?v=1"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/cinematic.js"></script>
+  <script src="js/footer.js"></script>
+  <script src="js/signin.js"></script>
+</body>
+</html>

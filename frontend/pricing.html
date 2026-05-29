@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing | Aetheris</title>
+  <link rel="icon" href="assets/Logo.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+  
+  <link rel="stylesheet" href="css/main.css?v=4.0">
+</head>
+<body class="bg-[#030305] text-white">
+
+  <!-- Reactbits Backgrounds -->
+  <div class="aurora-container">
+    <div class="aurora-blob cyan"></div>
+    <div class="aurora-blob purple"></div>
+    <div class="aurora-blob pink"></div>
+  </div>
+  <div class="grid-overlay"></div>
+
+
+
+  <!-- Navigation -->
+  <div class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
+    <!-- Left Logo -->
+    <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity w-1/4">
+      <img src="assets/Logo.png" alt="Logo" class="w-16 h-16 md:w-20 md:h-20">
+      <span class="font-outfit font-black tracking-widest text-xl md:text-2xl text-white">AETHER<span class="text-[var(--accent-1)]">IS</span></span>
+    </a>
+    
+    <!-- Centered Navigating Buttons -->
+    <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
+      <a href="index.html" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
+      <a href="detector.html" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
+      <a href="pricing.html" class="text-[var(--accent-1)] transition-colors">PRICING</a>
+    </div>
+
+    <!-- Right Action Buttons -->
+    <div class="hidden md:flex justify-end items-center w-1/4">
+      <a href="signin.html" id="nav-login-btn" class="px-6 py-2 bg-[var(--accent-1)] text-black hover:bg-white transition-colors">LOGIN</a>
+    </div>
+
+    <!-- Mobile Toggle -->
+    <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[var(--accent-1)]">
+      <i data-lucide="menu" class="w-8 h-8"></i>
+    </button>
+  </div>
+  
+  <!-- Sidebar (Mobile Menu) -->
+  <div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+    <button id="mobile-menu-close" class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]">
+      <i data-lucide="x" class="w-8 h-8"></i>
+    </button>
+    <div class="flex flex-col gap-6 text-2xl font-black">
+      <a href="index.html" class="text-white hover:text-[var(--accent-1)]">HOME</a>
+      <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
+      <a href="pricing.html" class="text-[var(--accent-1)]">PRICING</a>
+
+      <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
+      <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
+      <a href="contact.html" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
+      <a href="signin.html" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
+    </div>
+  </div>
+
+  <main class="relative z-10 pt-32 md:pt-40 pb-20 min-h-screen flex flex-col items-center">
+    
+    <div class="text-center mb-16 md:mb-24 px-4">
+      <h1 class="text-5xl md:text-8xl font-black mb-4 tracking-tighter text-gradient scramble-hover">
+        ACCESS LEVELS
+      </h1>
+      <p class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium">
+        Choose the bandwidth and capability level required for your forensic operations.
+      </p>
+    </div>
+
+    <!-- Pricing Grid -->
+    <div class="w-full max-w-[90rem] px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mx-auto stagger-children">
+      
+      <!-- Free Tier -->
+      <div class="holo-panel rounded-[24px] p-8 md:p-12 flex flex-col h-full relative group transform transition hover:-translate-y-2">
+        <div class="mb-8">
+          <h3 class="text-2xl font-black mb-2 text-white">BASIC</h3>
+          <p class="text-gray-400 text-sm font-medium mb-6">For casual verification.</p>
+          <div class="flex items-baseline gap-2">
+            <span class="text-5xl font-black">$0</span>
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-widest">/forever</span>
+          </div>
+        </div>
+        
+        <div class="space-y-4 mb-10 flex-grow">
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">1 Scan per detector</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Standard Heuristics</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Text, Image & Video</span>
+          </div>
+        </div>
+        
+        <a href="payment.html?plan=free" class="btn-glass w-full text-center">CURRENT PLAN</a>
+      </div>
+
+      <!-- Pro Tier -->
+      <div class="holo-panel rounded-[24px] p-8 md:p-12 flex flex-col h-full relative group transform transition hover:-translate-y-2 glow-border active">
+        <!-- Glow border logic is handled by CSS -->
+        <div class="absolute top-0 right-0 bg-[#00f0ff] text-black text-xs font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest">
+          Recommended
+        </div>
+
+        <div class="mb-8">
+          <h3 class="text-2xl font-black mb-2 text-[#00f0ff]">PRO</h3>
+          <p class="text-gray-400 text-sm font-medium mb-6">For professionals & creators.</p>
+          <div class="flex items-baseline gap-2">
+            <span class="text-5xl font-black text-white">$1</span>
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-widest">/one-time</span>
+          </div>
+        </div>
+        
+        <div class="space-y-4 mb-10 flex-grow">
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-[#00f0ff] mt-0.5"></i>
+            <span class="font-medium text-white">3 Scans per detector</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-[#00f0ff] mt-0.5"></i>
+            <span class="font-medium text-white">Deep Neural Heuristics</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-[#00f0ff] mt-0.5"></i>
+            <span class="font-medium text-white">Text, Image & Video</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-[#00f0ff] mt-0.5"></i>
+            <span class="font-medium text-white">Bypass Detection</span>
+          </div>
+        </div>
+        
+        <a href="payment.html?plan=pro" class="btn-magnetic w-full text-center"><span>UPGRADE NOW</span></a>
+      </div>
+
+      <!-- Ultimate Tier -->
+      <div class="holo-panel rounded-[24px] p-8 md:p-12 flex flex-col h-full relative group transform transition hover:-translate-y-2">
+        <div class="mb-8">
+          <h3 class="text-2xl font-black mb-2 text-white">ULTIMATE</h3>
+          <p class="text-gray-400 text-sm font-medium mb-6">Unrestricted forensic dominance.</p>
+          <div class="flex items-baseline gap-2">
+            <span class="text-5xl font-black">$5</span>
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-widest">/one-time</span>
+          </div>
+        </div>
+        
+        <div class="space-y-4 mb-10 flex-grow">
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Unlimited Detections</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Zero Data Retention</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Omni-channel Forensics</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Advanced PDF Reports</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-gray-400 mt-0.5"></i>
+            <span class="font-medium text-gray-300">Priority Support</span>
+          </div>
+        </div>
+        
+        <a href="payment.html?plan=ultimate" class="btn-glass w-full text-center hover:text-white">GET ULTIMATE</a>
+      </div>
+
+    </div>
+  </main>
+  
+  <footer class="site-footer"></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/i18n.js?v=1"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/footer.js?v=3"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/cinematic.js"></script>
+  <script>
+    lucide.createIcons();
+
+    // --- 10 NEW ADVANCED ANIMATIONS FOR PRICING PAGE ---
+
+    // 1. Staggered Pricing Cards Entry
+    gsap.fromTo('.holo-panel',
+      { y: 100, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: "back.out(1.2)", delay: 0.5 }
+    );
+
+    // 2. 3D Tilt Hover on Pricing Cards
+    document.querySelectorAll('.holo-panel').forEach(card => initParallaxCard(card));
+
+    // 3. Magnetic Buttons
+    document.querySelectorAll('.btn-magnetic, .btn-glass').forEach(btn => {
+      btn.addEventListener('mousemove', e => {
+        const rect = btn.getBoundingClientRect();
+        gsap.to(btn, { x: (e.clientX - rect.left - rect.width / 2) * 0.2, y: (e.clientY - rect.top - rect.height / 2) * 0.2, duration: 0.4 });
+      });
+      btn.addEventListener('mouseleave', () => gsap.to(btn, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.3)" }));
+    });
+
+    // 4. Icon Bounce on Feature Hover
+    document.querySelectorAll('.flex.items-start.gap-3').forEach(feature => {
+      feature.addEventListener('mouseenter', () => gsap.to(feature.querySelector('svg'), { scale: 1.3, color: 'var(--accent-1)', duration: 0.3 }));
+      feature.addEventListener('mouseleave', () => gsap.to(feature.querySelector('svg'), { scale: 1, color: '#9ca3af', duration: 0.3 }));
+    });
+
+    // 5. Price Text Hover Glow
+    document.querySelectorAll('.text-5xl').forEach(price => {
+      price.parentElement.parentElement.addEventListener('mouseenter', () => {
+        gsap.to(price, { textShadow: "0px 0px 20px rgba(255,255,255,0.8)", duration: 0.3 });
+      });
+      price.parentElement.parentElement.addEventListener('mouseleave', () => {
+        gsap.to(price, { textShadow: "0px 0px 0px rgba(255,255,255,0)", duration: 0.5 });
+      });
+    });
+
+  </script>
+</body>
+</html>
