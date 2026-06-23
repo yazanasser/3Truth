@@ -1,0 +1,56 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# 1. Force URLs to use the custom routing names (redirect old file names)
+RewriteCond %{THE_REQUEST} \s/+(detector\.html|detector)[\s?] [NC]
+RewriteRule ^ /scan [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+(pricing\.html|pricing)[\s?] [NC]
+RewriteRule ^ /plans [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+(signin\.html|signin)[\s?] [NC]
+RewriteRule ^ /login [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+(contact\.html|contact)[\s?] [NC]
+RewriteRule ^ /support [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+(payment\.html|payment)[\s?] [NC]
+RewriteRule ^ /checkout [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+(static\.html|static)[\s?] [NC]
+RewriteRule ^ /info [R=301,L,NE]
+
+# 2. Redirect /index or /index.html to the root
+RewriteCond %{THE_REQUEST} \s/+(index\.html|index)[\s?] [NC]
+RewriteRule ^ / [R=301,L]
+
+# 3. Route the root domain directly to the frontend
+RewriteRule ^$ frontend/ [L]
+
+# 4. If the requested URL points to a real file or folder in the root, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 5. Map the custom URL names to the actual files in the frontend folder behind the scenes
+RewriteRule ^scan/?$ frontend/detector.html [L]
+RewriteRule ^plans/?$ frontend/pricing.html [L]
+RewriteRule ^login/?$ frontend/signin.html [L]
+RewriteRule ^support/?$ frontend/contact.html [L]
+RewriteRule ^checkout/?$ frontend/payment.html [L]
+RewriteRule ^info/?$ frontend/static.html [L]
+
+# 6. Fallback: Catch any other assets (CSS, JS, images) and route to frontend
+RewriteCond %{REQUEST_URI} !^/frontend/
+RewriteRule ^(.*)$ frontend/$1 [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Disable caching for HTML, CSS, and JS so you NEVER have to hard refresh
+    <FilesMatch "\.(html|htm|js|css)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+</IfModule>

@@ -14,6 +14,20 @@ if (typeof window.gsap === 'undefined') {
   window.ScrollTrigger = {}; window.TextPlugin = {}; window.MotionPathPlugin = {};
 }
 
+function createMockFieldValue() {
+  return {
+    increment: (amount) => ({ __mockFieldValue: 'increment', amount }),
+    serverTimestamp: () => new Date()
+  };
+}
+
+function attachMockFirestoreStatics(firestoreFn) {
+  if (typeof firestoreFn === 'function' && !firestoreFn.FieldValue) {
+    firestoreFn.FieldValue = createMockFieldValue();
+  }
+  return firestoreFn;
+}
+
 // Global Firebase Mock if missing or partially loaded
 if (typeof window.firebase === 'undefined') {
   const mockAuth = {
@@ -25,15 +39,18 @@ if (typeof window.firebase === 'undefined') {
     signInWithEmailAndPassword: async (email, password) => {
       const mockUser = { email, uid: 'mock_uid_' + Math.random().toString(36).substr(2, 9) };
       localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      mockAuth.currentUser = mockUser;
       return { user: mockUser };
     },
     createUserWithEmailAndPassword: async (email, password) => {
       const mockUser = { email, uid: 'mock_uid_' + Math.random().toString(36).substr(2, 9) };
       localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      mockAuth.currentUser = mockUser;
       return { user: mockUser };
     },
     signOut: async () => {
       localStorage.removeItem('mockUser');
+      mockAuth.currentUser = null;
       window.location.reload();
     },
     currentUser: localStorage.getItem('mockUser') ? JSON.parse(localStorage.getItem('mockUser')) : null
@@ -43,16 +60,19 @@ if (typeof window.firebase === 'undefined') {
     collection: () => ({
       doc: () => ({
         set: async () => {},
-        get: async () => ({ exists: true, data: () => ({ plan: 'Ultimate' }) }),
-        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Ultimate' }) }); return () => {}; }
+        update: async () => {},
+        get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
+        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
       })
     })
   };
 
+  const firestore = attachMockFirestoreStatics(() => mockDb);
+
   window.firebase = {
     initializeApp: () => {},
     auth: () => mockAuth,
-    firestore: () => mockDb
+    firestore
   };
 } else if (typeof window.firebase.auth !== 'function') {
   const mockAuth = {
@@ -64,15 +84,18 @@ if (typeof window.firebase === 'undefined') {
     signInWithEmailAndPassword: async (email, password) => {
       const mockUser = { email, uid: 'mock-uid' };
       localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      mockAuth.currentUser = mockUser;
       return { user: mockUser };
     },
     createUserWithEmailAndPassword: async (email, password) => {
       const mockUser = { email, uid: 'mock-uid' };
       localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      mockAuth.currentUser = mockUser;
       return { user: mockUser };
     },
     signOut: async () => {
       localStorage.removeItem('mockUser');
+      mockAuth.currentUser = null;
       window.location.reload();
     },
     currentUser: localStorage.getItem('mockUser') ? JSON.parse(localStorage.getItem('mockUser')) : null
@@ -82,14 +105,31 @@ if (typeof window.firebase === 'undefined') {
     collection: () => ({
       doc: () => ({
         set: async () => {},
-        get: async () => ({ exists: true, data: () => ({ plan: 'Ultimate' }) }),
-        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Ultimate' }) }); return () => {}; }
+        update: async () => {},
+        get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
+        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
       })
     })
   };
   
   window.firebase.auth = () => mockAuth;
-  window.firebase.firestore = () => mockDb;
+  window.firebase.firestore = attachMockFirestoreStatics(() => mockDb);
+} else {
+  if (typeof window.firebase.firestore !== 'function') {
+    const mockDb = {
+      collection: () => ({
+        doc: () => ({
+          set: async () => {},
+          update: async () => {},
+          get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
+          onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
+        })
+      })
+    };
+    window.firebase.firestore = attachMockFirestoreStatics(() => mockDb);
+  } else if (!window.firebase.firestore.FieldValue) {
+    attachMockFirestoreStatics(window.firebase.firestore);
+  }
 }
 
 const firebaseConfig = {
@@ -107,13 +147,23 @@ let db = null;
 
 if (typeof firebase !== 'undefined') {
   try {
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     if (typeof firebase.auth === 'function') {
       auth = firebase.auth();
       db = firebase.firestore();
     }
   } catch(e) {
     console.warn('Firebase init error:', e);
+    try {
+      if (typeof firebase.auth === 'function') {
+        auth = firebase.auth();
+        db = typeof firebase.firestore === 'function' ? firebase.firestore() : null;
+      }
+    } catch (fallbackError) {
+      console.warn('Firebase fallback init error:', fallbackError);
+    }
   }
 }
 

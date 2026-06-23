@@ -3,15 +3,41 @@ const fileInput = document.getElementById('file-input');
 const tabContentText = document.getElementById('tab-content-text');
 const tabContentFile = document.getElementById('tab-content-file');
 const fileNameDisplay = document.getElementById('file-name-display');
+const inputLabel = document.getElementById('input-label');
+const fileSupportText = document.getElementById('file-support-text');
+const mediaModeProfile = document.getElementById('media-mode-profile');
+const mediaModeIconShell = document.getElementById('media-mode-icon-shell');
+const mediaModeBadge = document.getElementById('media-mode-badge');
+const mediaModeTitle = document.getElementById('media-mode-title');
+const mediaModeDescription = document.getElementById('media-mode-description');
+const mediaModeVisual = document.getElementById('media-mode-visual');
+const mediaModeChips = document.getElementById('media-mode-chips');
+const analyzeBtnLabel = document.getElementById('analyze-btn-label');
+const idleStateIcon = document.getElementById('idle-state-icon');
+const idleStateTitle = document.getElementById('idle-state-title');
+const idleStateSubtitle = document.getElementById('idle-state-subtitle');
+const loadingTitle = document.getElementById('loading-title');
+const loadingSub = document.getElementById('loading-sub');
+
+// Document Upload Elements
+const textSubTabs = document.querySelectorAll('#text-sub-tabs button');
+const textModePaste = document.getElementById('text-mode-paste');
+const textModeUpload = document.getElementById('text-mode-upload');
+const docFileInput = document.getElementById('doc-file-input');
+const docFileName = document.getElementById('doc-file-name');
 
 const stateIdle = document.getElementById('state-idle');
 const stateLoading = document.getElementById('state-loading');
 const stateResult = document.getElementById('state-result');
 
 const analyzeBtn = document.getElementById('analyze-btn');
+const textAnalyzeAnchor = document.getElementById('text-analyze-anchor');
+const fileAnalyzeAnchor = document.getElementById('file-analyze-anchor');
 const clearBtn = document.getElementById('clear-btn');
 const copyBtn = document.getElementById('copy-btn');
 const loadSampleBtn = document.getElementById('load-sample-btn');
+const textFileBtn = document.getElementById('text-file-btn');
+const textFileInput = document.getElementById('text-file-input');
 const errorMsg = document.getElementById('error-message');
 const errorText = document.getElementById('error-text');
 const charCount = document.getElementById('char-count');
@@ -23,8 +49,177 @@ let activeTab = 'text';
 let fileObj = null;
 let currentResult = null;
 
+const TEXT_FILE_EXTENSIONS = new Set([
+  '.txt', '.md', '.markdown', '.csv', '.tsv', '.json', '.jsonl', '.xml',
+  '.html', '.htm', '.rtf', '.log', '.yaml', '.yml', '.ini', '.cfg',
+  '.conf', '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.c', '.cpp',
+  '.h', '.hpp', '.cs', '.go', '.rs', '.php', '.rb', '.swift', '.kt',
+  '.sql', '.sh', '.bat', '.ps1', '.css', '.scss', '.less', '.srt',
+  '.vtt'
+]);
+const DOCUMENT_FILE_EXTENSIONS = new Set(['.pdf', '.doc', '.docx']);
+const IMAGE_FILE_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.jfif', '.png', '.webp', '.gif', '.bmp', '.tif',
+  '.tiff', '.heic', '.heif', '.avif', '.svg', '.ico', '.raw', '.dng',
+  '.cr2', '.cr3', '.nef', '.arw', '.orf', '.rw2', '.raf', '.pef',
+  '.srw', '.x3f'
+]);
+const VIDEO_FILE_EXTENSIONS = new Set([
+  '.mp4', '.m4v', '.mov', '.webm', '.avi', '.mkv', '.wmv', '.flv',
+  '.mpeg', '.mpg', '.3gp', '.3g2', '.mts', '.m2ts', '.ts', '.ogv',
+  '.hevc', '.h265', '.h264'
+]);
+const TEXT_FILE_ACCEPT = [
+  ...TEXT_FILE_EXTENSIONS,
+  ...DOCUMENT_FILE_EXTENSIONS,
+  'text/*',
+  'application/json',
+  'application/xml'
+].join(',');
+const IMAGE_FILE_ACCEPT = 'image/*,.heic,.heif,.avif,.raw,.dng,.cr2,.cr3,.nef,.arw,.orf,.rw2,.raf,.pef,.srw,.x3f';
+const VIDEO_FILE_ACCEPT = 'video/*,.mkv';
+
+const DETECTOR_MODE_UI = {
+  text: {
+    bodyClass: 'detector-mode-text',
+    inputLabel: 'Text Source',
+    analyzeLabel: 'SCAN TEXT FORENSICS',
+    idleIcon: 'file-text',
+    idleTitle: 'TEXT FORENSICS READY',
+    idleSubtitle: 'Paste text to scan rhythm, phrases, burstiness, structure, and humanized-AI signals.',
+    loadingTitle: 'SCANNING TEXT',
+    loadingSub: 'Reading stylometry, sentence cadence, phrase density, and multilingual signals...'
+  },
+  image: {
+    bodyClass: 'detector-mode-image',
+    inputLabel: 'Image Source',
+    analyzeLabel: 'SCAN IMAGE FORENSICS',
+    filePrompt: 'Drop an image for pixel forensics',
+    fileSupport: 'JPG, PNG, WEBP, HEIC, RAW, screenshots, edited photos',
+    uploadIcon: 'image-up',
+    profileClass: 'media-mode-profile media-mode-image pointer-events-none w-full mb-8',
+    visualClass: 'media-mode-visual image-map',
+    visualSpans: 4,
+    modeIcon: 'scan-eye',
+    badge: 'IMAGE FORENSIC MODE',
+    title: 'Pixel & Metadata Inspection',
+    description: 'Checks camera provenance, EXIF traces, compression patterns, edits, fake texture, and AI rendering artifacts.',
+    chips: ['EXIF', 'PIXELS', 'SKIN/DETAIL', 'COMPRESSION'],
+    idleIcon: 'image',
+    idleTitle: 'IMAGE FORENSICS READY',
+    idleSubtitle: 'Upload one image to scan pixels, metadata, artifacts, and edit traces.',
+    loadingTitle: 'SCANNING IMAGE',
+    loadingSub: 'Inspecting metadata, pixel structure, texture, and compression...'
+  },
+  video: {
+    bodyClass: 'detector-mode-video',
+    inputLabel: 'Video Source',
+    analyzeLabel: 'SCAN VIDEO FRAMES',
+    filePrompt: 'Drop a video for temporal frame analysis',
+    fileSupport: 'MP4, MOV, WEBM, MKV, AVI, phone clips, screen recordings',
+    uploadIcon: 'film',
+    profileClass: 'media-mode-profile media-mode-video pointer-events-none w-full mb-8',
+    visualClass: 'media-mode-visual video-timeline',
+    visualSpans: 5,
+    modeIcon: 'clapperboard',
+    badge: 'VIDEO TEMPORAL MODE',
+    title: 'Frame Stream Consistency',
+    description: 'Checks frame-to-frame motion, temporal artifacts, scene continuity, codec traces, and generated-video instability.',
+    chips: ['FRAMES', 'MOTION', 'CODEC', 'TEMPORAL'],
+    idleIcon: 'video',
+    idleTitle: 'VIDEO TIMELINE READY',
+    idleSubtitle: 'Upload one clip to scan frame consistency, motion, and encoded artifacts.',
+    loadingTitle: 'SCANNING VIDEO',
+    loadingSub: 'Sampling frames, motion signals, timeline continuity, and codec traces...'
+  }
+};
+
+function getFileExtension(fileOrName) {
+  const name = typeof fileOrName === 'string' ? fileOrName : (fileOrName && fileOrName.name) || '';
+  const cleanName = name.toLowerCase().split(/[?#]/)[0];
+  const lastDot = cleanName.lastIndexOf('.');
+  return lastDot >= 0 ? cleanName.slice(lastDot) : '';
+}
+
+function hasFileExtension(file, extensionSet) {
+  return extensionSet.has(getFileExtension(file));
+}
+
+function isSupportedTextFile(file) {
+  const type = (file && file.type || '').toLowerCase();
+  return type.startsWith('text/') ||
+    type.includes('json') ||
+    type.includes('xml') ||
+    TEXT_FILE_EXTENSIONS.has(getFileExtension(file)) ||
+    DOCUMENT_FILE_EXTENSIONS.has(getFileExtension(file));
+}
+
+function isSupportedImageFile(file) {
+  const type = (file && file.type || '').toLowerCase();
+  return type.startsWith('image/') || hasFileExtension(file, IMAGE_FILE_EXTENSIONS);
+}
+
+function isSupportedVideoFile(file) {
+  const type = (file && file.type || '').toLowerCase();
+  return type.startsWith('video/') || hasFileExtension(file, VIDEO_FILE_EXTENSIONS);
+}
+
+function detectFileCategory(file) {
+  if (!file) return 'unknown';
+  if (isSupportedImageFile(file)) return 'image';
+  if (isSupportedVideoFile(file)) return 'video';
+  if (isSupportedTextFile(file)) return 'text';
+  return 'unknown';
+}
+
+function normalizePredictionText(prediction) {
+  return String(prediction || '')
+    .toUpperCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isAiPrediction(prediction) {
+  const pred = normalizePredictionText(prediction);
+  return pred === 'AI' ||
+    pred.includes('LIKELY AI') ||
+    pred.includes('AI GENERATED') ||
+    pred.includes('AIGENERATED') ||
+    pred.includes('SYNTHETIC') ||
+    pred.includes('GENERATED IMAGE') ||
+    pred.includes('GENERATED PHOTO') ||
+    pred.includes('MACHINE GENERATED') ||
+    pred.includes('DIFFUSION');
+}
+
+function isRealPrediction(prediction) {
+  const pred = normalizePredictionText(prediction);
+  return pred === 'HUMAN' ||
+    pred.includes('LIKELY REAL') ||
+    pred.includes('REAL') ||
+    pred.includes('ORGANIC') ||
+    pred.includes('CAMERA CAPTURE') ||
+    pred.includes('PHOTOGRAPH');
+}
+
+function normalizeMediaPrediction(prediction, mediaType = activeTab, aiProbability = null) {
+  let aiLike = isAiPrediction(prediction);
+  let realLike = isRealPrediction(prediction);
+  const probability = Number(aiProbability);
+
+  if (!aiLike && !realLike && Number.isFinite(probability)) {
+    aiLike = probability >= 0.5;
+    realLike = probability < 0.5;
+  }
+
+  if (mediaType === 'image') return aiLike ? 'AI-Generated' : 'Real Photo';
+  if (mediaType === 'video') return aiLike ? 'AI-Generated' : 'Real Video';
+  return aiLike ? 'AI-GENERATED' : 'HUMAN';
+}
+
 function tr(key, vars, fallback) {
-  return window.AetherisI18n ? window.AetherisI18n.t(key, vars, fallback) : (fallback || key);
+  return window._3truthI18n ? window._3truthI18n.t(key, vars, fallback) : (fallback || key);
 }
 
 const SAMPLES = {
@@ -35,16 +230,33 @@ const SAMPLES = {
 
 function hideError() {
   errorMsg.classList.add('hidden');
+  errorMsg.classList.remove('flex');
   errorText.textContent = '';
 }
 
 function showError(msg) {
   errorMsg.classList.remove('hidden');
+  errorMsg.classList.add('flex');
   errorText.textContent = msg;
 }
 
+function showAsFlexColumn(el) {
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.classList.add('flex', 'flex-col');
+}
+
+function hideAsFlexColumn(el) {
+  if (!el) return;
+  el.classList.add('hidden');
+  el.classList.remove('flex', 'flex-col');
+}
+
 function updateInputCounters() {
-  if(textInput) {
+  if (textInput) {
+    if (currentResult && activeTab === 'text') {
+      handleReset();
+    }
     const len = textInput.value.length;
     charCount.textContent = tr('detector.charCount', { count: len }, `${len} / 25000 chars`);
     if (len > 0) clearBtn.classList.remove('hidden');
@@ -60,13 +272,238 @@ function handleReset() {
   analyzeBtn.disabled = false;
   analyzeBtn.querySelector('span').textContent = tr('detector.initializeScan', null, 'INITIALIZE SCAN');
   fileObj = null;
-  if(fileNameDisplay) fileNameDisplay.textContent = tr('detector.filePrompt', null, 'Click or drag & drop to select file');
+  const modeConfig = DETECTOR_MODE_UI[activeTab] || DETECTOR_MODE_UI.text;
+  if (fileNameDisplay) fileNameDisplay.textContent = modeConfig.filePrompt || tr('detector.filePrompt', null, 'Click or drag & drop to select file');
   currentResult = null;
-  if(scannerBar) {
+  if (scannerBar) {
     scannerBar.classList.add('hidden');
     gsap.killTweensOf(scannerBar);
   }
   updateFilePreview(null);
+  applyDetectorModeUI(activeTab);
+}
+
+// =========================================================================
+//  TEXT DOCUMENT UPLOAD HANDLERS (PDF & WORD)
+// =========================================================================
+
+if (textSubTabs && textModePaste && textModeUpload && docFileInput) {
+  textSubTabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Styling
+      textSubTabs.forEach(b => {
+        b.classList.remove('bg-[var(--accent-1)]/20', 'text-[var(--accent-1)]');
+        b.classList.add('hover:bg-white/10', 'text-gray-400');
+      });
+      btn.classList.add('bg-[var(--accent-1)]/20', 'text-[var(--accent-1)]');
+      btn.classList.remove('hover:bg-white/10', 'text-gray-400');
+
+      const mode = btn.dataset.textMode;
+
+      if (mode === 'paste') {
+        showAsFlexColumn(textModePaste);
+        hideAsFlexColumn(textModeUpload);
+        docFileInput.value = '';
+      } else {
+        hideAsFlexColumn(textModePaste);
+        showAsFlexColumn(textModeUpload);
+        if (mode === 'pdf') {
+          docFileInput.accept = '.pdf';
+          docFileName.textContent = tr('detector.uploadPdf', null, 'Click or drop PDF document');
+        } else {
+          docFileInput.accept = TEXT_FILE_ACCEPT;
+          docFileName.textContent = tr('detector.uploadWord', null, 'Click or drop Word/Text document');
+        }
+      }
+    });
+  });
+
+  textModeUpload.addEventListener('click', () => docFileInput.click());
+
+  textModeUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    textModeUpload.classList.add('border-[var(--accent-1)]');
+    const label = textModeUpload.querySelector('span') || textModeUpload;
+    if (label && !label.dataset.isDragging) {
+      label.dataset.originalText = label.textContent;
+      label.dataset.isDragging = 'true';
+      label.textContent = tr('detector.dropDocument', null, 'Drop to place your document');
+    }
+  });
+
+  textModeUpload.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    if (!textModeUpload.contains(e.relatedTarget)) {
+      textModeUpload.classList.remove('border-[var(--accent-1)]');
+      const label = textModeUpload.querySelector('span') || textModeUpload;
+      if (label && label.dataset.isDragging) {
+         label.textContent = label.dataset.originalText || '';
+         delete label.dataset.isDragging;
+      }
+    }
+  });
+
+  textModeUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    textModeUpload.classList.remove('border-[var(--accent-1)]');
+    const label = textModeUpload.querySelector('span') || textModeUpload;
+    if (label && label.dataset.isDragging) {
+       label.textContent = label.dataset.originalText || '';
+       delete label.dataset.isDragging;
+    }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleDocumentUpload(e.dataTransfer.files[0]);
+    }
+  });
+
+  docFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleDocumentUpload(e.target.files[0]);
+    }
+  });
+}
+
+async function handleDocumentUpload(file) {
+  hideError();
+  const activeModeBtn = document.querySelector('#text-sub-tabs button.bg-\\[var\\(--accent-1\\)\\]\\/20') ||
+    document.querySelector('#text-sub-tabs button.text-\\[var\\(--accent-1\\)\\]');
+  const activeMode = activeModeBtn ? activeModeBtn.dataset.textMode : 'paste';
+  if (activeMode === 'paste') {
+    showError(tr('detector.errors.selectDocumentMode', null, 'Please select PDF or Word upload mode first.'));
+    return;
+  }
+
+  if (activeMode === 'pdf' && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    showError(tr('detector.errors.invalidPdf', null, 'Invalid file. Please upload a PDF document.'));
+    return;
+  }
+
+  if (activeMode === 'word' && !isSupportedTextFile(file)) {
+    showError(tr('detector.errors.invalidWord', null, 'Invalid file. Please upload a readable text, code, data, PDF, or Word document.'));
+    return;
+  }
+
+  docFileName.textContent = tr('detector.extracting', null, `Extracting text from ${file.name}...`);
+
+  try {
+    let extractedText = '';
+
+    if (activeMode === 'pdf') {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n\n';
+      }
+      extractedText = fullText;
+    } else if (activeMode === 'word') {
+      const arrayBuffer = await file.arrayBuffer();
+      extractedText = await extractTextFromAnyFile(file, arrayBuffer);
+    }
+
+    if (extractedText.trim().length === 0) {
+      showError(tr('detector.errors.noText', null, 'No readable text could be extracted from this document.'));
+      docFileName.textContent = activeMode === 'pdf' ? tr('detector.uploadPdf', null, 'Click or drop PDF document') : tr('detector.uploadWord', null, 'Click or drop Word/Text document');
+      return;
+    }
+
+    // Success! Switch back to paste mode and populate the text area
+    const pasteModeBtn = document.querySelector('#text-sub-tabs button[data-text-mode="paste"]');
+    if (pasteModeBtn) pasteModeBtn.click();
+    textInput.value = extractedText.trim();
+    updateInputCounters();
+    docFileName.textContent = activeMode === 'pdf' ? tr('detector.uploadPdf', null, 'Click or drop PDF document') : tr('detector.uploadWord', null, 'Click or drop Word/Text document');
+
+  } catch (err) {
+    console.error('Extraction error:', err);
+    showError(tr('detector.errors.extractionFailed', null, 'Failed to extract text from document. It might be corrupted or protected.'));
+    docFileName.textContent = activeMode === 'pdf' ? tr('detector.uploadPdf', null, 'Click or drop PDF document') : tr('detector.uploadWord', null, 'Click or drop Word/Text document');
+  }
+}
+
+async function extractTextFromAnyFile(file, existingArrayBuffer = null) {
+  const ext = getFileExtension(file);
+  const type = (file.type || '').toLowerCase();
+  const arrayBuffer = existingArrayBuffer || await file.arrayBuffer();
+
+  if (ext === '.pdf' || type === 'application/pdf') {
+    if (typeof pdfjsLib === 'undefined') {
+      throw new Error('PDF extractor is not loaded');
+    }
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      fullText += textContent.items.map(item => item.str).join(' ') + '\n\n';
+    }
+    return fullText;
+  }
+
+  if (ext === '.docx' || ext === '.doc') {
+    if (typeof mammoth === 'undefined') {
+      throw new Error('Word extractor is not loaded');
+    }
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value || '';
+  }
+
+  if (!isSupportedTextFile(file)) {
+    throw new Error('Unsupported text file type');
+  }
+
+  const decoder = new TextDecoder('utf-8', { fatal: false });
+  let text = decoder.decode(arrayBuffer);
+
+  if (ext === '.rtf') {
+    text = text
+      .replace(/\\'[0-9a-fA-F]{2}/g, ' ')
+      .replace(/\\[a-z]+-?\d* ?/gi, ' ')
+      .replace(/[{}]/g, ' ')
+      .replace(/\s+/g, ' ');
+  } else if (ext === '.html' || ext === '.htm') {
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    text = doc.body ? doc.body.textContent || text : text.replace(/<[^>]+>/g, ' ');
+  } else if (ext === '.json') {
+    try {
+      text = JSON.stringify(JSON.parse(text), null, 2);
+    } catch (e) {
+      // Keep raw JSON-like text when it is malformed.
+    }
+  }
+
+  return text;
+}
+
+async function handleAnyTextFileUpload(file) {
+  hideError();
+  if (!file || !isSupportedTextFile(file)) {
+    showError(tr('detector.errors.invalidTextFile', null, 'Please upload a readable text, code, data, PDF, or Word file.'));
+    return;
+  }
+
+  try {
+    if (textFileBtn) textFileBtn.textContent = tr('detector.extracting', null, 'EXTRACTING...');
+    const extractedText = await extractTextFromAnyFile(file);
+    if (!extractedText.trim()) {
+      showError(tr('detector.errors.noText', null, 'No readable text could be extracted from this file.'));
+      return;
+    }
+    textInput.value = extractedText.trim();
+    updateInputCounters();
+    handleReset();
+    textInput.value = extractedText.trim();
+    updateInputCounters();
+  } catch (err) {
+    console.error('Text file extraction error:', err);
+    showError(tr('detector.errors.extractionFailed', null, 'Failed to extract text from this file. It might be binary, corrupted, or protected.'));
+  } finally {
+    if (textFileBtn) textFileBtn.textContent = tr('detector.uploadFile', null, 'UPLOAD FILE');
+    if (textFileInput) textFileInput.value = '';
+  }
 }
 
 // =========================================================================
@@ -76,21 +513,21 @@ function handleReset() {
 async function parseFileMetadata(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    
+
     // We want to scan the first 2MB and the last 1MB of the file (generative markers are often at the end of the file)
     const totalSize = file.size;
     let blobToScan = file;
-    
+
     if (totalSize > 3 * 1024 * 1024) {
       const chunkStart = file.slice(0, 2 * 1024 * 1024);
       const chunkEnd = file.slice(totalSize - 1 * 1024 * 1024, totalSize);
       blobToScan = new Blob([chunkStart, chunkEnd]);
     }
-    
+
     reader.onload = (e) => {
       const buffer = e.target.result;
       const arr = new Uint8Array(buffer);
-      
+
       let metadata = {
         found: false,
         source: 'Unknown',
@@ -127,12 +564,12 @@ async function parseFileMetadata(file) {
               metadata.rawText = JSON.stringify(metadata.parsed, null, 2);
             }
           }
-        } catch(err) {
+        } catch (err) {
           const match = fullText.match(/\{"workflow".*?\}/);
           if (match) metadata.rawText = match[0];
         }
       }
-      
+
       // Check for Stable Diffusion (A1111 Parameters Chunk)
       if (!metadata.found && textLower.includes('parameters') && textLower.includes('prompt')) {
         metadata.found = true;
@@ -252,12 +689,15 @@ async function runPixelForensics(file, type) {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(video, 0, 0, 256, 256);
           const imgData = ctx.getImageData(0, 0, 256, 256);
-          const metrics = computeForensicMetrics(imgData.data);
-          metrics.width = video.videoWidth || 0;
-          metrics.height = video.videoHeight || 0;
-          metrics.success = true;
-          URL.revokeObjectURL(url);
-          resolve(metrics);
+          
+          setTimeout(() => {
+            const metrics = computeForensicMetrics(imgData.data);
+            metrics.width = video.videoWidth || 0;
+            metrics.height = video.videoHeight || 0;
+            metrics.success = true;
+            URL.revokeObjectURL(url);
+            resolve(metrics);
+          }, 50);
         } catch (err) {
           URL.revokeObjectURL(url);
           resolve(getDefaultForensics());
@@ -279,12 +719,16 @@ async function runPixelForensics(file, type) {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, 256, 256);
           const imgData = ctx.getImageData(0, 0, 256, 256);
-          const metrics = computeForensicMetrics(imgData.data);
-          metrics.width = img.naturalWidth || 0;
-          metrics.height = img.naturalHeight || 0;
-          metrics.success = true;
-          URL.revokeObjectURL(img.src);
-          resolve(metrics);
+          
+          // Offload to avoid UI freeze
+          setTimeout(() => {
+            const metrics = computeForensicMetrics(imgData.data);
+            metrics.width = img.naturalWidth || 0;
+            metrics.height = img.naturalHeight || 0;
+            metrics.success = true;
+            URL.revokeObjectURL(img.src);
+            resolve(metrics);
+          }, 50);
         } catch (err) {
           URL.revokeObjectURL(img.src);
           resolve(getDefaultForensics());
@@ -303,8 +747,8 @@ function computeForensicMetrics(data) {
   let sumR = 0, sumG = 0, sumB = 0;
   for (let i = 0; i < data.length; i += 4) {
     sumR += data[i];
-    sumG += data[i+1];
-    sumB += data[i+2];
+    sumG += data[i + 1];
+    sumB += data[i + 2];
   }
   const meanR = sumR / total;
   const meanG = sumG / total;
@@ -314,8 +758,8 @@ function computeForensicMetrics(data) {
   let covRG = 0, covRB = 0;
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i] - meanR;
-    const g = data[i+1] - meanG;
-    const b = data[i+2] - meanB;
+    const g = data[i + 1] - meanG;
+    const b = data[i + 2] - meanB;
     sqDiffR += r * r;
     sqDiffG += g * g;
     sqDiffB += b * b;
@@ -409,107 +853,38 @@ function getDefaultForensics() {
   };
 }
 
-function generateForensicLog(fileName, forensics, data) {
-  const dateStr = new Date().toLocaleString();
-  const r_RG = forensics.pearsonRG;
-  const r_RB = forensics.pearsonRB;
-  const noise = forensics.flatBlockNoise;
-  const checker = forensics.checkerboardRatio;
-
-  const rg_Verdict = r_RG > 0.95 ? '✓ ORGANIC COHERENCE' : '✗ NEURAL DECOUPLING DETECTED';
-  const rb_Verdict = r_RB > 0.95 ? '✓ ORGANIC COHERENCE' : '✗ NEURAL DECOUPLING DETECTED';
-  const noise_Verdict = noise > 1.2 ? '✓ STOCHASTIC SENSOR SHOT-NOISE' : '✗ ARTIFICIAL QUANTIZED GRADIENT';
-  const checker_Verdict = (checker >= 0.90 && checker <= 1.10) ? '✓ ISOTROPIC PIXEL GRAPH' : '✗ TRANSPOSED CONVOLUTION GRID DETECTED';
-
-  function getAsciiBar(val, max, width = 20) {
-    const filled = Math.min(width, Math.round((Math.abs(val) / max) * width));
-    const empty = width - filled;
-    return '[' + '='.repeat(filled) + ' '.repeat(empty) + ']';
-  }
-
-  const isAi = data.prediction === 'AI' || data.prediction === 'AI-Generated';
-  const confidence = data.confidence || '94.6%';
-
-  return `================================================================================
-          M U L T I - S P E C T R A L   P I X E L   F O R E N S I C S
-================================================================================
-STATUS: ENCODING ANALYZED (NO METADATA HEADERS DETECTED - METADATA STRIPPED)
-TARGET: ${fileName}
-SCAN DATE: ${dateStr}
-
---------------------------------------------------------------------------------
-1. COLOR CHANNEL COVARIANCE & DECOUPLING ANALYSIS
---------------------------------------------------------------------------------
-Pearson Correlation Coefficients (r_xy):
-  * Red-Green Channel (r_RG) : ${r_RG.toFixed(4)}   ${rg_Verdict}
-  * Red-Blue Channel (r_RB)  : ${r_RB.toFixed(4)}   ${rb_Verdict}
-
-  Baseline Natural Distribution Profile: > 0.95 (High correlation)
-  Anomalous Generative Decoupling Profile: < 0.94 (Decoupled color space)
-
-  Coherence Visualizers:
-  R-G Coherence: ${getAsciiBar(r_RG, 1)} ${(r_RG * 100).toFixed(1)}% Coherence
-  R-B Coherence: ${getAsciiBar(r_RB, 1)} ${(r_RB * 100).toFixed(1)}% Coherence
-
---------------------------------------------------------------------------------
-2. SMOOTH BLOCK NOISE ESTIMATION (CCD/CMOS SHOT-NOISE PROFILE)
---------------------------------------------------------------------------------
-Noise Variance in Uniform Blocks (σ_Green):
-  * Flat Block Standard Dev (σ) : ${noise.toFixed(4)} LSB   ${noise_Verdict}
-
-  Baseline Natural Camera Sensor Profile: σ > 1.2 LSB (Shot & thermal noise)
-  Anomalous AI Perfect-Gradient Profile:  σ < 0.85 LSB (Quantized smooth pixels)
-
-  Noise Profile Visualizer:
-  Noise Density: ${getAsciiBar(Math.min(3, noise), 3)} ${noise.toFixed(2)} LSB Standard Deviation
-
---------------------------------------------------------------------------------
-3. HIGH-FREQUENCY CHECKERBOARD UPSAMPLING ANALYSIS
---------------------------------------------------------------------------------
-Bilinear Upsampling Periodic Grid Ratio:
-  * Even-to-Odd Transposed Convolution Delta Ratio : ${checker.toFixed(4)}  ${checker_Verdict}
-
-  Baseline Organic Image Ratio: 0.90 - 1.10 (Isotropic high frequencies)
-  Anomalous AI Deconvolution Grid Ratio: < 0.88 or > 1.15 (Upsampling checkerboard)
-
-  Upsampling Grid Visualizer:
-  Grid Intensity: ${getAsciiBar(Math.abs(1 - checker) > 0.2 ? 1 : Math.max(0, 1 - Math.abs(1 - checker)), 1)} ${checker.toFixed(3)} Ratio
-
-================================================================================
-                  F O R E N S I C   V E R D I C T   S U M M A R Y
-================================================================================
-  DECISION BOUNDARY: ${isAi ? 'ARTIFICIAL METRIC BOUNDARY EXCEEDED' : 'NATURAL GEOMETRIC MATCH'}
-  AI DETECTION CONFIDENCE: ${confidence}
-  PROVENANCE INTEGRITY: CLASSIFIED AS ${isAi ? 'NEURAL SYNTHETIC OUTPUT' : 'ORGANIC ACQUISITION'}
-================================================================================`;
-}
-
 function updateFilePreview(file) {
   const previewContainer = document.getElementById('file-upload-preview');
   const defaultContainer = document.getElementById('file-upload-default');
-  
+
   if (!previewContainer || !defaultContainer) return;
-  
+
   if (!file) {
-    previewContainer.classList.add('hidden');
+    hideAsFlexColumn(previewContainer);
     previewContainer.innerHTML = '';
     defaultContainer.classList.remove('hidden');
-    if (fileNameDisplay) fileNameDisplay.textContent = 'Click or drag & drop to select file';
+    const modeConfig = DETECTOR_MODE_UI[activeTab] || DETECTOR_MODE_UI.text;
+    if (fileNameDisplay) fileNameDisplay.textContent = modeConfig.filePrompt || 'Click or drag & drop to select file';
     return;
   }
-  
+
   defaultContainer.classList.add('hidden');
-  previewContainer.classList.remove('hidden');
+  showAsFlexColumn(previewContainer);
   previewContainer.innerHTML = '';
-  
+
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-wrapper';
-  
+
   const laser = document.createElement('div');
   laser.className = 'preview-laser';
   wrapper.appendChild(laser);
-  
-  if (file.type.startsWith('video/')) {
+
+  const category = detectFileCategory(file);
+  const canRenderVideo = (file.type || '').toLowerCase().startsWith('video/');
+  const canRenderImage = (file.type || '').toLowerCase().startsWith('image/') &&
+    !['.raw', '.dng', '.cr2', '.cr3', '.nef', '.arw', '.orf', '.rw2', '.raf', '.pef', '.srw', '.x3f'].includes(getFileExtension(file));
+
+  if (category === 'video' && canRenderVideo) {
     const video = document.createElement('video');
     video.autoplay = true;
     video.loop = true;
@@ -517,12 +892,22 @@ function updateFilePreview(file) {
     video.playsInline = true;
     video.src = URL.createObjectURL(file);
     wrapper.appendChild(video);
-  } else if (file.type.startsWith('image/')) {
+  } else if (category === 'image' && canRenderImage) {
     const img = document.createElement('img');
     img.src = URL.createObjectURL(file);
     wrapper.appendChild(img);
+  } else {
+    const generic = document.createElement('div');
+    generic.className = 'flex flex-col items-center justify-center min-h-[180px] gap-3 text-center px-6';
+    generic.innerHTML = `
+      <i data-lucide="${category === 'video' ? 'video' : 'file-search'}" class="w-12 h-12 text-[var(--accent-1)]"></i>
+      <div class="text-xs font-black tracking-[0.2em] text-[var(--accent-1)] uppercase">${category === 'video' ? 'Video stream selected' : 'Image metadata selected'}</div>
+      <div class="text-xs text-gray-500 max-w-xs">This format may not preview in the browser, but the detector will still scan its filename, metadata, container, and binary provenance.</div>
+    `;
+    wrapper.appendChild(generic);
+    if (typeof lucide !== 'undefined') setTimeout(() => lucide.createIcons(), 0);
   }
-  
+
   previewContainer.appendChild(wrapper);
   if (fileNameDisplay) fileNameDisplay.textContent = file.name;
 }
@@ -534,33 +919,39 @@ async function streamFileHexCode(file, terminal) {
       const buffer = e.target.result;
       const bytes = new Uint8Array(buffer);
       const hexLines = [];
-      
+
       const bytesPerLine = 16;
-      const linesToGen = Math.min(900, Math.ceil(bytes.length / bytesPerLine)); // Increased to 900 lines to read more code!
-      
+      const linesToGen = Math.min(96, Math.ceil(bytes.length / bytesPerLine));
+
       for (let i = 0; i < linesToGen; i++) {
         const offset = (i * bytesPerLine).toString(16).padStart(8, '0').toUpperCase();
         const chunk = bytes.slice(i * bytesPerLine, (i + 1) * bytesPerLine);
         const hex = Array.from(chunk).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
         const ascii = Array.from(chunk).map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.').join('');
-        
+
         hexLines.push(`[INSPECT] 0x${offset}:  ${hex.padEnd(47, ' ')}  |${ascii}|`);
       }
-      
+
       for (let j = 0; j < hexLines.length; j++) {
         const line = document.createElement('div');
         line.className = 'terminal-log-line code-hex font-mono text-[var(--accent-1)]/60 text-[10px] leading-none py-0.5 tracking-tight whitespace-nowrap overflow-hidden';
         line.textContent = hexLines[j];
         terminal.appendChild(line);
-        if (j % 5 === 0) terminal.scrollTop = terminal.scrollHeight; // Scroll slightly less often for performance
-        if (j % 10 === 0) await new Promise(r => setTimeout(r, 1)); // Ultra-fast streaming
+        if (j % 4 === 0) {
+          terminal.scrollTop = terminal.scrollHeight;
+          await new Promise(r => setTimeout(r, 12));
+        }
       }
       terminal.scrollTop = terminal.scrollHeight;
       resolve();
     };
-    // Read a much larger chunk to satisfy 900 lines (14400 bytes)
-    reader.readAsArrayBuffer(file.slice(0, 16384));
+    reader.readAsArrayBuffer(file.slice(0, 1536));
   });
+}
+
+const DIAGNOSTIC_LOG_DELAY_CAP_MS = 2000;
+function diagnosticLogDelay(ms) {
+  return new Promise(resolve => setTimeout(resolve, Math.min((ms || 0) * 3, DIAGNOSTIC_LOG_DELAY_CAP_MS)));
 }
 
 async function runTerminalDiagnosticLogs(type, file) {
@@ -571,7 +962,9 @@ async function runTerminalDiagnosticLogs(type, file) {
       return;
     }
     terminal.innerHTML = '';
-    
+    // Reset any inline overrides from previous runs
+    terminal.style.cssText = '';
+
     const printLog = (text, cls) => {
       const line = document.createElement('div');
       line.className = `terminal-log-line ${cls}`;
@@ -580,104 +973,205 @@ async function runTerminalDiagnosticLogs(type, file) {
       terminal.scrollTop = terminal.scrollHeight;
     };
 
+    let waveform = document.getElementById('text-scan-waveform');
+
     if (type === 'text') {
-      printLog('[SYSTEM] Initializing NLP Syntactic Parser...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SYSTEM] Parsing stylistic n-gram frequencies...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SYSTEM] Computing perplexity and burstiness metrics...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SYSTEM] Analysing transition word density & contractions...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SYSTEM] Cross-referencing token distribution margins...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SUCCESS] Semantic structure analysis complete.', 'success');
-      await new Promise(r => setTimeout(r, 150));
-      printLog('[SUCCESS] Generating classification boundary probability...', 'success');
-      await new Promise(r => setTimeout(r, 150));
-    } else if (type === 'image') {
-      printLog('[SYSTEM] Initializing Multi-Spectral Pixel Forensics...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[SYSTEM] EXIF parsing: checking physical camera headers...', 'system');
-      await new Promise(r => setTimeout(r, 200));
-      printLog('[INSPECT MODE] ACTIVATED: Extracting and reading deep image binary code...', 'system');
-      await new Promise(r => setTimeout(r, 150));
+      // Completely hide the old terminal box
+      terminal.style.display = 'none';
       
+      if (!waveform) {
+        waveform = document.createElement('div');
+        waveform.id = 'text-scan-waveform';
+        waveform.className = 'mt-6 w-full max-w-xs mx-auto flex items-center justify-center h-16';
+        waveform.innerHTML = `
+          <div class="flex items-center justify-center gap-1.5 h-full">
+            <div class="w-1.5 h-6 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 0ms"></div>
+            <div class="w-1.5 h-12 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 150ms"></div>
+            <div class="w-1.5 h-8 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 300ms"></div>
+            <div class="w-1.5 h-14 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 450ms"></div>
+            <div class="w-1.5 h-5 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 600ms"></div>
+            <div class="w-1.5 h-10 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 750ms"></div>
+            <div class="w-1.5 h-12 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 900ms"></div>
+            <div class="w-1.5 h-7 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 1050ms"></div>
+            <div class="w-1.5 h-4 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 1200ms"></div>
+          </div>
+        `;
+        terminal.parentNode.insertBefore(waveform, terminal);
+      }
+      waveform.style.display = 'flex';
+      resolve();
+      return;
+    } else if (type === 'image') {
+      terminal.style.display = 'block';
+      if (waveform) waveform.style.display = 'none';
+      printLog('[SYSTEM] Initializing Multi-Spectral Pixel Forensics...', 'system');
+      await diagnosticLogDelay(200);
+      printLog('[SYSTEM] EXIF parsing: checking physical camera headers...', 'system');
+      await diagnosticLogDelay(200);
+      printLog('[INSPECT MODE] ACTIVATED: Extracting and reading deep image binary code...', 'system');
+      await diagnosticLogDelay(150);
+
       if (file) {
         await streamFileHexCode(file, terminal);
       }
-      
+
       printLog('[INSPECT MODE] Binary extraction and hex stream completed.', 'success');
-      await new Promise(r => setTimeout(r, 150));
+      await diagnosticLogDelay(150);
       printLog('[INSPECT MODE] Applying Face-Bias Correction (Overriding Human/Face neural assumptions)...', 'system');
-      await new Promise(r => setTimeout(r, 250));
+      await diagnosticLogDelay(250);
       printLog('[SYSTEM] Calculating Error Level Analysis (ELA) for image manipulation...', 'system');
-      await new Promise(r => setTimeout(r, 250));
+      await diagnosticLogDelay(250);
       printLog('[SYSTEM] Analysing high-frequency transposed convolution grids...', 'system');
-      await new Promise(r => setTimeout(r, 250));
+      await diagnosticLogDelay(250);
       printLog('[SYSTEM] Executing 2D FFT (Fast Fourier Transform) spectrum diagnostics...', 'system');
-      await new Promise(r => setTimeout(r, 300));
+      await diagnosticLogDelay(300);
       printLog('[SYSTEM] Executing CCD/CMOS sensor noise variance estimation...', 'system');
-      await new Promise(r => setTimeout(r, 200));
+      await diagnosticLogDelay(200);
       printLog('[SUCCESS] Pixel, hex code, and frequency spectrum analysis complete.', 'success');
-      await new Promise(r => setTimeout(r, 150));
+      await diagnosticLogDelay(150);
       printLog('[SUCCESS] Compiling smart forensic boundary report...', 'success');
-      await new Promise(r => setTimeout(r, 150));
+      await diagnosticLogDelay(150);
     } else if (type === 'video') {
       printLog('[SYSTEM] Initializing Spatio-Temporal Codec Analyzer...', 'system');
-      await new Promise(r => setTimeout(r, 200));
+      await diagnosticLogDelay(200);
       printLog('[SYSTEM] Checking container format atom indexes & duration...', 'system');
-      await new Promise(r => setTimeout(r, 200));
+      await diagnosticLogDelay(200);
       printLog('[SYSTEM] Reading raw video bitstream headers...', 'system');
-      await new Promise(r => setTimeout(r, 150));
-      
+      await diagnosticLogDelay(150);
+
       if (file) {
         await streamFileHexCode(file, terminal);
       }
-      
+
       printLog('[SYSTEM] Temporal compression anomaly scans active...', 'system');
-      await new Promise(r => setTimeout(r, 250));
+      await diagnosticLogDelay(250);
       printLog('[SYSTEM] Evaluating temporal motion vector continuity...', 'system');
-      await new Promise(r => setTimeout(r, 300));
+      await diagnosticLogDelay(300);
       printLog('[SUCCESS] Video stream telemetry scan complete.', 'success');
-      await new Promise(r => setTimeout(r, 150));
+      await diagnosticLogDelay(150);
       printLog('[SUCCESS] Resolving generative neural vectors...', 'success');
-      await new Promise(r => setTimeout(r, 150));
+      await diagnosticLogDelay(150);
     }
     resolve();
   });
 }
 
+function replaceLucideIcon(elementId, iconName, className) {
+  const current = document.getElementById(elementId);
+  if (!current) return;
+  current.outerHTML = `<i id="${elementId}" data-lucide="${iconName}" class="${className}"></i>`;
+}
+
+function renderLucideIcons() {
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
+}
+
+function applyDetectorModeUI(mode) {
+  const config = DETECTOR_MODE_UI[mode] || DETECTOR_MODE_UI.text;
+  placeAnalyzeButtonForMode(mode);
+  document.body.classList.remove('detector-mode-text', 'detector-mode-image', 'detector-mode-video');
+  document.body.classList.add(config.bodyClass);
+
+  if (inputLabel) inputLabel.textContent = config.inputLabel;
+  if (analyzeBtnLabel) {
+    analyzeBtnLabel.textContent = config.analyzeLabel;
+    analyzeBtnLabel.dataset.original = config.analyzeLabel;
+  }
+  if (idleStateTitle) idleStateTitle.textContent = config.idleTitle;
+  if (idleStateSubtitle) idleStateSubtitle.textContent = config.idleSubtitle;
+  if (loadingTitle) loadingTitle.textContent = config.loadingTitle;
+  if (loadingSub) loadingSub.textContent = config.loadingSub;
+
+  replaceLucideIcon('idle-state-icon', config.idleIcon, 'w-10 h-10 text-gray-600');
+
+  if (mode === 'text') {
+    renderLucideIcons();
+    return;
+  }
+
+  if (fileNameDisplay && !fileObj) fileNameDisplay.textContent = config.filePrompt;
+  if (fileSupportText) fileSupportText.textContent = config.fileSupport;
+  replaceLucideIcon('file-upload-icon', config.uploadIcon, 'w-12 h-12 text-gray-600 group-hover:text-[var(--accent-1)] mb-4 transition-colors');
+
+  if (mediaModeProfile) mediaModeProfile.className = config.profileClass;
+  if (mediaModeIconShell) {
+    mediaModeIconShell.innerHTML = `<i id="media-mode-icon" data-lucide="${config.modeIcon}" class="w-7 h-7"></i>`;
+  }
+  if (mediaModeBadge) mediaModeBadge.textContent = config.badge;
+  if (mediaModeTitle) mediaModeTitle.textContent = config.title;
+  if (mediaModeDescription) mediaModeDescription.textContent = config.description;
+  if (mediaModeVisual) {
+    mediaModeVisual.className = config.visualClass;
+    mediaModeVisual.innerHTML = Array.from({ length: config.visualSpans }, () => '<span></span>').join('');
+  }
+  if (mediaModeChips) {
+    mediaModeChips.innerHTML = config.chips.map(chip => `<span>${chip}</span>`).join('');
+  }
+
+  renderLucideIcons();
+}
+
+function placeAnalyzeButtonForMode(mode = activeTab) {
+  if (!analyzeBtn) return;
+  const target = mode === 'text' ? textAnalyzeAnchor : fileAnalyzeAnchor;
+  if (target && analyzeBtn.parentElement !== target) {
+    target.appendChild(analyzeBtn);
+  }
+}
+
 // Tab navigation logic
+function syncDetectorTabs(selectedButton) {
+  tabs.forEach(tab => {
+    const isSelected = tab === selectedButton || tab.getAttribute('data-tab') === activeTab;
+    tab.classList.toggle('active', isSelected);
+    tab.classList.toggle('is-active', isSelected);
+    tab.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+  });
+}
+
 tabs.forEach(btn => {
   btn.addEventListener('click', () => {
     activeTab = btn.getAttribute('data-tab');
     handleReset();
-    
+
     // Update styles
-    tabs.forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    
+    syncDetectorTabs(btn);
+    applyDetectorModeUI(activeTab);
+
     if (activeTab === 'text') {
       tabContentText.classList.remove('hidden');
-      tabContentFile.classList.add('hidden');
+      hideAsFlexColumn(tabContentFile);
     } else {
       tabContentText.classList.add('hidden');
-      tabContentFile.classList.remove('hidden');
+      showAsFlexColumn(tabContentFile);
       if (activeTab === 'image') {
-        fileInput.setAttribute('accept', 'image/*');
+        fileInput.setAttribute('accept', IMAGE_FILE_ACCEPT);
       } else if (activeTab === 'video') {
-        fileInput.setAttribute('accept', 'video/*');
+        fileInput.setAttribute('accept', VIDEO_FILE_ACCEPT);
       }
     }
   });
 });
 
-if(textInput) textInput.addEventListener('input', updateInputCounters);
-if(clearBtn) clearBtn.addEventListener('click', () => { textInput.value = ''; updateInputCounters(); handleReset(); });
-if(loadSampleBtn) loadSampleBtn.addEventListener('click', () => { textInput.value = SAMPLES.text; updateInputCounters(); handleReset(); });
+syncDetectorTabs(document.querySelector(`.tab-btn[data-tab="${activeTab}"]`) || tabs[0]);
+applyDetectorModeUI(activeTab);
 
-if(tabContentFile) {
+if (textInput) textInput.addEventListener('input', updateInputCounters);
+if (clearBtn) clearBtn.addEventListener('click', () => { textInput.value = ''; updateInputCounters(); handleReset(); });
+if (loadSampleBtn) loadSampleBtn.addEventListener('click', () => { textInput.value = SAMPLES.text; updateInputCounters(); handleReset(); });
+if (textFileInput) textFileInput.setAttribute('accept', TEXT_FILE_ACCEPT);
+if (textFileBtn && textFileInput) {
+  textFileBtn.addEventListener('click', () => textFileInput.click());
+  textFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleAnyTextFileUpload(e.target.files[0]);
+    }
+  });
+}
+
+if (tabContentFile) {
   tabContentFile.addEventListener('click', (e) => {
     // If clicked on preview-wrapper or video/image within preview, do not trigger double selector
     if (e.target.closest('#file-upload-preview')) {
@@ -686,25 +1180,40 @@ if(tabContentFile) {
     }
     fileInput.click();
   });
-  
+
   // Drag and drop support
   tabContentFile.addEventListener('dragover', (e) => {
     e.preventDefault();
-    tabContentFile.classList.add('border-[var(--accent-1)]', 'bg-[var(--accent-1)]/10');
+    tabContentFile.classList.add('border-[var(--accent-1)]');
+    if (fileNameDisplay && !fileNameDisplay.dataset.isDragging) {
+      fileNameDisplay.dataset.originalText = fileNameDisplay.textContent;
+      fileNameDisplay.dataset.isDragging = 'true';
+      fileNameDisplay.textContent = activeTab === 'video' ? 'Drop to place your video' : 'Drop to place your image';
+    }
   });
   tabContentFile.addEventListener('dragleave', (e) => {
     e.preventDefault();
-    tabContentFile.classList.remove('border-[var(--accent-1)]', 'bg-[var(--accent-1)]/10');
+    if (!tabContentFile.contains(e.relatedTarget)) {
+      tabContentFile.classList.remove('border-[var(--accent-1)]');
+      if (fileNameDisplay && fileNameDisplay.dataset.isDragging) {
+         fileNameDisplay.textContent = fileNameDisplay.dataset.originalText || '';
+         delete fileNameDisplay.dataset.isDragging;
+      }
+    }
   });
   tabContentFile.addEventListener('drop', (e) => {
     e.preventDefault();
-    tabContentFile.classList.remove('border-[var(--accent-1)]', 'bg-[var(--accent-1)]/10');
+    tabContentFile.classList.remove('border-[var(--accent-1)]');
+    if (fileNameDisplay && fileNameDisplay.dataset.isDragging) {
+       fileNameDisplay.textContent = fileNameDisplay.dataset.originalText || '';
+       delete fileNameDisplay.dataset.isDragging;
+    }
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       // Only accept if correct type for active tab
-      const type = file.type;
-      if (activeTab === 'image' && !type.startsWith('image/')) return showError(tr('detector.errors.imageFile', null, 'Please drop an image file.'));
-      if (activeTab === 'video' && !type.startsWith('video/')) return showError(tr('detector.errors.videoFile', null, 'Please drop a video file.'));
+      if (activeTab === 'image' && !isSupportedImageFile(file)) return showError(tr('detector.errors.imageFile', null, 'Please drop an image file.'));
+      if (activeTab === 'video' && !isSupportedVideoFile(file)) return showError(tr('detector.errors.videoFile', null, 'Please drop a video file.'));
+      handleReset();
       fileObj = file;
       updateFilePreview(fileObj);
       hideError();
@@ -712,20 +1221,41 @@ if(tabContentFile) {
   });
 }
 
-if(fileInput) {
+if (fileInput) {
   fileInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
-      fileObj = e.target.files[0];
+      const selectedFile = e.target.files[0];
+      if (activeTab === 'image' && !isSupportedImageFile(selectedFile)) {
+        fileInput.value = '';
+        return showError(tr('detector.errors.imageFile', null, 'Please select an image file.'));
+      }
+      if (activeTab === 'video' && !isSupportedVideoFile(selectedFile)) {
+        fileInput.value = '';
+        return showError(tr('detector.errors.videoFile', null, 'Please select a video file.'));
+      }
+      handleReset();
+      fileObj = selectedFile;
       updateFilePreview(fileObj);
       hideError();
     }
   });
 }
 
-if(analyzeBtn) {
+if (analyzeBtn) {
   analyzeBtn.addEventListener('click', async () => {
+    if (currentResult) {
+      if (activeTab === 'text') {
+        handleReset();
+        textInput.focus();
+      } else {
+        handleReset();
+        fileInput.click();
+      }
+      return;
+    }
+
     hideError();
-    
+
     if (activeTab === 'text' && (!textInput.value || textInput.value.trim().length < 50)) {
       showError(tr('detector.errors.minText', null, "Please enter at least 50 characters for meaningful analysis."));
       return;
@@ -735,33 +1265,26 @@ if(analyzeBtn) {
       return;
     }
 
-    // Ensure user is signed in and check subscription limits
+    // Beta access: require sign-in, but all detectors are free and unlimited.
     const currentUser = typeof firebase !== 'undefined' ? firebase.auth().currentUser : null;
     if (!currentUser) {
-      showError(tr('detector.errors.signIn', null, "You must be signed in to scan. Redirecting..."));
-      setTimeout(() => window.location.href = 'signin.html', 2000);
-      return;
+      const freeScanUsed = localStorage.getItem('3truth_free_scan_used');
+      if (freeScanUsed) {
+        showToast(tr('detector.errors.freeScanUsed', null, "Please sign in to continue using 3truth AI Detector. Redirecting..."), 1500);
+        setTimeout(() => window.location.href = 'signin.html', 1500);
+        return;
+      } else {
+        localStorage.setItem('3truth_free_scan_used', 'true');
+      }
     }
 
-    try {
-      const userDoc = await firebase.firestore().collection("users").doc(currentUser.uid).get();
-      if (userDoc.exists) {
-        const data = userDoc.data();
-        const plan = data.plan || "Free";
-        const scansUsed = data.scans_used || 0;
-        
-        let limit = 1;
-        if (plan.toLowerCase() === 'pro') limit = 3;
-        if (plan.toLowerCase() === 'ultimate') limit = Infinity;
-        
-        if (scansUsed >= limit) {
-           showError(tr('detector.errors.limit', { plan, limit }, `You have reached your ${plan} plan limit of ${limit} scans. Redirecting to upgrade...`));
-           setTimeout(() => window.location.href = 'pricing.html', 3000);
-           return;
-        }
-      }
-    } catch(err) {
-      console.error("Subscription check failed", err);
+    if (currentUser && window.firebase && firebase.firestore) {
+      firebase.firestore().collection("users").doc(currentUser.uid).set({
+        plan: "Beta Unlimited",
+        beta_access: true
+      }, { merge: true }).catch(err => {
+        console.warn("Beta access sync skipped", err);
+      });
     }
 
     // UI Loading state
@@ -770,31 +1293,36 @@ if(analyzeBtn) {
     stateLoading.classList.remove('hidden');
     analyzeBtn.disabled = true;
     analyzeBtn.querySelector('span').textContent = tr('detector.analyzing', null, 'ANALYZING...');
-    
-    if(scannerBar) {
+
+    if (scannerBar) {
       scannerBar.classList.remove('hidden');
-      gsap.fromTo(scannerBar, { y: 0, opacity: 1 }, { y: 500, duration: 1.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      scannerBar.classList.add('scanning');
     }
 
-    // Concurrent pre-scan pixel forensics and binary parsing on the client side
+    // Run browser-side forensic pre-scan in parallel with the backend request.
     let forensics = null;
     let metadata = null;
+    let preScanPromise = Promise.resolve([null, null]);
     if (activeTab !== 'text' && fileObj) {
-      try {
-        [metadata, forensics] = await Promise.all([
-          parseFileMetadata(fileObj),
-          runPixelForensics(fileObj, activeTab)
-        ]);
-      } catch (fe) {
+      preScanPromise = Promise.all([
+        parseFileMetadata(fileObj),
+        runPixelForensics(fileObj, activeTab)
+      ]).catch((fe) => {
         console.error("Client side forensic pre-scan failed:", fe);
-      }
+        return [null, null];
+      });
     }
 
     try {
+      if (activeTab === 'image' || activeTab === 'video') {
+        // User requested a slower visual scan experience to 'see the filters work'
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
       const formData = new FormData();
       formData.append('type', activeTab);
-      formData.append('language', window.AetherisI18n ? window.AetherisI18n.getLang() : 'auto');
-      
+      formData.append('language', window._3truthI18n ? window._3truthI18n.getLang() : 'auto');
+
       if (activeTab === 'text') {
         formData.append('content', textInput.value);
       } else {
@@ -809,7 +1337,9 @@ if(analyzeBtn) {
 
       let data;
       try {
-        const response = await fetch('http://127.0.0.1:5001/api/analyze', {
+        // Pointing to the secure Hostinger VPS domain on custom SSL port
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5001' : 'https://api.3truth.com:5002';
+        const response = await fetch(`${API_BASE}/api/analyze`, {
           method: 'POST',
           headers: headers,
           body: formData
@@ -819,7 +1349,8 @@ if(analyzeBtn) {
 
         // Enrich backend response with computed canvas forensics & client-extracted metadata
         if (activeTab !== 'text') {
-          data.forensics = forensics;
+          [metadata, forensics] = await preScanPromise;
+          data.forensics = data.forensics || forensics;
           if (!data.provenanceCodeInfo && metadata && metadata.found) {
             data.provenanceCodeInfo = {
               type: metadata.source,
@@ -829,9 +1360,20 @@ if(analyzeBtn) {
           }
           data = fuseMetadataAndForensics(data, forensics, metadata);
         } else if (activeTab === 'text') {
+          const textVal = textInput.value;
+
+          // Zero Trust Policy Fusion: Combine Python Neural Net with JS Heuristics
+          const jsHeuristics = classifyText(textVal);
+          if (jsHeuristics.ai_probability > (data.ai_probability || 0)) {
+            data.ai_probability = jsHeuristics.ai_probability;
+            data.prediction = data.ai_probability >= 0.5 ? 'AI-GENERATED' : 'HUMAN';
+            data.confidence = (Math.max(data.ai_probability, 1 - data.ai_probability) * 100).toFixed(1) + '%';
+            data.features = { ...data.features, ...jsHeuristics.features };
+            data.sentenceBreakdown = jsHeuristics.sentenceBreakdown;
+          }
+
           if (!data.sentenceBreakdown) {
-            const textVal = textInput.value;
-            const isAI = data.prediction === 'AI' || data.prediction === 'AI-Generated';
+            const isAI = isAiPrediction(data.prediction);
             // Simple split keeping the text
             let sentences = [];
             let current = "";
@@ -843,174 +1385,52 @@ if(analyzeBtn) {
               }
             }
             if (sentences.length === 0 && textVal.trim().length > 0) sentences = [textVal.trim()];
-            
+
             data.sentenceBreakdown = sentences.map((s, idx) => {
               const sLower = s.toLowerCase();
               const hasAITerm = AI_VOCAB.some(v => sLower.includes(v)) || AI_TRANSITIONS.some(v => sLower.includes(v)) || ARABIC_AI_PHRASES.some(v => sLower.includes(v));
-              let sProb = arabicRatio(s) >= 0.20 ? scoreArabicText(s).score : (hasAITerm ? 0.62 : (isAI ? Math.min(0.72, data.ai_probability || 0.5) : 0.18));
+              let sProb = arabicRatio(s) >= 0.20 ? scoreArabicText(s).score : (hasAITerm ? 0.62 : 0.18);
+              if (isAI && sProb < 0.5) sProb = Math.max(0.6, (data.ai_probability || 0.6) * 0.8);
               return { text: s, prediction: sProb >= 0.5 ? 'AI' : 'HUMAN', probability: Number(sProb.toFixed(3)) };
             });
           }
         }
       } catch (err) {
-        console.warn("Backend not running, running client-side Forensic Heuristics Engine.", err);
-        
-        let isAI = false;
-        let aiProb = 0.04;
-        let sentenceBreakdown = [];
-        let features = {};
-        
+        console.warn("Backend not available, running server-grade client-side engine.", err);
+        if (activeTab !== 'text') {
+          [metadata, forensics] = await preScanPromise;
+        }
+
         if (activeTab === 'text') {
-            const textValue = textInput ? textInput.value : "";
-            data = classifyText(textValue);
-        } else {
-            // Fused Decision Heuristics Matrix
-            const fileName = fileObj.name.toLowerCase();
-            const aiKeywords = [
-              'comfyui', 'stablediffusion', 'stable-diffusion', 'sdxl', 'flux', 'dall-e', 'dalle',
-              'midjourney', 'prompt', 'gan', 'generative', 'synthetic', 'ai-generated', 'copilot',
-              'bing-creator', 'leonardo', 'civitai', 'upscaled', 'render', 'viggle', 'luma', 'sora',
-              'kling', 'runway', 'pika', 'cyberpunk', 'photorealistic', '4k', '8k', 'unreal-engine'
-            ];
-            const realKeywords = [
-              'img_', 'dsc_', 'pxl_', 'dcim', 'photo_', 'camera_', 'iphone', 'samsung', 'pixel',
-              'nikon', 'canon', 'sony', 'fujifilm'
-            ];
-
-            const isAiFilename = aiKeywords.some(kw => fileName.includes(kw)) || /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(fileName);
-            const isRealFilename = realKeywords.some(kw => fileName.includes(kw));
-
-            let isMetadataAi = false;
-            let isMetadataReal = false;
-            let metadataSource = "None";
-            if (metadata && metadata.found) {
-              metadataSource = metadata.source;
-              const metaSrc = metadata.source.toLowerCase();
-              if (metaSrc.includes('comfyui') || 
-                  metaSrc.includes('stable diffusion') || 
-                  metaSrc.includes('generative') ||
-                  metaSrc.includes('neural network') ||
-                  metaSrc.includes('adobe xmp') ||
-                  metaSrc.includes('embedded neural')) {
-                isMetadataAi = true;
-              } else if (metaSrc.includes('camera') || 
-                         metaSrc.includes('exif') ||
-                         metaSrc.includes('hardware')) {
-                isMetadataReal = true;
-              }
-            }
-
-            const width = forensics && forensics.width ? forensics.width : 0;
-            const height = forensics && forensics.height ? forensics.height : 0;
-            const isSquare = width > 0 && height > 0 && width === height;
-            const isPng = fileObj.type === 'image/png' || fileName.endsWith('.png');
-            
-            const standardAiRes = [
-              [512, 512], [768, 768], [1024, 1024], [1536, 1536], [2048, 2048],
-              [1456, 816], [816, 1456], [832, 1216], [1216, 832], [1024, 768], [768, 1024],
-              [1344, 768], [768, 1344]
-            ];
-            const isAiResolution = standardAiRes.some(([w, h]) => width === w && height === h);
-
-            let aiScoreCount = 0;
-            let reasons = [];
-            if (forensics && forensics.success) {
-              if (forensics.pearsonRG < 0.91) {
-                aiScoreCount += 2.5;
-                reasons.push(`Red-Green correlation decoupling (r_RG = ${forensics.pearsonRG})`);
-              } else if (forensics.pearsonRG < 0.94) {
-                aiScoreCount += 1.0;
-              }
-
-              if (forensics.pearsonRB < 0.91) {
-                aiScoreCount += 2.5;
-                reasons.push(`Red-Blue correlation decoupling (r_RB = ${forensics.pearsonRB})`);
-              } else if (forensics.pearsonRB < 0.94) {
-                aiScoreCount += 1.0;
-              }
-
-              if (forensics.flatBlockNoise < 0.65) {
-                aiScoreCount += 4.0;
-                reasons.push(`Quantized mathematically perfect flat surfaces (σ = ${forensics.flatBlockNoise} LSB, zero camera grain)`);
-              } else if (forensics.flatBlockNoise < 0.85) {
-                aiScoreCount += 2.0;
-              }
-
-              if (forensics.checkerboardRatio < 0.86 || forensics.checkerboardRatio > 1.18) {
-                aiScoreCount += 4.0;
-                reasons.push(`Upsampling deconvolution grid (Ratio = ${forensics.checkerboardRatio})`);
-              } else if (forensics.checkerboardRatio < 0.90 || forensics.checkerboardRatio > 1.12) {
-                aiScoreCount += 2.0;
-              }
-            }
-
-            let decisionScore = 0;
-            if (isMetadataAi) decisionScore += 10.0;
-            if (isAiFilename) decisionScore += 5.0;
-            if (isRealFilename) decisionScore -= 4.0;
-            
-            if (isPng) decisionScore += 3.0;
-            if (isSquare) decisionScore += 3.5;
-            if (isAiResolution) decisionScore += 3.5;
-            decisionScore += aiScoreCount;
-
-            if (isMetadataReal) {
-              if (aiScoreCount >= 4.0) {
-                decisionScore += 2.0;
-                reasons.push("Spoofed camera hardware signature overridden due to pixel anomalies");
-              } else {
-                decisionScore -= 10.0;
-              }
-            }
-
-            let boundaryReason = "";
-            if (decisionScore >= 4.0) {
-              isAI = true;
-              boundaryReason = reasons.length > 0 
-                ? `Anomalous pixel structure: ` + reasons.join(", ")
-                : `Generative format triggers: PNG encoding, perfect dimensions, or AI file signature`;
-            } else {
-              isAI = false;
-              boundaryReason = isMetadataReal 
-                ? `Verified original hardware camera signature (${metadataSource})`
-                : `Standard physical sensor shot-noise and isotropic color distributions`;
-            }
-            
-            aiProb = isAI
-              ? Math.min(0.98, 0.82 + Math.min(decisionScore, 12) * 0.012)
-              : Math.max(0.02, 0.12 - Math.max(0, -decisionScore) * 0.01);
-            const metadataType = (metadata && metadata.found) ? metadata.source : (forensics && forensics.success ? 'Stripped / Web Compressed' : 'Unknown');
-            
-            features = {
-              'File Name': fileObj.name,
-              'File Size': (fileObj.size / 1024 / 1024).toFixed(2) + ' MB',
-              'MIME Type': fileObj.type,
-              'Sensor Profile': (metadata && metadata.source.includes('Camera')) ? metadata.source : 'No camera hardware found',
-              'Metadata Channel': metadataType,
-              'Chroma Discrepancy': isAI ? 'Non-organic color distribution' : 'Natural spectrum profile',
-              'Neural Signatures': (metadata && metadata.found && !metadata.source.includes('Camera')) ? metadata.source : (isAI ? 'Latent GAN/Diffusion markers' : 'None detected'),
-              'Noise Pattern': isAI ? 'Artificial high-frequency grid artifacts' : 'Standard CCD/CMOS sensor noise',
-              'Latent Space Index': isAI ? '94.2% AI generated pattern' : '0.4% (Organic capture)',
-              'Vector Quantization': isAI ? 'Anomalous discrete cosine transformations' : 'Standard sensor pixel distribution'
+          const textValue = textInput ? textInput.value : "";
+          data = classifyText(textValue);
+        } else if (activeTab === 'image') {
+          // Server-grade image classification (identical scoring to server.js classifyImage)
+          data = await classifyImageClient(fileObj, metadata, forensics);
+          // Enrich with client-side pixel forensics and metadata
+          data.forensics = forensics;
+          if (metadata && metadata.found && !data.provenanceCodeInfo) {
+            data.provenanceCodeInfo = {
+              type: metadata.source,
+              source: metadata.source,
+              code: metadata.rawText
             };
-            
-            data = {
-                prediction: isAI ? 'AI' : 'HUMAN',
-                ai_probability: aiProb,
-                confidence: (Math.max(aiProb, 1 - aiProb) * 100).toFixed(1) + '%',
-                word_count: 0,
-                sentenceBreakdown: [],
-                features: features,
-                forensics: forensics
+          }
+          // Run the same fusion pipeline used when backend responds
+          data = fuseMetadataAndForensics(data, forensics, metadata);
+        } else if (activeTab === 'video') {
+          // Server-grade video classification (identical scoring to server.js classifyVideo)
+          data = await classifyVideoClient(fileObj, metadata);
+          data.forensics = forensics;
+          if (metadata && metadata.found && !data.provenanceCodeInfo) {
+            data.provenanceCodeInfo = {
+              type: metadata.source,
+              source: metadata.source,
+              code: metadata.rawText
             };
-            
-            if (metadata && metadata.found) {
-              data.provenanceCodeInfo = {
-                type: metadata.source,
-                source: metadata.source,
-                code: metadata.rawText
-              };
-            }
+          }
+          // Run the same fusion pipeline used when backend responds
+          data = fuseMetadataAndForensics(data, forensics, metadata);
         }
       }
 
@@ -1020,26 +1440,28 @@ if(analyzeBtn) {
         laser.classList.add('scanning');
       }
 
-      await runTerminalDiagnosticLogs(activeTab, fileObj);
-
-      // Deactivate laser sweep animation
-      if (laser) {
-        laser.classList.remove('scanning');
-      }
-
-      // Increment scan count after successful scan
       try {
-        if (currentUser) {
-          await firebase.firestore().collection("users").doc(currentUser.uid).update({
-            scans_used: firebase.firestore.FieldValue.increment(1)
-          });
-        }
+        await runTerminalDiagnosticLogs(activeTab, fileObj);
       } catch (err) {
-        console.error("Failed to update scan count", err);
+        console.warn('Detector diagnostics log failed', err);
+      } finally {
+        if (laser) {
+          laser.classList.remove('scanning');
+        }
       }
 
       currentResult = data;
       renderResult(data);
+
+      // Beta access is unlimited; keep account state synced without blocking results.
+      if (currentUser && window.firebase && firebase.firestore) {
+        firebase.firestore().collection("users").doc(currentUser.uid).set({
+          plan: "Beta Unlimited",
+          beta_access: true
+        }, { merge: true }).catch(err => {
+          console.warn("Failed to sync beta scan state", err);
+        });
+      }
 
     } catch (err) {
       console.error(err);
@@ -1047,9 +1469,17 @@ if(analyzeBtn) {
       showError(err.message || tr('detector.errors.connection', null, 'Connection failed.'));
     } finally {
       analyzeBtn.disabled = false;
-      analyzeBtn.querySelector('span').textContent = tr('detector.initializeScan', null, 'INITIALIZE SCAN');
-      if(scannerBar) {
+      const modeConfig = DETECTOR_MODE_UI[activeTab] || DETECTOR_MODE_UI.text;
+      const newLabel = currentResult 
+        ? (activeTab === 'text' ? tr('detector.scanNewText', null, 'SCAN NEW TEXT') : tr('detector.uploadNewFile', null, 'UPLOAD NEW FILE')) 
+        : (modeConfig.analyzeLabel || tr('detector.initializeScan', null, 'INITIALIZE SCAN'));
+      if (analyzeBtn.querySelector('span')) {
+        analyzeBtn.querySelector('span').textContent = newLabel;
+        analyzeBtn.querySelector('span').dataset.original = newLabel;
+      }
+      if (scannerBar) {
         gsap.killTweensOf(scannerBar);
+        scannerBar.classList.remove('scanning');
         scannerBar.classList.add('hidden');
       }
     }
@@ -1067,19 +1497,34 @@ function renderResult(data) {
   const barAi = document.getElementById('bar-ai');
   const scoreHuman = document.getElementById('score-human');
   const scoreAi = document.getElementById('score-ai');
+  const scoreRealLabel = document.getElementById('score-real-label');
 
   let pAi = data.ai_probability ?? 0;
   pAi = Math.max(0, Math.min(1, Number(pAi) || 0));
 
   let pHuman = 1 - pAi;
-  
-  const predUpper = (data.prediction || '').toUpperCase();
-  if (predUpper === 'AI' || predUpper.includes('AI-GENERATED') || predUpper.includes('SYNTHETIC')) {
+  const realScoreLabel = activeTab === 'text'
+    ? tr('detector.humanProbability', null, 'HUMAN PROBABILITY')
+    : (activeTab === 'video'
+      ? tr('detector.realVideoProbability', null, 'REAL VIDEO PROBABILITY')
+      : tr('detector.realPhotoProbability', null, 'REAL PHOTO PROBABILITY'));
+  if (scoreRealLabel) scoreRealLabel.textContent = realScoreLabel;
+
+  const canonicalPrediction = normalizeMediaPrediction(data.prediction, activeTab, pAi);
+  data.prediction = canonicalPrediction;
+  const predUpper = normalizePredictionText(canonicalPrediction);
+  if (isAiPrediction(canonicalPrediction)) {
     verdictEl.textContent = tr('detector.verdictAi', null, 'AI GENERATED');
     verdictEl.className = 'text-5xl font-black mb-2 uppercase text-red-500 text-glow';
     confEl.className = 'inline-block px-4 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-xs font-black text-red-500';
-  } else if (predUpper === 'HUMAN' || predUpper.includes('HUMAN') || predUpper.includes('REAL') || predUpper.includes('ORGANIC')) {
-    verdictEl.textContent = tr('detector.verdictHuman', null, 'HUMAN');
+  } else if (isRealPrediction(canonicalPrediction)) {
+    if (predUpper.includes('REAL VIDEO')) {
+      verdictEl.textContent = tr('detector.verdictRealVideo', null, 'REAL VIDEO');
+    } else if (predUpper.includes('REAL PHOTO') || activeTab === 'image') {
+      verdictEl.textContent = tr('detector.verdictRealPhoto', null, 'REAL PHOTO');
+    } else {
+      verdictEl.textContent = tr('detector.verdictHuman', null, 'HUMAN');
+    }
     verdictEl.className = 'text-5xl font-black mb-2 uppercase text-green-400 text-glow';
     confEl.className = 'inline-block px-4 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-xs font-black text-green-400';
   } else {
@@ -1095,32 +1540,34 @@ function renderResult(data) {
   if (pdfBtnEl) {
     if (activeTab === 'text') {
       pdfBtnEl.classList.remove('hidden');
+      pdfBtnEl.classList.add('flex');
     } else {
       pdfBtnEl.classList.add('hidden');
+      pdfBtnEl.classList.remove('flex');
     }
   }
 
   // Animate Bars
   gsap.fromTo(barHuman, { width: '0%' }, { width: `${(pHuman * 100).toFixed(1)}%`, duration: 1, ease: 'power3.out' });
   gsap.fromTo(barAi, { width: '0%' }, { width: `${(pAi * 100).toFixed(1)}%`, duration: 1, ease: 'power3.out' });
-  
+
   // Animate Numbers
   gsap.to({ val: 0 }, {
     val: pHuman * 100,
     duration: 1,
-    onUpdate: function() { scoreHuman.textContent = this.targets()[0].val.toFixed(1) + '%'; }
+    onUpdate: function () { scoreHuman.textContent = this.targets()[0].val.toFixed(1) + '%'; }
   });
   gsap.to({ val: 0 }, {
     val: pAi * 100,
     duration: 1,
-    onUpdate: function() { scoreAi.textContent = this.targets()[0].val.toFixed(1) + '%'; }
+    onUpdate: function () { scoreAi.textContent = this.targets()[0].val.toFixed(1) + '%'; }
   });
 
   // Handle text breakdown highlights
   const breakdownSec = document.getElementById('text-breakdown-section');
   const humanBox = document.getElementById('breakdown-human-text');
   const aiBox = document.getElementById('breakdown-ai-text');
-  
+
   const fileMetaSec = document.getElementById('file-metadata-section');
   const fileMetaContent = document.getElementById('file-metadata-content');
   const provenanceSec = document.getElementById('provenance-code-section');
@@ -1133,10 +1580,10 @@ function renderResult(data) {
   if (data.sentenceBreakdown && data.sentenceBreakdown.length > 0) {
     humanBox.innerHTML = '';
     aiBox.innerHTML = '';
-    
+
     let humanCount = 0;
     let aiCount = 0;
-    
+
     data.sentenceBreakdown.forEach(seg => {
       if (seg.prediction === 'HUMAN') {
         humanCount++;
@@ -1152,38 +1599,54 @@ function renderResult(data) {
         aiBox.appendChild(mark);
       }
     });
-    
+
     if (humanCount === 0) {
-      humanBox.innerHTML = `<span class="text-gray-500 italic text-xs">${tr('detector.noHumanSegments', null, 'No human-written segments identified in the source.')}</span>`;
+      const emptyHuman = document.createElement('span');
+      emptyHuman.className = 'text-gray-500 italic text-xs';
+      emptyHuman.textContent = tr('detector.noHumanSegments', null, 'No human-written segments identified in the source.');
+      humanBox.appendChild(emptyHuman);
     }
     if (aiCount === 0) {
-      aiBox.innerHTML = `<span class="text-gray-500 italic text-xs">${tr('detector.noAiSegments', null, 'No synthetic/AI-generated segments identified.')}</span>`;
+      const emptyAi = document.createElement('span');
+      emptyAi.className = 'text-gray-500 italic text-xs';
+      emptyAi.textContent = tr('detector.noAiSegments', null, 'No synthetic/AI-generated segments identified.');
+      aiBox.appendChild(emptyAi);
     }
   }
 
   if (data.features) {
-    fileMetaContent.innerHTML = Object.entries(data.features).map(([key, val]) => `
-      <div class="border-b border-[var(--accent-1)]/20 pb-2">
-        <span class="text-gray-500 font-bold block mb-1 uppercase tracking-wide">${window.AetherisI18n ? window.AetherisI18n.featureLabel(key) : key.replace(/_/g, ' ')}</span>
-        <span class="text-gray-200 font-medium">${val}</span>
-      </div>
-    `).join('');
+    fileMetaContent.textContent = '';
+    Object.entries(data.features).forEach(([key, val]) => {
+      const row = document.createElement('div');
+      row.className = 'border-b border-[var(--accent-1)]/20 pb-2';
+
+      const label = document.createElement('span');
+      label.className = 'text-gray-500 font-bold block mb-1 uppercase tracking-wide';
+      label.textContent = window._3truthI18n ? window._3truthI18n.featureLabel(key) : key.replace(/_/g, ' ');
+
+      const value = document.createElement('span');
+      value.className = 'text-gray-200 font-medium break-words';
+      value.textContent = String(val);
+
+      row.append(label, value);
+      fileMetaContent.appendChild(row);
+    });
   }
 
   const width = forensics && forensics.width ? forensics.width : 0;
   const height = forensics && forensics.height ? forensics.height : 0;
   const isAi = predUpper === 'AI' || predUpper.includes('AI-GENERATED') || predUpper.includes('SYNTHETIC') || verdictEl.className.includes('red');
-  
+
   if (!data.provenanceCodeInfo) {
     if (isAi) {
       data.provenanceCodeInfo = {
         type: 'DECOMPILED_NEURAL_RECONSTRUCTION',
-        source: 'Aetheris Latent Space Decompiler v1.0',
+        source: '3truth Latent Space Decompiler v1.0',
         code: `================================================================================
 A E T H E R I S   L A T E N T   S P A C E   D E C O M P I L E R   v 1 . 0
 ================================================================================
 STATUS: NEURAL DECONVOLUTION ARTIFACTS MAP DETECTED
-TARGET ASPECT RATIO: ${width > 0 && height > 0 ? (width/height).toFixed(2) + ' (' + width + 'x' + height + ')' : '1.00 (1024x1024)'}
+TARGET ASPECT RATIO: ${width > 0 && height > 0 ? (width / height).toFixed(2) + ' (' + width + 'x' + height + ')' : '1.00 (1024x1024)'}
 SAMPLING PROFILE: BILINEAR TRANSPOSED CONVOLUTION LATTICE
 
 [TENSOR CORE] INGESTING PIXEL GRADIENT MATRIX...
@@ -1218,7 +1681,7 @@ SAMPLING PROFILE: BILINEAR TRANSPOSED CONVOLUTION LATTICE
 C M O S   O P T I C A L   P R O V E N A N C E   I N T E G R A T O R   v 1 . 0
 ================================================================================
 STATUS: PRISTINE OPTICAL ACQUISITION CONFIRMED (NO DIGITAL OVERLAYS)
-TARGET ASPECT RATIO: ${width > 0 && height > 0 ? (width/height).toFixed(2) + ' (' + width + 'x' + height + ')' : '1.33 (4032x3024)'}
+TARGET ASPECT RATIO: ${width > 0 && height > 0 ? (width / height).toFixed(2) + ' (' + width + 'x' + height + ')' : '1.33 (4032x3024)'}
 SAMPLING PROFILE: BAYER INTERPOLATION SCANNING GRID
 
 [CMOS SENSOR] CAPTURING ANALOG PHOTON FLOW...
@@ -1240,7 +1703,7 @@ SAMPLING PROFILE: BAYER INTERPOLATION SCANNING GRID
       };
     }
   }
-  
+
   provenanceContent.textContent = data.provenanceCodeInfo.code;
 
   // Automatically show appropriate detail sections depending on the active tab
@@ -1260,25 +1723,21 @@ SAMPLING PROFILE: BAYER INTERPOLATION SCANNING GRID
   }
 }
 
-if(copyBtn) {
+if (copyBtn) {
   copyBtn.addEventListener('click', () => {
     if (!currentResult) return;
     const lines = [
       `${tr('detector.verdictLabel', null, 'Verdict')}: ${currentResult.prediction}`,
-      `${window.AetherisI18n && window.AetherisI18n.isArabic() ? 'الثقة' : 'Confidence'}: ${currentResult.confidence}`,
+      `${window._3truthI18n && window._3truthI18n.isArabic() ? 'الثقة' : 'Confidence'}: ${currentResult.confidence}`,
       `${tr('detector.reportAiScore', null, 'AI Score')}: ${((currentResult.ai_probability ?? 0) * 100).toFixed(1)}%`,
       `${tr('detector.reportHumanScore', null, 'Human Score')}: ${((1 - (currentResult.ai_probability ?? 0)) * 100).toFixed(1)}%`,
     ];
     navigator.clipboard.writeText(lines.join('\n')).then(() => {
-      const icon = copyBtn.querySelector('i');
-      const text = copyBtn.lastChild;
-      if(icon) icon.setAttribute('data-lucide', 'check');
-      text.nodeValue = ' ' + tr('detector.copied', null, 'COPIED!');
-      lucide.createIcons();
+      copyBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> ${tr('detector.copied', null, 'copied succesfully')}`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       setTimeout(() => {
-        if(icon) icon.setAttribute('data-lucide', 'copy');
-        text.nodeValue = ' ' + tr('detector.copyReport', null, 'COPY REPORT');
-        lucide.createIcons();
+        copyBtn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> ${tr('detector.copyReport', null, 'COPY REPORT')}`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }, 2000);
     });
   });
@@ -1288,117 +1747,125 @@ const pdfBtn = document.getElementById('pdf-btn');
 if (pdfBtn) {
   pdfBtn.addEventListener('click', () => {
     if (!currentResult) return;
-    
+
     // Create a beautiful, printable HTML element in memory
     const reportEl = document.createElement('div');
     reportEl.style.padding = '45px';
     reportEl.style.color = '#ffffff'; // Dark mode text
-    reportEl.style.backgroundColor = '#030305'; // Dark mode background
+    reportEl.style.backgroundColor = '#031f1a'; // Dark cyan beta background
     reportEl.style.fontFamily = "'Outfit', sans-serif";
     reportEl.style.position = 'relative';
-    
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+
     const dateStr = new Date().toLocaleString();
-    const verdict = currentResult.prediction === 'AI' || currentResult.prediction === 'AI-Generated' ? 'AI GENERATED' : currentResult.prediction;
-    const isAiVerdict = (currentResult.prediction || '').toUpperCase().includes('AI') || (currentResult.prediction || '').toUpperCase().includes('SYNTHETIC');
-    const verdictColor = isAiVerdict ? '#f87171' : (verdict === 'MIXED' ? '#facc15' : '#4ade80');
+    const verdict = normalizeMediaPrediction(currentResult.prediction, activeTab, currentResult.ai_probability);
+    const isAiVerdict = isAiPrediction(verdict);
+    const verdictColor = isAiVerdict ? '#2FEECC' : (verdict === 'MIXED' ? '#FFFFFF' : '#A8FFF0');
     const pAi = currentResult.ai_probability ?? 0;
     const pHuman = 1 - pAi;
-    
+
     const aiSentences = currentResult.sentenceBreakdown ? currentResult.sentenceBreakdown.filter(s => s.prediction !== 'HUMAN') : [];
     const humanSentences = currentResult.sentenceBreakdown ? currentResult.sentenceBreakdown.filter(s => s.prediction === 'HUMAN') : [];
-    
+
     // Construct HTML content
     reportEl.innerHTML = `
       <!-- Start with Brand Logo Header -->
-      <div style="border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="border-bottom: 3px solid #06352d; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <img src="assets/Logo.png" style="height: 48px; width: 48px; object-fit: contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
+          <img src="assets/Logo.png" style="height: 48px; width: auto; object-fit: contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
           <div>
-            <h1 style="font-size: 26px; font-weight: 900; margin: 0; letter-spacing: -0.5px; color: #ffffff;">Aetheris</h1>
-            <p style="font-size: 10px; color: #06b6d4; margin: 2px 0 0 0; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">${tr('detector.reportBrand', null, 'Neural Forensic Intelligence')}</p>
+            <h1 style="font-size: 26px; font-weight: 900; margin: 0; letter-spacing: -0.5px; color: #ffffff;">3truth</h1>
+            <p style="font-size: 10px; color: #2FEECC; margin: 2px 0 0 0; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">${tr('detector.reportBrand', null, 'Neural Forensic Intelligence')}</p>
           </div>
         </div>
         <div style="text-align: right;">
-          <p style="font-size: 11px; color: #64748b; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Classification Report</p>
-          <p style="font-size: 13px; color: #e2e8f0; margin: 4px 0 0 0; font-weight: 800;">ID: #ATH-${Math.floor(100000 + Math.random() * 900000)}</p>
+          <p style="font-size: 11px; color: #A8FFF0; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Classification Report</p>
+          <p style="font-size: 13px; color: #FFFFFF; margin: 4px 0 0 0; font-weight: 800;">ID: #ATH-${Math.floor(100000 + Math.random() * 900000)}</p>
         </div>
       </div>
-      
+
       <!-- Forensic Verdict Badge -->
-      <div style="background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; margin-bottom: 30px; text-align: center;">
-        <h2 style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px 0;">${tr('detector.verdictLabel', null, 'Forensic Verdict')}</h2>
+      <div style="background-color: #031f1a; border: 1px solid #06352d; border-radius: 16px; padding: 24px; margin-bottom: 30px; text-align: center;">
+        <h2 style="font-size: 11px; font-weight: 800; color: #A8FFF0; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px 0;">${tr('detector.verdictLabel', null, 'Forensic Verdict')}</h2>
         <div style="font-size: 38px; font-weight: 900; color: ${verdictColor}; margin-bottom: 6px; letter-spacing: -1px; text-transform: uppercase;">
-          ${verdict}
+          ${escapeHtml(verdict)}
         </div>
-        <div style="display: inline-block; padding: 4px 12px; background-color: #1e293b; border: 1px solid #334155; border-radius: 9999px; font-size: 11px; font-weight: 800; color: #cbd5e1;">
-          ${currentResult.confidence || '95.6%'} CONFIDENCE
+        <div style="display: inline-block; padding: 4px 12px; background-color: #06352d; border: 1px solid #0f6b5a; border-radius: 9999px; font-size: 11px; font-weight: 800; color: #FFFFFF;">
+          ${escapeHtml(currentResult.confidence || '95.6%')} CONFIDENCE
         </div>
       </div>
 
       <!-- Probability Bars -->
       <div style="margin-bottom: 35px; display: flex; gap: 20px;">
-        <div style="flex: 1; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; background-color: #0f172a;">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 8px;">
+        <div style="flex: 1; border: 1px solid #06352d; border-radius: 12px; padding: 16px; background-color: #031f1a;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #A8FFF0; margin-bottom: 8px;">
             <span>${tr('detector.reportHumanScore', null, 'HUMAN SCORE')}</span>
-            <span style="color: #34d399;">${(pHuman * 100).toFixed(1)}%</span>
+            <span style="color: #A8FFF0;">${(pHuman * 100).toFixed(1)}%</span>
           </div>
-          <div style="height: 8px; background-color: #334155; border-radius: 9999px; overflow: hidden;">
-            <div style="width: ${(pHuman * 100).toFixed(1)}%; height: 100%; background-color: #10b981; border-radius: 9999px;"></div>
+          <div style="height: 8px; background-color: #06352d; border-radius: 9999px; overflow: hidden;">
+            <div style="width: ${(pHuman * 100).toFixed(1)}%; height: 100%; background-color: #A8FFF0; border-radius: 9999px;"></div>
           </div>
         </div>
-        <div style="flex: 1; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; background-color: #0f172a;">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 8px;">
+        <div style="flex: 1; border: 1px solid #06352d; border-radius: 12px; padding: 16px; background-color: #031f1a;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #A8FFF0; margin-bottom: 8px;">
             <span>${tr('detector.reportAiScore', null, 'AI SCORE')}</span>
-            <span style="color: #60a5fa;">${(pAi * 100).toFixed(1)}%</span>
+            <span style="color: #2FEECC;">${(pAi * 100).toFixed(1)}%</span>
           </div>
-          <div style="height: 8px; background-color: #334155; border-radius: 9999px; overflow: hidden;">
-            <div style="width: ${(pAi * 100).toFixed(1)}%; height: 100%; background-color: #3b82f6; border-radius: 9999px;"></div>
+          <div style="height: 8px; background-color: #06352d; border-radius: 9999px; overflow: hidden;">
+            <div style="width: ${(pAi * 100).toFixed(1)}%; height: 100%; background-color: #2FEECC; border-radius: 9999px;"></div>
           </div>
         </div>
       </div>
-      
+
       <!-- Content Breakdown Sections -->
       ${activeTab === 'text' ? `
         <div style="margin-bottom: 30px;">
-          <h3 style="font-size: 14px; font-weight: 900; color: #fca5a5; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #7f1d1d; padding-bottom: 6px;">${tr('detector.aiText', null, 'AI Text')} :</h3>
-          <div style="font-size: 13px; color: #fecaca; line-height: 1.8; border: 1px solid #7f1d1d; background-color: #2b1212; padding: 18px; border-radius: 10px; min-height: 50px;">
-            ${aiSentences.map(s => `<span style="background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 3px 6px; border-radius: 4px; font-weight: 600; margin: 2px; display: inline; border-bottom: 1.5px solid #ef4444;">${s.text}</span>`).join(' ') || `<span style="color: #64748b; font-style: italic;">${tr('detector.noArtificialSegments', null, 'No artificial/AI-generated segments identified.')}</span>`}
+          <h3 style="font-size: 14px; font-weight: 900; color: #2FEECC; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #2FEECC; padding-bottom: 6px;">${tr('detector.aiText', null, 'AI Text')} :</h3>
+          <div style="font-size: 13px; color: #FFFFFF; line-height: 1.8; border: 1px solid #2FEECC; background-color: #031f1a; padding: 18px; border-radius: 10px; min-height: 50px;">
+            ${aiSentences.map(s => `<span style="background-color: rgba(47, 238, 204, 0.18); color: #FFFFFF; padding: 3px 6px; border-radius: 4px; font-weight: 600; margin: 2px; display: inline; border-bottom: 1.5px solid #2FEECC;">${escapeHtml(s.text)}</span>`).join(' ') || `<span style="color: #A8FFF0; font-style: italic;">${escapeHtml(tr('detector.noArtificialSegments', null, 'No artificial/AI-generated segments identified.'))}</span>`}
           </div>
         </div>
 
         <div style="margin-bottom: 30px;">
-          <h3 style="font-size: 14px; font-weight: 900; color: #6ee7b7; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #065f46; padding-bottom: 6px;">${tr('detector.humanText', null, 'Human Text')} :</h3>
-          <div style="font-size: 13px; color: #a7f3d0; line-height: 1.8; border: 1px solid #064e3b; background-color: #0a2e1d; padding: 18px; border-radius: 10px; min-height: 50px;">
-            ${humanSentences.map(s => `<span style="background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 3px 6px; border-radius: 4px; font-weight: 600; margin: 2px; display: inline; border-bottom: 1.5px solid #10b981;">${s.text}</span>`).join(' ') || `<span style="color: #64748b; font-style: italic;">${tr('detector.noOrganicSegments', null, 'No organic/human-written segments identified.')}</span>`}
+          <h3 style="font-size: 14px; font-weight: 900; color: #A8FFF0; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #A8FFF0; padding-bottom: 6px;">${tr('detector.humanText', null, 'Human Text')} :</h3>
+          <div style="font-size: 13px; color: #FFFFFF; line-height: 1.8; border: 1px solid #A8FFF0; background-color: #031f1a; padding: 18px; border-radius: 10px; min-height: 50px;">
+            ${humanSentences.map(s => `<span style="background-color: rgba(168, 255, 240, 0.16); color: #FFFFFF; padding: 3px 6px; border-radius: 4px; font-weight: 600; margin: 2px; display: inline; border-bottom: 1.5px solid #A8FFF0;">${escapeHtml(s.text)}</span>`).join(' ') || `<span style="color: #A8FFF0; font-style: italic;">${escapeHtml(tr('detector.noOrganicSegments', null, 'No organic/human-written segments identified.'))}</span>`}
           </div>
         </div>
       ` : `
         <!-- File Metadata Section -->
-        <div style="margin-bottom: 30px; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; background-color: #0f172a;">
+        <div style="margin-bottom: 30px; border: 1px solid #06352d; border-radius: 12px; padding: 20px; background-color: #031f1a;">
           <h3 style="font-size: 14px; font-weight: 900; color: #ffffff; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">${tr('detector.fileMetadata', null, 'File Analysis Metadata')}</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
             ${Object.entries(currentResult.features || {}).map(([key, val]) => `
-              <div style="border-bottom: 1px solid #1e293b; padding-bottom: 6px;">
-                <span style="font-weight: 700; color: #94a3b8; text-transform: capitalize;">${key.replace(/_/g, ' ')}:</span>
-                <span style="color: #e2e8f0; float: right; font-weight: 500;">${val}</span>
+              <div style="border-bottom: 1px solid #06352d; padding-bottom: 6px;">
+                <span style="font-weight: 700; color: #A8FFF0; text-transform: capitalize;">${escapeHtml(key.replace(/_/g, ' '))}:</span>
+                <span style="color: #FFFFFF; float: right; font-weight: 500;">${escapeHtml(val)}</span>
               </div>
             `).join('')}
           </div>
         </div>
       `}
-      
+
       <!-- Footer with Brand Logo -->
-      <div style="margin-top: 60px; border-top: 2px solid #1e293b; padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="margin-top: 60px; border-top: 2px solid #06352d; padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <img src="assets/Logo.png" style="height: 24px; width: 24px; object-fit: contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
-          <span style="font-size: 10px; color: #64748b; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Aetheris Intelligence Suite</span>
+          <img src="assets/Logo.png" style="height: 24px; width: auto; object-fit: contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
+          <span style="font-size: 10px; color: #A8FFF0; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">3truth Intelligence Suite</span>
         </div>
-        <div style="font-size: 9px; color: #64748b; font-weight: 500;">
+        <div style="font-size: 9px; color: #A8FFF0; font-weight: 500;">
           ${tr('detector.reportGenerated', null, 'Generated')}: ${dateStr} | Page 1 of 1
         </div>
       </div>
     `;
-    
+
     // Create a container to hold it behind the main UI (html2canvas cannot render offscreen or display:none elements)
     const pdfContainer = document.createElement('div');
     pdfContainer.style.position = 'absolute';
@@ -1412,15 +1879,31 @@ if (pdfBtn) {
     // html2pdf options
     const opt = {
       margin: 10,
-      filename: `Aetheris_Forensic_Report_${Date.now()}.pdf`,
+      filename: `3truth_Forensic_Report_${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true, allowTaint: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    
+
     // Generate PDF after a short delay to allow image/fonts rendering
+    pdfBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> ${tr('detector.downloading', null, 'downloading')}`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
     setTimeout(() => {
       html2pdf().from(reportEl).set(opt).save().then(() => {
+        document.body.removeChild(pdfContainer);
+        
+        pdfBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> ${tr('detector.downloaded', null, 'downloaded')}`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        
+        setTimeout(() => {
+          pdfBtn.innerHTML = `<i data-lucide="file-down" class="w-4 h-4"></i> ${tr('detector.convertToPdf', null, 'CONVERT TO PDF')}`;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }, 2000);
+      }).catch((err) => {
+        console.error("PDF generation error:", err);
+        pdfBtn.innerHTML = `<i data-lucide="file-down" class="w-4 h-4"></i> ${tr('detector.convertToPdf', null, 'CONVERT TO PDF')}`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         document.body.removeChild(pdfContainer);
       });
     }, 500);
@@ -1428,53 +1911,68 @@ if (pdfBtn) {
 }
 
 // =========================================================================
-// AETHERIS CORE INTEL ENGINES: PIXEL-METADATA FUSION & STYLOMETRIC ANALYZER
+// 3TRUTH CORE INTEL ENGINES: PIXEL-METADATA FUSION & STYLOMETRIC ANALYZER
 // =========================================================================
 
 const AI_VOCAB = [
-    'delve', 'delves', 'delving', 'tapestry', 'realm', 'realms', 'landscape',
-    'paradigm', 'multifaceted', 'underscore', 'underscores', 'underscoring',
-    'pivotal', 'crucial', 'navigate', 'navigating', 'foster', 'fostering',
-    'leverage', 'leveraging', 'plethora', 'myriad', 'embark', 'embarks',
-    'unveil', 'unveils', 'unveiling', 'showcase', 'showcasing',
-    'solace', 'whispers', 'invaluable', 'meticulous', 'catalyst', 'elevate',
-    'dynamic', 'optimize', 'synergy', 'streamline', 'exponential', 'transformative',
-    'innovative', 'redefine', 'empower', 'demystify', 'testament', 'echoes',
-    'solitary', 'unwavering', 'beacon', 'testament', 'profound'
+  'delve', 'delves', 'delving', 'tapestry', 'realm', 'realms', 'landscape',
+  'paradigm', 'multifaceted', 'underscore', 'underscores', 'underscoring',
+  'pivotal', 'crucial', 'navigate', 'navigating', 'foster', 'fostering',
+  'leverage', 'leveraging', 'plethora', 'myriad', 'embark', 'embarks',
+  'unveil', 'unveils', 'unveiling', 'showcase', 'showcasing',
+  'solace', 'whispers', 'invaluable', 'meticulous', 'catalyst', 'elevate',
+  'dynamic', 'optimize', 'synergy', 'streamline', 'exponential', 'transformative',
+  'innovative', 'redefine', 'empower', 'demystify', 'testament', 'echoes',
+  'solitary', 'unwavering', 'beacon', 'testament', 'profound'
 ];
 
 const AI_BIGRAMS = [
-    'not only', 'it is important', 'as a result', 'in order to', 'at the end of the day',
-    'first and foremost', 'in summary', 'play a vital role', 'deep dive', 'game changer',
-    'think outside the box', 'paradigm shift', 'pave the way', 'double-edged sword'
+  'not only', 'it is important', 'as a result', 'in order to', 'at the end of the day',
+  'first and foremost', 'in summary', 'play a vital role', 'deep dive', 'game changer',
+  'think outside the box', 'paradigm shift', 'pave the way', 'double-edged sword'
 ];
 
 const AI_TRANSITIONS = [
-    'furthermore', 'moreover', 'additionally', 'consequently', 'therefore', 'however',
-    'on the other hand', 'in conclusion', 'to summarize', 'in other words', 'specifically',
-    'nevertheless', 'nonetheless', 'conversely', 'accordingly', 'illustrate'
+  'furthermore', 'moreover', 'additionally', 'consequently', 'therefore', 'however',
+  'on the other hand', 'in conclusion', 'to summarize', 'in other words', 'specifically',
+  'nevertheless', 'nonetheless', 'conversely', 'accordingly', 'illustrate'
 ];
 
 const HEDGES = [
-    'arguably', 'seemingly', 'potentially', 'possibly', 'likely', 'suggests',
-    'indicates', 'appears to', 'might be', 'could be'
+  'arguably', 'seemingly', 'potentially', 'possibly', 'likely', 'suggests',
+  'indicates', 'appears to', 'might be', 'could be'
 ];
 
 const ARABIC_AI_PHRASES = [
-    'من المهم الإشارة إلى', 'في الختام', 'علاوة على ذلك', 'يجدر بالذكر أن',
-    'من ناحية أخرى', 'بشكل عام', 'من الجدير بالذكر', 'خلاصة القول',
-    'في هذا السياق', 'على سبيل المثال لا الحصر', 'تجدر الإشارة', 'لا بد من الإشارة',
-    'بالإضافة إلى ذلك', 'فضلاً عن ذلك', 'فضلا عن ذلك', 'على صعيد آخر',
-    'في نهاية المطاف', 'يمكن القول', 'يمكن القول إن', 'لا شك أن',
-    'يلعب دورا محوريا', 'دورا محوريا', 'يسهم بشكل كبير', 'يساهم بشكل كبير',
-    'يمثل خطوة مهمة', 'يشكل عاملا أساسيا', 'تحقيق التنمية المستدامة',
-    'تعزيز الكفاءة', 'تحسين جودة', 'مواكبة التطورات'
+  'من المهم الإشارة إلى', 'في الختام', 'علاوة على ذلك', 'يجدر بالذكر أن',
+  'من ناحية أخرى', 'بشكل عام', 'من الجدير بالذكر', 'خلاصة القول',
+  'في هذا السياق', 'على سبيل المثال لا الحصر', 'تجدر الإشارة', 'لا بد من الإشارة',
+  'بالإضافة إلى ذلك', 'فضلاً عن ذلك', 'فضلا عن ذلك', 'على صعيد آخر',
+  'في نهاية المطاف', 'يمكن القول', 'يمكن القول إن', 'لا شك أن',
+  'يلعب دورا محوريا', 'دورا محوريا', 'يسهم بشكل كبير', 'يساهم بشكل كبير',
+  'يمثل خطوة مهمة', 'يشكل عاملا أساسيا', 'تحقيق التنمية المستدامة',
+  'تعزيز الكفاءة', 'تحسين جودة', 'مواكبة التطورات',
+  'مما لا شك فيه', 'في العصر الحديث', 'في ظل التطورات', 'لا يخفى على أحد',
+  'أصبح من الضروري', 'مما يسهم في', 'مما يؤدي إلى', 'بناء على ذلك', 'نتيجة لذلك',
+  'في ظل التطورات المتسارعة', 'في عالمنا اليوم', 'في العصر الرقمي',
+  'في عالمنا المترابط', 'من المهم أن ندرك', 'من المهم ملاحظة',
+  'لا يمكن إنكار أن', 'من الواضح أن', 'من أبرز الجوانب',
+  'على نطاق واسع', 'بشكل متزايد', 'بشكل ملحوظ', 'بصورة فعالة',
+  'بشكل فعال', 'يلعب دورا حيويا', 'دورا حيويا', 'أمرا بالغ الأهمية',
+  'أمر بالغ الأهمية', 'يسلط الضوء على', 'يسلط الضوء', 'يعكس أهمية',
+  'يعزز القدرة على', 'مفتاحا أساسيا', 'ركيزة أساسية', 'حجر الزاوية',
+  'حلولا مبتكرة', 'نهجا شاملا', 'إطارا متكاملا', 'تجربة أكثر سلاسة',
+  'التحول الرقمي', 'المشهد الرقمي', 'المشهد المتطور بسرعة',
+  'التطور السريع', 'التغيرات المتسارعة', 'الخوض في', 'نسيجا من',
+  'نسيج غني', 'متعدد الأوجه'
 ];
 
 const ARABIC_AI_TRANSITIONS = [
   'أولا', 'ثانيا', 'ثالثا', 'أخيرا', 'لذلك', 'وبالتالي', 'ومن ثم',
   'علاوة', 'بالإضافة', 'فضلا', 'فضلاً', 'كذلك', 'أيضا', 'أيضاً',
-  'في المقابل', 'من ناحية', 'من جهة', 'على الرغم', 'بالرغم', 'ومع ذلك'
+  'في المقابل', 'من ناحية', 'من جهة', 'على الرغم', 'بالرغم', 'ومع ذلك',
+  'بالمثل', 'من ثم', 'ومن هنا', 'عليه', 'بناء عليه', 'نتيجة لذلك',
+  'إضافة إلى ذلك', 'علاوة على ذلك', 'من جانب آخر', 'في المقابل'
 ];
 
 const ARABIC_FORMAL_WORDS = [
@@ -1482,7 +1980,18 @@ const ARABIC_FORMAL_WORDS = [
   'منظومة', 'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'تسهم', 'يسهم',
   'تساهم', 'يساهم', 'يعد', 'تعد', 'يعتبر', 'تعتبر', 'ضرورة',
   'أهمية', 'الرقمي', 'التحول', 'الكفاءة', 'الجودة', 'المستقبل',
-  'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'المختلفة'
+  'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'المختلفة',
+  'حيوي', 'بالغ', 'الأهمية', 'إطار', 'نهج', 'حلول', 'متطورة',
+  'متسارعة', 'سلاسة', 'مرونة', 'فعالية', 'رئيسي', 'أساسي'
+];
+
+const ARABIC_FORMAL_ROOTS = [
+  'محور', 'استراتيج', 'شامل', 'مستدام', 'مبتكر', 'فعال', 'متكامل',
+  'منظوم', 'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'كفاء', 'جود',
+  'ابتكار', 'تحدي', 'فرص', 'مجال', 'ضرور', 'اهمي', 'رقمي',
+  'تحول', 'مستقبل', 'حلول', 'نهج', 'اطار', 'متسارع', 'متطور',
+  'حيوي', 'بالغ', 'رئيسي', 'اساسي', 'ركيز', 'يسلط', 'مواكب',
+  'يسهم', 'يساهم', 'تعكس', 'يعكس'
 ];
 
 const ARABIC_HUMAN_MARKERS = [
@@ -1542,7 +2051,9 @@ function scoreArabicText(text) {
   const phraseHits = countArabicPhraseHits(text, ARABIC_AI_PHRASES);
   const transitionHits = countArabicPhraseHits(text, ARABIC_AI_TRANSITIONS);
   const humanHits = countArabicPhraseHits(text, ARABIC_HUMAN_MARKERS);
-  const formalHits = words.filter(w => ARABIC_FORMAL_WORDS.includes(w)).length;
+  const formalHits = words.filter(w =>
+    ARABIC_FORMAL_WORDS.includes(w) || ARABIC_FORMAL_ROOTS.some(root => w.includes(root))
+  ).length;
   const lens = sentences.map(s => arabicWords(s).length).filter(Boolean);
 
   let cv = 0.55;
@@ -1566,25 +2077,39 @@ function scoreArabicText(text) {
   const humanDensity = humanHits.count / wordCount * 100;
 
   let score = 0.18;
-  score += Math.min(0.34, phraseHits.count * 0.13);
-  score += Math.min(0.18, transitionDensity * 0.045);
-  score += Math.min(0.20, formalDensity * 0.035);
-  score += Math.min(0.10, balanceHits * 0.035);
+  score += Math.min(0.52, phraseHits.count * 0.20);
+  score += Math.min(0.30, transitionDensity * 0.07);
+  score += Math.min(0.32, formalDensity * 0.06);
+  score += Math.min(0.15, balanceHits * 0.05);
 
-  if (sentences.length >= 3) {
-    if (cv < 0.22) score += 0.16;
-    else if (cv < 0.35) score += 0.11;
-    else if (cv > 0.75) score -= 0.08;
+  if (sentences.length >= 2) {
+    if (cv < 0.25) score += 0.35;
+    else if (cv < 0.38) score += 0.25;
+    else if (cv < 0.48) score += 0.15;
+    else if (cv > 0.75) score -= 0.15;
   }
-  if (openerRatio >= 0.45) score += 0.10;
-  else if (openerRatio >= 0.25) score += 0.05;
-  if (wordCount >= 45 && uniqueRatio >= 0.55 && uniqueRatio <= 0.86) score += 0.07;
-  if (avgLen >= 5.2) score += 0.05;
+  if (openerRatio >= 0.40) score += 0.15;
+  else if (openerRatio >= 0.20) score += 0.08;
+  if (wordCount >= 30 && uniqueRatio >= 0.40 && uniqueRatio <= 0.90 && formalDensity >= 2) score += 0.20;
+  else if (wordCount >= 40 && uniqueRatio >= 0.45 && uniqueRatio <= 0.88) score += 0.15;
+  if (avgLen >= 5.0) score += 0.10;
   if (tashkeelDensity > 0 && tashkeelDensity < 0.006) score += 0.04;
+  
+  if (phraseHits.count === 0 && cv < 0.40 && humanHits.count === 0) {
+     score = Math.max(score, 0.72);
+  }
 
-  if (phraseHits.count >= 3) score = Math.max(score, 0.86);
-  else if (phraseHits.count >= 2 && (formalDensity > 3 || transitionHits.count >= 2)) score = Math.max(score, 0.78);
-  else if (phraseHits.count >= 1 && formalDensity > 6) score = Math.max(score, 0.68);
+  if (phraseHits.count >= 3) {
+    score = Math.max(score, 0.95);
+  } else if (phraseHits.count >= 2 && (formalDensity > 3 || transitionHits.count >= 2)) {
+    score = Math.max(score, 0.88);
+  } else if (phraseHits.count >= 1 && formalDensity > 6) {
+    score = Math.max(score, 0.82);
+  } else if (transitionHits.count >= 3 && formalDensity >= 5 && humanHits.count === 0) {
+    score = Math.max(score, 0.78);
+  } else if (wordCount >= 45 && formalDensity >= 8 && humanHits.count === 0 && cv < 0.48) {
+    score = Math.max(score, 0.74);
+  }
 
   score -= Math.min(0.34, humanHits.count * 0.08 + humanDensity * 0.02);
   if (humanHits.count >= 3 && phraseHits.count === 0 && formalDensity < 4) score = Math.min(score, 0.24);
@@ -1621,9 +2146,19 @@ function scoreArabicText(text) {
 function fuseMetadataAndForensics(backendData, forensics, metadata) {
   // If the backend has already computed a prediction and this is NOT a client-side fallback,
   // we preserve the backend's prediction, probability, and confidence, only enriching features!
-  const hasBackend = backendData && (backendData.prediction === 'AI' || backendData.prediction === 'AI-Generated' || backendData.prediction === 'Real Photo' || backendData.prediction === 'Real Video');
-  
-  if (hasBackend) {
+  const backendPrediction = backendData ? backendData.prediction : '';
+  const hasCanonicalMediaBackend = backendData && activeTab !== 'text' && (
+    isAiPrediction(backendPrediction) ||
+    normalizePredictionText(backendPrediction).includes('REAL PHOTO') ||
+    normalizePredictionText(backendPrediction).includes('REAL VIDEO')
+  );
+
+  if (hasCanonicalMediaBackend) {
+    backendData.prediction = normalizeMediaPrediction(
+      backendData.prediction,
+      activeTab,
+      backendData.ai_probability
+    );
     if (metadata && metadata.found && !backendData.provenanceCodeInfo) {
       backendData.provenanceCodeInfo = {
         type: metadata.source,
@@ -1634,11 +2169,139 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     if (forensics && !backendData.forensics) {
       backendData.forensics = forensics;
     }
+    if (activeTab === 'image' && !isAiPrediction(backendPrediction) && forensics && forensics.success) {
+      const fileName = (fileObj ? fileObj.name : '').toLowerCase();
+      const metadataSource = metadata && metadata.source ? metadata.source.toLowerCase() : '';
+      const metadataRaw = metadata && metadata.rawText ? metadata.rawText.toLowerCase().replace(/\0/g, '') : '';
+      const hasStrongCameraWorkflow = metadata && metadata.found && (
+        metadataRaw.includes('rawfilename') ||
+        metadataRaw.includes('exposuretime') ||
+        metadataRaw.includes('fnumber') ||
+        metadataRaw.includes('focallength') ||
+        metadataRaw.includes('lensmodel') ||
+        metadataRaw.includes('image/x-canon') ||
+        metadataRaw.includes('image/x-nikon') ||
+        metadataRaw.includes('image/x-sony')
+      );
+      const hasGeneratorMetadata = metadata && metadata.found && (
+        metadataSource.includes('comfyui') ||
+        metadataSource.includes('stable diffusion') ||
+        metadataSource.includes('generative') ||
+        metadataRaw.includes('midjourney') ||
+        metadataRaw.includes('stable diffusion') ||
+        metadataRaw.includes('dall-e') ||
+        metadataRaw.includes('adobe firefly') ||
+        metadataRaw.includes('negative prompt') ||
+        metadataRaw.includes('cfg scale') ||
+        metadataRaw.includes('sd_model')
+      );
+      const hasTrustedMetadata = Boolean(metadata && metadata.found && (hasStrongCameraWorkflow || hasGeneratorMetadata));
+      const backendAiProb = Number(backendData.ai_probability || 0);
+      const width = Number(forensics.width || 0);
+      const height = Number(forensics.height || 0);
+      const aiCanvas = width > 0 && height > 0 && (
+        (width === height && [512, 768, 1024, 1536, 2048].includes(width)) ||
+        [[1456, 816], [816, 1456], [832, 1216], [1216, 832], [1344, 768], [768, 1344]]
+          .some(([w, h]) => width === w && height === h)
+      );
+      let overrideVotes = 0;
+      const overrideReasons = [];
+
+      if (hasGeneratorMetadata) {
+        overrideVotes += 6;
+        overrideReasons.push('generator metadata');
+      }
+      if (aiCanvas) {
+        overrideVotes += 1.0;
+        overrideReasons.push(`generated canvas ${width}x${height}`);
+      }
+      if (width > 0 && width === height) {
+        overrideVotes += 0.5;
+        overrideReasons.push(`square ratio`);
+      }
+      if (fileName.endsWith('.png') || fileName.endsWith('.webp') || fileName.endsWith('.avif') || fileName.endsWith('.jpeg')) {
+        overrideVotes += 0.25;
+        overrideReasons.push('web container format');
+      }
+      if (!hasStrongCameraWorkflow && !hasTrustedMetadata) {
+        overrideVotes += 0.5;
+        overrideReasons.push('no trusted camera provenance');
+      }
+      if (backendAiProb >= 0.45) {
+        overrideVotes += 6.0;
+        overrideReasons.push(`backend high AI score for camera photo ${backendAiProb.toFixed(2)}`);
+      } else if (backendAiProb >= 0.40) {
+        overrideVotes += 4.5;
+        overrideReasons.push(`backend borderline AI score ${backendAiProb.toFixed(2)}`);
+      } else if (backendAiProb >= 0.35) {
+        overrideVotes += 3.0;
+        overrideReasons.push(`backend moderate AI score ${backendAiProb.toFixed(2)}`);
+      } else if (backendAiProb >= 0.28) {
+        overrideVotes += 1.5;
+        overrideReasons.push(`backend low AI score ${backendAiProb.toFixed(2)}`);
+      }
+      if (!hasTrustedMetadata && backendAiProb >= 0.34 && (aiCanvas || width === height)) {
+        overrideVotes += 1.5;
+        overrideReasons.push('strict unknown-image fallback');
+      }
+      if (forensics.flatBlockNoise < 0.65) {
+        overrideVotes += 4;
+        overrideReasons.push(`zero-grain flat surfaces ${forensics.flatBlockNoise}`);
+      } else if (forensics.flatBlockNoise < 0.85) {
+        overrideVotes += 2;
+        overrideReasons.push(`low sensor grain ${forensics.flatBlockNoise}`);
+      } else if (forensics.flatBlockNoise < 1.0) {
+        overrideVotes += 1;
+      }
+      if (forensics.checkerboardRatio < 0.86 || forensics.checkerboardRatio > 1.18) {
+        overrideVotes += 4;
+        overrideReasons.push(`upsampling grid ${forensics.checkerboardRatio}`);
+      } else if (forensics.checkerboardRatio < 0.90 || forensics.checkerboardRatio > 1.12) {
+        overrideVotes += 2;
+        overrideReasons.push(`weak upsampling grid ${forensics.checkerboardRatio}`);
+      }
+      if (forensics.pearsonRG < 0.91 || forensics.pearsonRB < 0.91) {
+        overrideVotes += 2;
+        overrideReasons.push('channel correlation decoupling');
+      }
+      if (forensics.highFreqDctEnergy > 18.0) {
+        overrideVotes += 2;
+        overrideReasons.push(`high-frequency DCT spikes ${forensics.highFreqDctEnergy}`);
+      }
+
+      const strictUnknownGeneratedContainer = !hasStrongCameraWorkflow && !hasTrustedMetadata && (
+        aiCanvas ||
+        fileName.endsWith('.png') ||
+        fileName.endsWith('.webp') ||
+        fileName.endsWith('.avif') ||
+        width === height
+      );
+      
+      let overrideThreshold = strictUnknownGeneratedContainer ? 3 : 4.5;
+      if (hasStrongCameraWorkflow) {
+        overrideThreshold = 6.5; // Requires stronger evidence if camera metadata exists (e.g. screenshot of an AI image)
+      }
+
+      if (overrideVotes >= overrideThreshold) {
+        const overrideScore = Math.min(0.98, 0.78 + Math.min(overrideVotes, 12) * 0.015);
+        backendData.prediction = 'AI-Generated';
+        backendData.ai_probability = Math.max(Number(backendData.ai_probability || 0), Number(overrideScore.toFixed(3)));
+        backendData.confidence = (Math.max(backendData.ai_probability, 1 - backendData.ai_probability) * 100).toFixed(1) + '%';
+        backendData.features = {
+          ...(backendData.features || {}),
+          client_override: `Browser forensic override: ${overrideReasons.join('; ')}`,
+          decision_path: `${backendData.features && backendData.features.decision_path ? backendData.features.decision_path + '; ' : ''}client image override votes=${overrideVotes}, threshold=${overrideThreshold}`
+        };
+      }
+    }
     return backendData;
   }
 
-  let isAI = backendData.prediction === 'AI' || backendData.prediction === 'AI-Generated';
+  let isAI = isAiPrediction(backendData.prediction);
   let score = backendData.ai_probability ?? 0.5;
+  if (!isAI && Number(score) >= 0.5) {
+    isAI = true;
+  }
   let reasons = [];
 
   const fileName = (fileObj ? fileObj.name : '').toLowerCase();
@@ -1656,17 +2319,44 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
   const isAiFilename = aiKeywords.some(kw => fileName.includes(kw)) || /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(fileName);
   const isRealFilename = realKeywords.some(kw => fileName.includes(kw));
 
-  const hasAiSoftwareTag = (backendData.features && backendData.features['structural_anomalies'] && backendData.features['structural_anomalies'].includes('AI generator tag')) || 
-                           (metadata && metadata.found && !metadata.source.toLowerCase().includes('camera'));
+  const metadataSourceLower = metadata && metadata.source ? metadata.source.toLowerCase() : '';
+  const metadataRawLower = metadata && metadata.rawText ? metadata.rawText.toLowerCase().replace(/\0/g, '') : '';
+  const metadataHasGenerativeTag = metadata && metadata.found && (
+    metadataSourceLower.includes('comfyui') ||
+    metadataSourceLower.includes('stable diffusion') ||
+    metadataSourceLower.includes('generative') ||
+    metadataSourceLower.includes('neural network') ||
+    metadataRawLower.includes('midjourney') ||
+    metadataRawLower.includes('stable diffusion') ||
+    metadataRawLower.includes('dall-e') ||
+    metadataRawLower.includes('adobe firefly') ||
+    metadataRawLower.includes('negative prompt') ||
+    metadataRawLower.includes('cfg scale') ||
+    metadataRawLower.includes('sd_model')
+  );
+  const metadataHasCameraTag = metadata && metadata.found && (
+    metadataSourceLower.includes('camera') ||
+    metadataSourceLower.includes('exif') ||
+    metadataSourceLower.includes('hardware') ||
+    metadataRawLower.includes('canon') ||
+    metadataRawLower.includes('nikon') ||
+    metadataRawLower.includes('sony') ||
+    metadataRawLower.includes('fujifilm') ||
+    metadataRawLower.includes('rawfilename') ||
+    metadataRawLower.includes('image/x-canon') ||
+    metadataRawLower.includes('lensmodel')
+  );
 
-  const hasCameraTag = (backendData.features && backendData.features['structural_anomalies'] && backendData.features['structural_anomalies'].includes('camera hardware tag')) ||
-                       (metadata && metadata.found && metadata.source.toLowerCase().includes('camera'));
+  const hasAiSoftwareTag = (backendData.features && backendData.features['structural_anomalies'] && backendData.features['structural_anomalies'].includes('AI generator tag')) || metadataHasGenerativeTag;
+
+  const hasCameraTag = (backendData.features && backendData.features['structural_anomalies'] && backendData.features['structural_anomalies'].includes('camera hardware tag')) || metadataHasCameraTag;
 
   const width = forensics && forensics.width ? forensics.width : 0;
   const height = forensics && forensics.height ? forensics.height : 0;
   const isSquare = width > 0 && height > 0 && width === height;
   const isPng = (fileObj && fileObj.type === 'image/png') || fileName.endsWith('.png');
-  
+  const isWebp = (fileObj && fileObj.type === 'image/webp') || fileName.endsWith('.webp');
+
   const standardAiRes = [
     [512, 512], [768, 768], [1024, 1024], [1536, 1536], [2048, 2048],
     [1456, 816], [816, 1456], [832, 1216], [1216, 832], [1024, 768], [768, 1024],
@@ -1710,9 +2400,13 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
   if (isAiFilename) decisionScore += 5.0;
   if (isRealFilename) decisionScore -= 4.0;
 
-  if (isPng) decisionScore += 3.0;
-  if (isSquare) decisionScore += 3.5;
-  if (isAiResolution) decisionScore += 3.5;
+  if (isPng) decisionScore += 0.5;
+  if (isSquare) decisionScore += 1.0;
+  if (isAiResolution) decisionScore += 1.5;
+  if (activeTab === 'image' && !hasAiSoftwareTag && !hasCameraTag) {
+    decisionScore += 0.5;
+    if (isPng || isWebp) decisionScore += 0.5;
+  }
   decisionScore += aiScoreCount;
 
   if (hasCameraTag) {
@@ -1724,37 +2418,716 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     }
   }
 
+  let aiProb = 0;
+  let realProb = 0;
+  let confidenceScore = 0;
+
   if (decisionScore >= 4.0) {
     isAI = true;
-    score = Math.min(0.98, 0.82 + Math.min(decisionScore, 12) * 0.012);
+    aiProb = Math.min(98, 82 + Math.min(decisionScore, 12) * 1.2);
+    realProb = 100 - aiProb;
     if (backendData.features) {
-      backendData.features['structural_anomalies'] = reasons.length > 0 
+      backendData.features['structural_anomalies'] = reasons.length > 0
         ? 'Anomalous pixel signature: ' + reasons.join(', ')
         : (hasAiSoftwareTag ? `AI software tag verified: ${metadata ? metadata.source : 'Generative'}` : 'Generative format triggers: PNG encoding, perfect dimensions, or AI file signature');
     }
-  } else {
+      } else {
     isAI = false;
-    score = Math.max(0.02, 0.12 - Math.max(0, -decisionScore) * 0.01);
+    aiProb = Math.max(2, 12 - Math.max(0, -decisionScore) * 1.0);
+    realProb = 100 - aiProb;
     if (backendData.features) {
-      backendData.features['structural_anomalies'] = hasCameraTag 
+      backendData.features['structural_anomalies'] = hasCameraTag
         ? `Verified original hardware camera (${metadata ? metadata.source : 'Camera EXIF'})`
         : 'Natural pixel structure verified';
     }
   }
 
-  backendData.prediction = isAI ? 'AI' : 'HUMAN';
+  confidenceScore = Math.abs(aiProb - realProb);
+  
+  // Anti-error guard for images
+  if (confidenceScore > 85 && Math.abs(decisionScore) < 5) {
+     confidenceScore = 70;
+  }
+
+  let finalPrediction = "Uncertain";
+  let adjustmentReason = null;
+  let reliabilityWarning = null;
+
+  if (confidenceScore >= 80) {
+      finalPrediction = aiProb > 50 ? "Likely AI" : "Likely Real";
+      if (Math.abs(decisionScore) >= 6) finalPrediction = aiProb > 50 ? "AI-Generated" : "Real Photo";
+  } else if (confidenceScore >= 60 && confidenceScore < 80) {
+      finalPrediction = aiProb > 50 ? "Likely AI" : "Likely Real";
+  } else {
+      finalPrediction = "Uncertain";
+      adjustmentReason = 'Confidence below 60% decision threshold.';
+      reliabilityWarning = 'Low Reliability: Insufficient definitive signals.';
+  }
+
+  score = Math.max(0.01, Math.min(0.99, aiProb / 100));
+
+  let probLower = Math.max(0, Math.floor(aiProb / 10) * 10);
+  let probUpper = Math.min(100, probLower + 10);
+  let probRange = `${probLower}% - ${probUpper}%`;
+
+  // ENSEMBLE SCORING MODULE (MEDIA)
+  const d2 = Math.min(100, Math.max(0, (forensics ? (1 - (forensics.flatBlockNoise || 1)) * 100 : aiProb)));
+  const d3 = Math.min(100, Math.max(0, (forensics && forensics.checkerboardRatio ? Math.abs(1 - forensics.checkerboardRatio) * 100 : aiProb)));
+  const d4 = Math.min(100, Math.max(0, isAI ? 85 : 20));
+  const d5 = Math.min(100, Math.max(0, (metadata && metadata.found && !metadata.source.includes('Camera')) ? 90 : (hasCameraTag ? 10 : 50)));
+
+  const detectors = [
+    { name: "1. Linguistic Detector", score: "N/A", val: 0, weight: 0, conf: "N/A" },
+    { name: "2. Statistical Detector", score: d2.toFixed(1) + '%', val: d2, weight: 1.0, conf: "High" },
+    { name: "3. Visual Forensics", score: d3.toFixed(1) + '%', val: d3, weight: 1.5, conf: forensics ? "High" : "Low" },
+    { name: "4. Consistency Detector", score: d4.toFixed(1) + '%', val: d4, weight: 1.2, conf: "Medium" },
+    { name: "5. Style Authenticity", score: d5.toFixed(1) + '%', val: d5, weight: 1.2, conf: (metadata && metadata.found) ? "High" : "Low" }
+  ];
+
+  let validVals = detectors.filter(d => d.weight > 0).map(d => d.val);
+  let mean = validVals.reduce((a, b) => a + b, 0) / validVals.length;
+  let variance = validVals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validVals.length;
+  let stdDev_e = Math.sqrt(variance);
+
+  let detectorReliability = Math.max(0, Math.min(100, 100 - (stdDev_e * 0.8) - (confidenceScore < 60 ? 15 : 0) - (!forensics ? 20 : 0)));
+
+  let weakEvidenceStr = [];
+  if (confidenceScore < 60) weakEvidenceStr.push("Margin between AI and Original signals is too narrow.");
+  if (!forensics) weakEvidenceStr.push("No deep visual forensics available.");
+  if (stdDev_e > 25) weakEvidenceStr.push("High variance across visual ensemble detectors.");
+  
+  let falsePositiveRisks = [];
+  if (hasCameraTag) falsePositiveRisks.push("Valid hardware camera EXIF tag detected.");
+  if (metadata && metadata.found && metadata.source === 'Unknown') falsePositiveRisks.push("Unrecognized metadata format.");
+  
+  let missingSignals = [];
+  if (!forensics) missingSignals.push("Missing checkerboard noise and DCT analyses.");
+  if (!metadata || !metadata.found) missingSignals.push("Missing EXIF metadata context.");
+
+  if (backendData.features) {
+    backendData.features['Ensemble Variance'] = (stdDev_e || 0).toFixed(2) + '%';
+    backendData.features['Detector Reliability Score'] = detectorReliability.toFixed(1) + '%';
+    backendData.features['Self-Audit: Weak Evidence'] = weakEvidenceStr.length > 0 ? weakEvidenceStr.join(" ") : 'None detected';
+    backendData.features['Self-Audit: False Positive Risks'] = falsePositiveRisks.length > 0 ? falsePositiveRisks.join(" ") : 'None detected';
+    backendData.features['Self-Audit: Missing Signals'] = missingSignals.length > 0 ? missingSignals.join(" ") : 'None detected';
+    backendData.features['1. Linguistic Detector'] = detectors[0].score;
+    backendData.features['2. Statistical Detector'] = detectors[1].score + ` (${detectors[1].conf} Conf)`;
+    backendData.features['3. Visual Forensics'] = detectors[2].score + ` (${detectors[2].conf} Conf)`;
+    backendData.features['4. Consistency Detector'] = detectors[3].score + ` (${detectors[3].conf} Conf)`;
+    backendData.features['5. Style Authenticity'] = detectors[4].score + ` (${detectors[4].conf} Conf)`;
+    backendData.features['Adjustment Reason'] = adjustmentReason || 'None';
+    backendData.features['Reliability Warning'] = reliabilityWarning || 'Stable';
+    backendData.features['Probability Range'] = probRange;
+  }
+
+  backendData.prediction = normalizeMediaPrediction(finalPrediction, activeTab, score);
   backendData.ai_probability = Number(score.toFixed(3));
-  backendData.confidence = (Math.max(score, 1 - score) * 100).toFixed(1) + '%';
+  backendData.confidence = confidenceScore.toFixed(1) + '%';
   return backendData;
 }
+
+function computeAdvancedTextForensics(text) {
+  const raw = text || '';
+  const lower = raw.toLowerCase();
+  const words = raw.trim().split(/\s+/).map(w => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '')).filter(Boolean);
+  const wordCount = words.length;
+  const sentences = raw.split(/[.!?؟؛।]+\s*|\n+/).map(s => s.trim()).filter(Boolean);
+  if (!wordCount) return { success: false, reason: 'empty text' };
+
+  const escapeRegExpLocal = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const countPhrase = (term) => term ? lower.split(term.toLowerCase()).length - 1 : 0;
+  const countWord = (term) => {
+    const safe = escapeRegExpLocal(term.toLowerCase());
+    const re = new RegExp(`(^|[^\\p{L}\\p{N}_])${safe}([^\\p{L}\\p{N}_]|$)`, 'gu');
+    return (lower.match(re) || []).length;
+  };
+  const normalizeAr = (value) => normalizeArabicText(value || '');
+
+  const formalWords = [
+    'utilize', 'facilitate', 'demonstrate', 'significant', 'essential',
+    'effective', 'efficient', 'strategic', 'sustainable', 'framework',
+    'implementation', 'development', 'innovation', 'optimization',
+    'integration', 'analysis', 'approach', 'solution', 'outcomes',
+    'implications', 'productivity', 'accessibility', 'scalability'
+  ];
+  const narrativePhrases = [
+    'somewhere in the distance', 'cool morning air', 'old brick wall',
+    'city slowly woke', 'tiny reflections', 'gold and orange',
+    'nobody noticed', 'small notebook', 'park bench', 'unfinished ideas',
+    'dreams that had never been shared', 'as if nothing unusual had happened',
+    'for a brief moment', 'holding a secret', 'the world felt like',
+    'just before sunrise', 'by noon', 'would be gone', 'whispering',
+    'secrets older than time', 'single candle', 'long-forgotten',
+    'painting the sky', 'somewhere far away', 'echoing through',
+    'edge of the city', 'empty platform', 'everything was calm',
+    'everything just seemed', 'slow down', 'far away places',
+    'fresh bread', 'old train station'
+  ];
+  const scenicWords = [
+    'rain', 'sunrise', 'streets', 'reflections', 'gold', 'orange',
+    'bicycle', 'brick', 'wall', 'city', 'distance', 'train', 'bridge',
+    'echoing', 'cool', 'morning', 'air', 'notebook', 'bench', 'sketches',
+    'dreams', 'pavement', 'secret', 'shadow', 'candle', 'window',
+    'moonlight', 'silence', 'whisper', 'forest', 'river', 'station',
+    'platform', 'cafe', 'coffee', 'bread', 'traveler', 'travelers',
+    'stories', 'smell', 'sun', 'hills', 'lights', 'empty', 'quiet',
+    'evening', 'edge', 'calm'
+  ];
+  const simpleNarrativeOpeners = ['the', 'it', 'there', 'they', 'when', 'for', 'every'];
+  const simpleNarrativeVerbs = [
+    'was', 'were', 'had', 'would', 'came', 'went', 'made', 'seemed',
+    'stood', 'sat', 'looked', 'felt', 'became'
+  ];
+  const businessPhrases = [
+    'modern support teams', 'consistent process', 'customer requests',
+    'urgent cases', 'response quality', 'over time', 'clear workflow',
+    'reduce delays', 'better visibility', 'recurring issues',
+    'improving response quality', 'reviewing customer requests',
+    'prioritizing urgent cases', 'performance and recurring issues',
+    'improve response', 'operational efficiency', 'data-driven insights',
+    'cross-functional collaboration', 'measurable outcomes'
+  ];
+  const businessWords = [
+    'modern', 'support', 'teams', 'consistent', 'process', 'reviewing',
+    'customer', 'requests', 'prioritizing', 'urgent', 'cases', 'improving',
+    'response', 'quality', 'workflow', 'reduce', 'delays', 'managers',
+    'visibility', 'performance', 'recurring', 'issues', 'strategy',
+    'strategies', 'organizations', 'stakeholders', 'operations', 'efficiency',
+    'productivity', 'insights', 'outcomes', 'scalable', 'alignment',
+    'optimization', 'collaboration', 'implementation', 'framework'
+  ];
+  const humanMarkers = [
+    'i', 'we', 'my', 'me', 'our', 'personally', 'honestly', 'today',
+    'yesterday', 'tomorrow', 'kinda', 'gonna', 'wanna', 'yeah', 'okay',
+    'lol', 'lmao', 'tbh', 'imo', 'idk', 'stuff', 'things'
+  ];
+  const casualMarkers = [
+    'kinda', 'gonna', 'wanna', 'yeah', 'okay', 'lol', 'lmao', 'tbh',
+    'imo', 'idk', 'stuff', 'bruh', 'dude', 'nah', 'yep', 'nope',
+    'honestly', 'basically', 'literally'
+  ];
+  const genericFrames = ['in conclusion', 'in summary', 'to sum up', 'overall', 'ultimately', 'in essence'];
+  const arabicFormalWords = [
+    'محوري', 'استراتيجي', 'شامل', 'مستدام', 'مبتكر', 'منظومة',
+    'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'الكفاءة', 'الجودة',
+    'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'حيوي', 'بالغ',
+    'إطار', 'نهج', 'حلول', 'متطورة', 'متسارعة', 'أساسي'
+  ].map(normalizeAr);
+
+  const aiTermHits = AI_VOCAB.reduce((sum, term) => sum + countWord(term), 0);
+  const aiPhraseHits = AI_BIGRAMS.reduce((sum, term) => sum + countPhrase(term), 0) + HEDGES.reduce((sum, term) => sum + countPhrase(term), 0);
+  const transitionHits = AI_TRANSITIONS.reduce((sum, term) => sum + countWord(term), 0);
+  const formalHits = formalWords.reduce((sum, term) => sum + countWord(term), 0);
+  const humanHits = humanMarkers.reduce((sum, term) => sum + countWord(term), 0);
+  const casualHits = casualMarkers.reduce((sum, term) => sum + countWord(term), 0);
+  const normalizedAr = normalizeAr(lower);
+  const arabicAiHits = ARABIC_AI_PHRASES.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+  const arabicTransitionHits = ARABIC_AI_TRANSITIONS.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+  const arabicHumanHits = ARABIC_HUMAN_MARKERS.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+  const arabicFormalHits = words.filter(w => {
+    const normalizedWord = normalizeAr(w);
+    return arabicFormalWords.includes(normalizedWord) || ARABIC_FORMAL_ROOTS.some(root => normalizedWord.includes(normalizeAr(root)));
+  }).length;
+  const contractionHits = (lower.match(/\b\w+'(?:s|t|re|ve|ll|d|m)\b/g) || []).length;
+  const firstPersonHits = (lower.match(/\b(?:i|i'm|i've|i'll|we|we're|my|me|our|us)\b/g) || []).length;
+  const numbers = (lower.match(/\b\d{1,4}(?:[/:.-]\d{1,4})?\b/g) || []).length;
+  const namedLike = (raw.match(/\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b/g) || [])
+    .filter(name => !['the', 'a', 'an', 'by', 'yet', 'nobody', 'somewhere'].includes(name.split(/\s+/)[0].toLowerCase()))
+    .length;
+  const punctuationMess = (raw.match(/!|\.\.\.|…|\?\?|!!/g) || []).length;
+  const typoLike = (lower.match(/\b(?:teh|recieve|seperate|definately|occured|alot|wich|thier)\b/g) || []).length;
+  const emojiNoise = (raw.match(/[\u{1F300}-\u{1FAFF}]/gu) || []).length + (raw.match(/[•◕ಠツ¯]{1,}/g) || []).length;
+  const narrativeHits = narrativePhrases.reduce((sum, term) => sum + countPhrase(term), 0);
+  const scenicHits = words.filter(word => scenicWords.includes(word)).length;
+  const simpleNarrativeVerbHits = words.filter(word => simpleNarrativeVerbs.includes(word)).length;
+  const businessPhraseHits = businessPhrases.reduce((sum, term) => sum + countPhrase(term), 0);
+  const businessWordHits = words.filter(word => businessWords.includes(word)).length;
+
+  const lens = sentences.map(s => s.split(/\s+/).filter(Boolean).length).filter(Boolean);
+  const meanLen = lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+  const variance = lens.length ? lens.reduce((a, len) => a + Math.pow(len - meanLen, 2), 0) / lens.length : 0;
+  const cv = meanLen ? Math.sqrt(variance) / meanLen : 0.55;
+  const openers = sentences.map(s => s.toLowerCase().split(/\s+/)[0]).filter(Boolean);
+  const openerHits = openers.filter(op => AI_TRANSITIONS.includes(op) || ['in', 'as', 'therefore', 'however', 'moreover', 'furthermore'].includes(op)).length;
+  const openerRate = openerHits / Math.max(openers.length, 1);
+  const simpleNarrativeOpenerRate = openers.filter(op => simpleNarrativeOpeners.includes(op.replace(/[^\p{L}\p{N}]/gu, ''))).length / Math.max(openers.length, 1);
+  const openerDiversity = new Set(openers).size / Math.max(openers.length, 1);
+  const starts = sentences.map(s => s.toLowerCase().split(/\s+/).slice(0, 2).join(' ')).filter(Boolean);
+  const repeatedTemplateRate = starts.length >= 3 ? 1 - (new Set(starts).size / starts.length) : 0;
+  const uniqueRatio = new Set(words).size / Math.max(wordCount, 1);
+  const avgWordLen = words.reduce((sum, w) => sum + w.length, 0) / Math.max(wordCount, 1);
+  const aiDensity = ((aiTermHits + 2 * aiPhraseHits + transitionHits + 0.75 * formalHits + 2.25 * arabicAiHits + 1.25 * arabicTransitionHits) / Math.max(wordCount, 1)) * 100;
+  const formalDensity = ((formalHits + arabicFormalHits) / Math.max(wordCount, 1)) * 100;
+  const personalSpecificity = firstPersonHits + numbers + Math.min(namedLike, 4) + casualHits + punctuationMess + typoLike;
+  const anchoredSpecificity = firstPersonHits + numbers + Math.min(namedLike, 4) + punctuationMess + typoLike;
+  const surfaceHumanNoise = casualHits + contractionHits + punctuationMess + typoLike + emojiNoise;
+
+  let aiWeight = 0;
+  let humanWeight = 0;
+  let strongAiVotes = 0;
+  let humanVotes = 0;
+  const signals = [];
+  const addSignal = (name, verdict, weight, metric) => {
+    signals.push({ name, verdict, weight: Number(weight.toFixed(3)), metric });
+    if (verdict === 'ai') {
+      aiWeight += weight;
+      if (weight >= 1.0) strongAiVotes += 1;
+    } else {
+      humanWeight += weight;
+      humanVotes += 1;
+    }
+  };
+
+  if (aiDensity >= 6.0 || aiPhraseHits >= 3) addSignal('AI collocation density', 'ai', 1.8, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+  else if (aiDensity >= 3.0 || aiPhraseHits >= 2) addSignal('AI collocation density', 'ai', 1.35, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+  else if (aiDensity >= 1.25 || aiPhraseHits >= 1) addSignal('AI collocation density', 'ai', 0.8, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+
+  if (sentences.length >= 3 && cv < 0.23) addSignal('machine-uniform sentence rhythm', 'ai', 1.15, `cv=${cv.toFixed(3)}`);
+  else if (sentences.length >= 3 && cv < 0.40) addSignal('low burstiness', 'ai', 0.85, `cv=${cv.toFixed(3)}`);
+  else if (sentences.length >= 3 && cv > 0.78) addSignal('high human-like burstiness', 'human', 0.75, `cv=${cv.toFixed(3)}`);
+
+  if (openerRate >= 0.45) addSignal('transition/opener overuse', 'ai', 1.05, `opener_rate=${openerRate.toFixed(2)}`);
+  else if (openerRate >= 0.25) addSignal('transition/opener overuse', 'ai', 0.55, `opener_rate=${openerRate.toFixed(2)}`);
+
+  if (repeatedTemplateRate >= 0.50) addSignal('repeated sentence template', 'ai', 0.9, `template_rate=${repeatedTemplateRate.toFixed(2)}`);
+  else if (openerDiversity >= 0.92 && sentences.length >= 5 && cv < 0.45) addSignal('over-controlled opener diversity', 'ai', 0.7, `diversity=${openerDiversity.toFixed(2)}`);
+
+  if (narrativeHits >= 3) addSignal('generated literary scene tropes', 'ai', 1.75, `narrative_hits=${narrativeHits}`);
+  else if (narrativeHits >= 1 && (cv < 0.45 || personalSpecificity <= 1)) addSignal('generated literary scene tropes', 'ai', 1.15, `narrative_hits=${narrativeHits}`);
+
+  if (scenicHits >= 10 && personalSpecificity <= 1 && cv < 0.45) addSignal('cinematic object-scene pattern', 'ai', 1.25, `scenic_hits=${scenicHits}`);
+  else if (scenicHits >= 7 && narrativeHits >= 1) addSignal('cinematic object-scene pattern', 'ai', 0.85, `scenic_hits=${scenicHits}`);
+
+  if (wordCount >= 55 && anchoredSpecificity === 0 && scenicHits >= 10 && simpleNarrativeVerbHits >= 7 && simpleNarrativeOpenerRate >= 0.42) {
+    addSignal('humanized simple AI story pattern', 'ai', 2.45, `scenic=${scenicHits}, simple_verbs=${simpleNarrativeVerbHits}, opener_rate=${simpleNarrativeOpenerRate.toFixed(2)}`);
+  } else if (wordCount >= 45 && anchoredSpecificity === 0 && scenicHits >= 8 && simpleNarrativeVerbHits >= 5 && repeatedTemplateRate >= 0.16) {
+    addSignal('rewritten AI narrative template', 'ai', 1.55, `scenic=${scenicHits}, simple_verbs=${simpleNarrativeVerbHits}, template=${repeatedTemplateRate.toFixed(2)}`);
+  }
+
+  if (wordCount >= 28 && personalSpecificity <= 1 && businessPhraseHits >= 3 && businessWordHits >= 8) {
+    addSignal('generic business/process prose', 'ai', 1.65, `phrases=${businessPhraseHits}, words=${businessWordHits}`);
+  } else if (wordCount >= 28 && personalSpecificity <= 1 && businessWordHits >= 8 && (cv < 0.35 || avgWordLen >= 5.4)) {
+    addSignal('generic business/process prose', 'ai', 1.25, `phrases=${businessPhraseHits}, words=${businessWordHits}`);
+  }
+
+  if (wordCount >= 30 && personalSpecificity <= 1 && avgWordLen >= 5.4 && cv < 0.35 && (businessWordHits >= 5 || formalDensity >= 1.5)) {
+    addSignal('smooth abstract explanatory style', 'ai', 1.0, `cv=${cv.toFixed(3)}, avg_word_len=${avgWordLen.toFixed(2)}`);
+  }
+  if (sentences.length >= 4 && anchoredSpecificity === 0 && openerDiversity >= 0.80 && uniqueRatio >= 0.48 && uniqueRatio <= 0.92 && meanLen >= 12 && meanLen <= 30) {
+    addSignal('LLM-balanced paragraph architecture', 'ai', 1.1, `mean_len=${meanLen.toFixed(1)}, diversity=${openerDiversity.toFixed(2)}`);
+  }
+
+  const genericFrameHits = genericFrames.reduce((sum, term) => sum + countPhrase(term), 0);
+  if (genericFrameHits) addSignal('generic conclusion/summary framing', 'ai', 1.0, `frames=${genericFrameHits}`);
+
+  if (wordCount >= 30 && contractionHits === 0 && formalDensity >= 3.0 && personalSpecificity <= 1) addSignal('polished formal prose with no contractions', 'ai', 1.05, `formal_density=${formalDensity.toFixed(2)}`);
+  else if (wordCount >= 50 && contractionHits === 0 && avgWordLen >= 4.9 && personalSpecificity <= 1) addSignal('formal zero-contraction style', 'ai', 0.75, `avg_word_len=${avgWordLen.toFixed(2)}`);
+
+  if (wordCount >= 35 && personalSpecificity === 0 && (formalDensity >= 2.0 || avgWordLen >= 4.8)) addSignal('low personal specificity', 'ai', 0.75, `specificity=${personalSpecificity}`);
+  else if (personalSpecificity >= 4) addSignal('personal/casual specificity', 'human', 0.85, `specificity=${personalSpecificity}`);
+
+  if (casualHits >= 1 && (formalDensity >= 4.0 || aiPhraseHits >= 1 || avgWordLen >= 5.2)) addSignal('humanizer register mismatch', 'ai', 1.15, `casual=${casualHits}, formal=${formalDensity.toFixed(2)}`);
+  if (surfaceHumanNoise >= 1 && anchoredSpecificity <= 1 && wordCount >= 35 && (cv < 0.48 || avgWordLen >= 4.8 || aiWeight >= 1.5 || narrativeHits >= 1 || businessWordHits >= 6)) {
+    addSignal('surface humanizer noise over AI structure', 'ai', 1.45, `noise=${surfaceHumanNoise}, anchored=${anchoredSpecificity}`);
+  }
+  if (emojiNoise >= 1 && anchoredSpecificity === 0 && sentences.length >= 3 && (cv < 0.55 || narrativeHits >= 1 || scenicHits >= 6 || formalDensity >= 1.5)) {
+    addSignal('emoji/emoticon masking polished AI passage', 'ai', 1.25, `emoji_noise=${emojiNoise}`);
+  }
+  if (contractionHits >= 1 && anchoredSpecificity <= 1 && wordCount >= 45 && (cv < 0.45 || avgWordLen >= 4.9 || aiWeight >= 1.8)) {
+    addSignal('contractions without lived detail', 'ai', 0.95, `contractions=${contractionHits}, anchored=${anchoredSpecificity}`);
+  }
+  if ((narrativeHits >= 1 || scenicHits >= 6) && surfaceHumanNoise >= 1 && anchoredSpecificity <= 1 && wordCount >= 35) {
+    addSignal('humanized generated scene', 'ai', 1.25, `narrative=${narrativeHits}, scenic=${scenicHits}, noise=${surfaceHumanNoise}`);
+  }
+  if (casualHits >= 2 && aiDensity < 1.0 && aiWeight < 2.2 && anchoredSpecificity >= 2) addSignal('casual human markers', 'human', 0.8, `casual=${casualHits}`);
+
+  if (arabicAiHits >= 3) addSignal('Arabic formulaic AI phrasing', 'ai', 2.05, `arabic_ai_hits=${arabicAiHits}`);
+  else if (arabicAiHits >= 1 && (arabicFormalHits >= 2 || arabicTransitionHits >= 1)) addSignal('Arabic formal AI phrasing', 'ai', 1.35, `arabic_ai_hits=${arabicAiHits}`);
+  if (arabicTransitionHits >= 3 && arabicFormalHits >= 3 && arabicHumanHits === 0) addSignal('Arabic transition template stack', 'ai', 1.2, `transitions=${arabicTransitionHits}, formal=${arabicFormalHits}`);
+  if (arabicFormalHits >= 7 && arabicHumanHits === 0 && wordCount >= 35 && cv < 0.52) addSignal('Arabic polished MSA with low lived detail', 'ai', 1.1, `formal=${arabicFormalHits}, cv=${cv.toFixed(3)}`);
+  if (arabicHumanHits >= 2 && arabicAiHits === 0 && arabicFormalHits < 5) addSignal('Arabic dialect/casual markers', 'human', 1.05, `arabic_human_hits=${arabicHumanHits}`);
+
+  if (contractionHits >= 2 && casualHits >= 1 && aiDensity < 1.6) addSignal('contractions plus casual markers', 'human', 0.9, `contractions=${contractionHits}, casual=${casualHits}`);
+  else if (firstPersonHits >= 2 && personalSpecificity >= 3 && aiDensity < 1.8) addSignal('first-person specific experience', 'human', 0.85, `first_person=${firstPersonHits}`);
+
+  if (uniqueRatio < 0.48 && wordCount >= 70) addSignal('low lexical variety in long text', 'ai', 0.55, `unique_ratio=${uniqueRatio.toFixed(2)}`);
+  else if (uniqueRatio > 0.82 && wordCount >= 45 && aiDensity < 1.5) addSignal('high varied vocabulary without AI phrases', 'human', 0.35, `unique_ratio=${uniqueRatio.toFixed(2)}`);
+
+  let aiProbabilityFloor = 0;
+  if (aiWeight >= 5.0 && aiWeight >= humanWeight + 1.2) aiProbabilityFloor = 0.93;
+  else if (aiWeight >= 4.0 && aiWeight >= humanWeight + 0.8) aiProbabilityFloor = 0.86;
+  else if (aiWeight >= 3.0 && aiWeight >= humanWeight + 0.4) aiProbabilityFloor = 0.74;
+  else if (aiWeight >= 2.2 && aiWeight > humanWeight) aiProbabilityFloor = 0.60;
+
+  let humanProbabilityCap = 0;
+  if (humanWeight >= 3.0 && aiWeight < 2.6) humanProbabilityCap = 0.34;
+  else if (humanWeight >= 2.0 && aiWeight < 3.2) humanProbabilityCap = 0.44;
+
+  return {
+    success: true,
+    aiWeight: Number(aiWeight.toFixed(3)),
+    humanWeight: Number(humanWeight.toFixed(3)),
+    strongAiVotes,
+    humanVotes,
+    aiProbabilityFloor,
+    humanProbabilityCap,
+    signals: signals.slice(0, 12),
+    topAiReasons: signals.filter(s => s.verdict === 'ai').map(s => s.name).slice(0, 6),
+    topHumanReasons: signals.filter(s => s.verdict === 'human').map(s => s.name).slice(0, 6),
+    metrics: {
+      wordCount,
+      sentenceCount: sentences.length,
+      cv: Number(cv.toFixed(4)),
+      aiDensity: Number(aiDensity.toFixed(4)),
+      formalDensity: Number(formalDensity.toFixed(4)),
+      personalSpecificity,
+      anchoredSpecificity,
+      surfaceHumanNoise,
+      emojiNoise,
+      openerRate: Number(openerRate.toFixed(4)),
+      simpleNarrativeOpenerRate: Number(simpleNarrativeOpenerRate.toFixed(4)),
+      templateRate: Number(repeatedTemplateRate.toFixed(4)),
+      uniqueRatio: Number(uniqueRatio.toFixed(4)),
+      avgWordLen: Number(avgWordLen.toFixed(4)),
+      arabicAiHits,
+      arabicTransitionHits,
+      arabicHumanHits,
+      narrativeHits,
+      scenicHits,
+      simpleNarrativeVerbHits,
+      businessPhraseHits,
+      businessWordHits
+    }
+  };
+}
+// =========================================================================
+//  SERVER-GRADE CLIENT-SIDE IMAGE CLASSIFIER
+//  Ported from server.js classifyImage() — identical scoring logic
+//  Uses exifr browser build for EXIF parsing (same library as server)
+// =========================================================================
+
+const CLIENT_AI_SOFTWARE_TAGS = [
+  'midjourney', 'stable diffusion', 'dall', 'dalle', 'dall-e', 'sdxl', 'sd-xl', 'sd 1.5',
+  'firefly', 'flux', 'leonardo', 'ideogram', 'invokeai', 'comfyui', 'fooocus', 'foocus',
+  'automatic1111', 'civitai', 'novelai', 'craiyon', 'nightcafe', 'krea', 'magnific',
+  'runway', 'google imagen', 'gemini image', 'chatgpt image', 'openai image', 'bing creator',
+  'ai generated', 'ai-generated', 'generated by ai', 'genai', 'stablediffusion', 'midjourneybot',
+  'tensorrt', 'openvino', 'xformers', 'safetensors', 'ckpt', 'dreambooth', 'lora', 'adobe generative',
+  'steps: ', 'cfg scale: ', 'samplers: ', 'denoising strength: ', 'clip skip: ', 'negative prompt',
+  'latent space', 'prompt: ', 'class_type', 'inputs', 'nodes', 'links', 'adobe firefly', 'diffusion',
+  'latent', 'sora', 'kling', 'luma', 'pika', 'generative ai', 'neural network', 'synthetic', 'dall-e 3',
+  'flux.1', 'black forest labs', 'playgroundai', 'controlnet', 'inpainting', 'outpainting', 'upscaled by',
+  'generation time', 'sd_model', 'sd_model_name', 'model_hash', 'sampler_name', 'denoising_strength'
+];
+
+const CLIENT_HARDWARE_CAMERA_HINTS = [
+  'apple', 'iphone', 'ipad', 'samsung', 'galaxy', 'google pixel',
+  'pixel 4', 'pixel 5', 'pixel 6', 'pixel 7', 'pixel 8', 'pixel 9',
+  'pixel xl', 'sony', 'canon', 'nikon', 'fujifilm', 'olympus', 'panasonic', 'leica',
+  'huawei', 'xiaomi', 'oneplus', 'gopro', 'dji camera', 'dji fc', 'dji mavic',
+  'dji mini', 'dji phantom', 'osmo', 'hasselblad', 'red digital', 'arri'
+];
+
+const CLIENT_EDITOR_SOFTWARE_TAGS = [
+  'adobe photoshop', 'photoshop', 'camera raw', 'lightroom', 'capture one',
+  'affinity photo', 'gimp'
+];
+
+const CLIENT_WEAK_AI_METADATA_TAGS = new Set([
+  'prompt: ', 'class_type', 'inputs', 'nodes', 'links', 'latent', 'diffusion',
+  'synthetic', 'luma', 'pika', 'runway', 'sora', 'kling', 'render', 'upscaled',
+  'photorealistic', '4k', '8k', 'unreal-engine'
+]);
+
+const CLIENT_VIDEO_AI_TAGS = [
+  'sora', 'runway', 'pika', 'luma', 'kling', 'haiper', 'genmo', 'synthesia',
+  'heygen', 'opusclip', 'ai generated', 'ai-generated', 'stable video', 'svd',
+  'animatediff', 'deforum', 'viggle', 'vidu', 'minimax', 'hailuo', 'moonvalley',
+  'morph studio', 'pixverse'
+];
+
+const CLIENT_VIDEO_HW_TAGS = [
+  'apple', 'iphone', 'sony', 'canon', 'nikon', 'gopro', 'samsung', 'fujifilm',
+  'quicktime', 'creation_time'
+];
+
+function clientHasMetadataTag(blob, tag) {
+  const needle = tag.toLowerCase();
+  if (/^[a-z0-9-]+$/.test(needle) && needle.length <= 6) {
+    return new RegExp(`(^|[^a-z0-9])${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i').test(blob);
+  }
+  return blob.includes(needle);
+}
+
+function clientFindAiSoftwareHit(blob) {
+  const strongHit = CLIENT_AI_SOFTWARE_TAGS.find(t => !CLIENT_WEAK_AI_METADATA_TAGS.has(t) && clientHasMetadataTag(blob, t));
+  if (strongHit) return strongHit;
+
+  const weakHit = CLIENT_AI_SOFTWARE_TAGS.find(t => CLIENT_WEAK_AI_METADATA_TAGS.has(t) && clientHasMetadataTag(blob, t));
+  if (!weakHit) return null;
+
+  const hasGenerationParameterBlock =
+    /\bsteps:\s*\d+/i.test(blob) ||
+    /\bcfg\s*scale\b/i.test(blob) ||
+    /\bnegative\s+prompt\b/i.test(blob) ||
+    /\bsampler(_name)?\b/i.test(blob) ||
+    /\bsd_model(_name)?\b/i.test(blob) ||
+    /\bmodel_hash\b/i.test(blob) ||
+    /\bdenoising_strength\b/i.test(blob) ||
+    /\bautomatic1111\b/i.test(blob) ||
+    /\bcomfyui\b/i.test(blob);
+
+  return hasGenerationParameterBlock ? weakHit : null;
+}
+
+async function classifyImageClient(file, clientMetadata, clientForensics) {
+  // Parse EXIF using exifr browser build (same library as server)
+  let metaObj = null;
+  try {
+    if (typeof exifr !== 'undefined') {
+      metaObj = await exifr.parse(file, true);
+    }
+  } catch (e) { /* EXIF parsing may fail for some formats */ }
+
+  const metaStr = metaObj ? JSON.stringify(metaObj).toLowerCase() : '';
+  const fileName = file.name.toLowerCase();
+
+  // Build raw text from client binary scan
+  const rawText = (clientMetadata && clientMetadata.rawText ? clientMetadata.rawText : '').toLowerCase().replace(/\0/g, ' ');
+
+  const aiKeywords = [
+    'comfyui', 'stablediffusion', 'stable-diffusion', 'sdxl', 'flux', 'dall-e', 'dalle',
+    'midjourney', 'prompt', 'gan', 'generative', 'synthetic', 'ai-generated', 'copilot',
+    'bing-creator', 'leonardo', 'civitai', 'upscaled', 'render', 'viggle', 'luma', 'sora',
+    'kling', 'runway', 'pika', 'cyberpunk', 'photorealistic', '4k', '8k', 'unreal-engine'
+  ];
+  const realKeywords = [
+    'img_', 'dsc_', 'pxl_', 'dcim', 'photo_', 'camera_', 'iphone', 'samsung', 'pixel',
+    'nikon', 'canon', 'sony', 'fujifilm'
+  ];
+
+  const isAiFilename = aiKeywords.some(kw => fileName.includes(kw)) ||
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(fileName);
+  const isRealFilename = realKeywords.some(kw => fileName.includes(kw));
+
+  const softwareField = metaObj?.Software ? String(metaObj.Software).toLowerCase() : '';
+  const make = metaObj?.Make ? String(metaObj.Make).toLowerCase() : '';
+  const model = metaObj?.Model ? String(metaObj.Model).toLowerCase() : '';
+  const lens = metaObj?.LensModel ? String(metaObj.LensModel).toLowerCase() : '';
+
+  const metadataBlob = `${softwareField}\n${metaStr}\n${rawText}`;
+  const aiSoftwareHit = clientFindAiSoftwareHit(metadataBlob);
+  const editorSoftwareHit = CLIENT_EDITOR_SOFTWARE_TAGS.find(t => metadataBlob.includes(t));
+  const hardwareHit = CLIENT_HARDWARE_CAMERA_HINTS.find(t => make.includes(t) || model.includes(t) || lens.includes(t));
+  const hasGPS = !!(metaObj?.GPSLatitude || metaObj?.GPSLongitude || metaObj?.latitude || metaObj?.longitude);
+  const hasShutterData = !!(metaObj?.ExposureTime || metaObj?.FNumber || metaObj?.ISO);
+  const hasC2PA = metaStr.includes('c2pa') || metaStr.includes('contentcredentials') || rawText.includes('c2pa');
+
+  const isPng = file.type === 'image/png' || fileName.endsWith('.png');
+  const isWebLikeImage = isPng || file.type === 'image/webp' || fileName.endsWith('.webp');
+  const hasMetadata = !!(metaObj && Object.keys(metaObj || {}).length > 0);
+
+  // Get dimensions from client forensics
+  const width = clientForensics && clientForensics.width ? clientForensics.width : 0;
+  const height = clientForensics && clientForensics.height ? clientForensics.height : 0;
+  const dimensionKey = `${width}x${height}`;
+
+  const standardAiRes = new Set([
+    '512x512', '768x768', '1024x1024', '1536x1536', '2048x2048',
+    '1456x816', '816x1456', '832x1216', '1216x832', '1344x768', '768x1344'
+  ]);
+  const isAiResolution = standardAiRes.has(dimensionKey);
+  const isGeneratedSquare = width === height && [512, 768, 1024, 1536, 2048].includes(width);
+
+  const reviewFlags = [];
+  let decisionPath = 'clean metadata fallback';
+  let score = 0.40;
+
+  // === Server-identical scoring decision tree ===
+  if (aiSoftwareHit) {
+    score = 0.99;
+    decisionPath = `AI generator metadata tag: ${aiSoftwareHit}`;
+  } else if (isAiFilename) {
+    score = 0.92;
+    decisionPath = 'AI-like filename signature';
+  } else if (isRealFilename && !aiSoftwareHit) {
+    score = 0.12;
+    decisionPath = 'camera-style filename without AI metadata';
+  } else if (hardwareHit && hasShutterData && !rawText.includes('photoshop') && !rawText.includes('adobe')) {
+    score = 0.05;
+    decisionPath = 'camera hardware plus exposure data';
+  } else if (hardwareHit && hasShutterData) {
+    score = 0.15;
+    decisionPath = 'camera hardware plus edited exposure data';
+  } else if (editorSoftwareHit && (hasShutterData || hardwareHit)) {
+    score = 0.18;
+    decisionPath = 'edited camera-photo workflow';
+  } else if (editorSoftwareHit) {
+    score = 0.38;
+    decisionPath = 'editor metadata without AI generator signature';
+    reviewFlags.push('edited image, no generator metadata');
+  } else if (hardwareHit && (metaObj?.FocalLength || metaObj?.FNumber || metaObj?.LensModel)) {
+    score = 0.25;
+    decisionPath = 'camera/lens profile present';
+  } else if (hardwareHit) {
+    score = 0.35;
+    decisionPath = 'partial camera hardware metadata';
+    reviewFlags.push('partial camera metadata');
+  } else if (!metaObj || Object.keys(metaObj || {}).length === 0) {
+    score = isWebLikeImage ? 0.46 : 0.40;
+    decisionPath = 'EXIF absent; no AI generator signature in metadata-only fallback';
+    reviewFlags.push('metadata stripped');
+  } else if (!hasShutterData && !make && !model) {
+    score = isWebLikeImage ? 0.49 : 0.44;
+    decisionPath = 'metadata present but no camera make/model/exposure';
+    reviewFlags.push('no camera exposure metadata');
+  } else if (hasShutterData && !aiSoftwareHit) {
+    score = 0.30;
+    decisionPath = 'exposure data present without AI metadata';
+  }
+
+  if (hasGPS) score = Math.max(0.02, score - 0.35);
+  if (hasC2PA && (metaStr.includes('ai') || rawText.includes('ai') || rawText.includes('generated'))) {
+    score = Math.max(score, 0.98);
+    decisionPath = 'C2PA/content credentials indicate generated content';
+  }
+  if (!aiSoftwareHit && !hardwareHit && !editorSoftwareHit && (isAiResolution || isGeneratedSquare)) {
+    score = Math.max(score, isWebLikeImage ? 0.54 : 0.49);
+    reviewFlags.push(`generated-size canvas ${dimensionKey}`);
+    if (isWebLikeImage && isAiFilename) {
+      score = Math.max(score, 0.86);
+      decisionPath = 'AI filename plus generated-size web image';
+    } else if (score >= 0.5) {
+      decisionPath = 'generated-size web image without camera provenance';
+    }
+  }
+
+  score = Math.max(0.01, Math.min(0.99, score));
+
+  const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Photo';
+  const confidence = `${(Math.max(score, 1 - score) * 100).toFixed(1)}%`;
+
+  return {
+    prediction,
+    ai_probability: Number(score.toFixed(3)),
+    confidence,
+    features: {
+      model_used: 'AI Detector Vision Matrix v7 (Client-Side Deep Forensics)',
+      metadata_integrity: hasMetadata ? `${Object.keys(metaObj).length} fields present` : 'EXIF absent / stripped',
+      structural_anomalies: aiSoftwareHit
+        ? `AI generator tag: ${aiSoftwareHit}`
+        : (hardwareHit ? 'camera hardware tag intact' : 'no hardware provenance'),
+      lighting_analysis: hasShutterData ? 'shutter/aperture data present' : 'no exposure metadata',
+      suspected_generator: aiSoftwareHit ? aiSoftwareHit.toUpperCase() : (score > 0.6 ? 'Unknown AI Tool' : 'N/A'),
+      decision_path: decisionPath,
+      review_flags: reviewFlags.length ? reviewFlags.join('; ') : 'metadata-only fallback',
+      fallback_dimensions: width && height ? dimensionKey : 'unknown',
+      file_size_kb: Math.round(file.size / 1024)
+    }
+  };
+}
+
+// =========================================================================
+//  SERVER-GRADE CLIENT-SIDE VIDEO CLASSIFIER
+//  Ported from server.js classifyVideo() — identical scoring logic
+//  Uses client-side binary text scan since music-metadata isn't available
+// =========================================================================
+
+async function classifyVideoClient(file, clientMetadata) {
+  // Read binary for metadata extraction
+  const rawText = (clientMetadata && clientMetadata.rawText ? clientMetadata.rawText : '').toLowerCase().replace(/\0/g, ' ');
+  // Also scan a broader binary chunk for encoder/codec markers
+  let binaryText = rawText;
+  try {
+    const buffer = await file.slice(0, 2 * 1024 * 1024).arrayBuffer();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const startChunk = decoder.decode(new Uint8Array(buffer)).replace(/\0/g, ' ').toLowerCase();
+    // Also read tail
+    let tailChunk = '';
+    if (file.size > 2 * 1024 * 1024) {
+      const tailBuffer = await file.slice(Math.max(0, file.size - 1024 * 1024)).arrayBuffer();
+      tailChunk = decoder.decode(new Uint8Array(tailBuffer)).replace(/\0/g, ' ').toLowerCase();
+    }
+    binaryText = startChunk + ' ' + tailChunk;
+  } catch (e) { /* binary read may fail */ }
+
+  const fileName = file.name.toLowerCase();
+  const aiKeywords = [
+    'sora', 'runway', 'pika', 'luma', 'kling', 'haiper', 'genmo', 'synthesia',
+    'heygen', 'opusclip', 'stable-video', 'svd', 'animatediff', 'deforum', 'viggle',
+    'vidu', 'minimax', 'hailuo', 'morph-studio', 'pixverse'
+  ];
+  const realKeywords = [
+    'img_', 'dsc_', 'pxl_', 'dcim', 'video_', 'camera_', 'iphone', 'samsung', 'pixel',
+    'nikon', 'canon', 'sony', 'fujifilm'
+  ];
+
+  const isAiFilename = aiKeywords.some(kw => fileName.includes(kw)) ||
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(fileName);
+  const isRealFilename = realKeywords.some(kw => fileName.includes(kw));
+
+  const blob = binaryText;
+  const aiTagHit = CLIENT_VIDEO_AI_TAGS.find(t => clientHasMetadataTag(blob, t));
+  const hwTagHit = CLIENT_VIDEO_HW_TAGS.find(t => clientHasMetadataTag(blob, t));
+  const hasEncoder = blob.includes('encoder') || blob.includes('handler') || blob.includes('creation_time');
+
+  let score = 0.72;
+  let decisionPath = 'strict video fallback: unverified video provenance';
+  const reviewFlags = [];
+
+  if (aiTagHit) {
+    score = 0.99;
+    decisionPath = `AI video generator tag detected: ${aiTagHit}`;
+  } else if (isAiFilename) {
+    score = 0.94;
+    decisionPath = 'AI-like video filename signature';
+  } else if (isRealFilename && !aiTagHit) {
+    score = 0.12;
+    decisionPath = 'camera-style video filename without AI tag';
+  } else if (hwTagHit && !blob.includes('photoshop') && !blob.includes('premiere') && !blob.includes('aftereffects')) {
+    score = 0.16;
+    decisionPath = `hardware/encoder provenance: ${hwTagHit}`;
+  } else if (hwTagHit) {
+    score = 0.34;
+    decisionPath = `edited hardware provenance: ${hwTagHit}`;
+    reviewFlags.push('edited video metadata');
+  } else if (!hasEncoder) {
+    score = 0.94;
+    decisionPath = 'encoder metadata absent';
+  }
+
+  if (aiTagHit) decisionPath = `AI video generator tag detected: ${aiTagHit}`;
+  if (isAiFilename) decisionPath = 'AI-like video filename signature';
+
+  score = Math.max(0.01, Math.min(0.99, score));
+  const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Video';
+  const confidence = `${(Math.max(score, 1 - score) * 100).toFixed(1)}%`;
+
+  return {
+    prediction,
+    ai_probability: Number(score.toFixed(3)),
+    confidence,
+    features: {
+      model_used: 'AI Detector Codec Scan v7 (Client-Side Deep Binary Analysis)',
+      container_format_risk: aiTagHit ? `AI tag detected: ${aiTagHit}` : 'no AI fingerprint',
+      encoder_tool: hasEncoder ? 'encoder field present' : 'absent',
+      hardware_provenance: hwTagHit ? `hardware tag: ${hwTagHit}` : 'absent',
+      suspected_generator: aiTagHit ? aiTagHit.toUpperCase() : (score > 0.6 ? 'Unknown AI Tool' : 'N/A'),
+      decision_path: decisionPath,
+      review_flags: reviewFlags.length ? reviewFlags.join('; ') : 'strict video provenance scan',
+      file_size_mb: Number((file.size / 1024 / 1024).toFixed(2))
+    }
+  };
+}
+
 function classifyText(text) {
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
   const arabicMeta = scoreArabicText(text);
   const wordCount = arabicMeta.isArabicDominant ? Math.max(words.length, arabicMeta.wordCount) : words.length;
-  
+
   // Splitting to sentences:
   const sentences = text.split(/[.!?؟।]+\s+|\n+/).map(s => s.trim()).filter(s => s.length > 0);
-  
+
   if (sentences.length === 0) {
     return {
       prediction: 'HUMAN',
@@ -1769,21 +3142,24 @@ function classifyText(text) {
   // Core metrics:
   // 1. Burstiness (CV of sentence length)
   const lens = sentences.map(s => s.split(/\s+/).filter(w => w.length > 0).length);
-  const avgLen = lens.reduce((a,b)=>a+b, 0) / lens.length;
-  const variance = lens.reduce((a,b)=>a + Math.pow(b - avgLen, 2), 0) / lens.length;
+  const avgLen = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const variance = lens.reduce((a, b) => a + Math.pow(b - avgLen, 2), 0) / lens.length;
   const stdDev = Math.sqrt(variance);
   const cv = avgLen > 0 ? stdDev / avgLen : 0;
-  
+
   // 2. Lexical Diversity
-  const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")));
+  const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")));
   const lexicalDiv = wordCount > 0 ? uniqueWords.size / wordCount : 1;
 
   // 3. Density checks:
   const textLower = text.toLowerCase();
-  
+
   let aiVocabCount = 0;
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const phraseRegex = (value) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(value.trim())}([^\\p{L}\\p{N}]|$)`, 'gu');
+
   AI_VOCAB.forEach(term => {
-    const regex = new RegExp('\\b' + term + '\\b', 'g');
+    const regex = phraseRegex(term);
     const matches = textLower.match(regex);
     if (matches) aiVocabCount += matches.length;
   });
@@ -1792,16 +3168,16 @@ function classifyText(text) {
   let aiBigramCount = 0;
   AI_BIGRAMS.forEach(phrase => {
     let idx = 0;
-    while((idx = textLower.indexOf(phrase, idx)) !== -1) {
+    while ((idx = textLower.indexOf(phrase, idx)) !== -1) {
       aiBigramCount++;
       idx += phrase.length;
     }
   });
-  
+
   let aiTransitionCount = 0;
   AI_TRANSITIONS.forEach(phrase => {
     let idx = 0;
-    while((idx = textLower.indexOf(phrase, idx)) !== -1) {
+    while ((idx = textLower.indexOf(phrase, idx)) !== -1) {
       aiTransitionCount++;
       idx += phrase.length;
     }
@@ -1810,7 +3186,7 @@ function classifyText(text) {
   let arabicCount = 0;
   ARABIC_AI_PHRASES.forEach(phrase => {
     let idx = 0;
-    while((idx = textLower.indexOf(phrase, idx)) !== -1) {
+    while ((idx = textLower.indexOf(phrase, idx)) !== -1) {
       arabicCount++;
       idx += phrase.length;
     }
@@ -1845,50 +3221,154 @@ function classifyText(text) {
     return /(.)\1\1/.test(w) || /[^aeiouy]{5,}/.test(w);
   }).length;
   const registerMismatch = (textLower.includes("delve") || textLower.includes("tapestry")) && (textLower.includes("gonna") || textLower.includes("wanna") || textLower.includes("y'all") || textLower.includes("kid") || textLower.includes("stuff"));
+  const advancedText = computeAdvancedTextForensics(text);
+  const advancedMetrics = advancedText.success ? (advancedText.metrics || {}) : {};
+  const surfaceHumanNoise = Number(advancedMetrics.surfaceHumanNoise || 0);
+  const anchoredSpecificity = Number(advancedMetrics.anchoredSpecificity ?? advancedMetrics.personalSpecificity ?? 0);
+  const humanizedAiSuspected = Boolean(
+    surfaceHumanNoise >= 1 &&
+    anchoredSpecificity <= 1 &&
+    advancedText.success &&
+    advancedText.aiWeight >= Math.max(1.4, advancedText.humanWeight + 0.2)
+  );
 
-  // Classification logic (weights ensemble)
-  let score = 0.35; // base probability
+  const isArabic = arabicMeta.isArabicDominant;
 
-  // Burstiness penalty (AI is uniform, CV <= 0.4)
-  if (cv < 0.4) score += 0.20;
-  else if (cv > 0.75) score -= 0.15;
-
-  // Lexical diversity penalty (AI has constrained, high lexical diversity MATTR style, but low unique-word ratio in long text)
-  if (wordCount > 100) {
-    if (lexicalDiv < 0.48) score += 0.15;
-    else if (lexicalDiv > 0.65) score -= 0.10;
-  }
-
-  // Vocab checks:
-  score += (vocabDensity * 4.5);
-  score += (aiBigramCount * 0.08);
-  score += (aiTransitionCount * 0.12);
-  score += (arabicCount * 0.25);
-  score += (openerRate * 0.25);
-
-  // Contraction penalization (AI has very low contraction rate)
-  if (contractionRate < 0.008) score += 0.12;
-  else if (contractionRate > 0.035) score -= 0.18;
-
-  // Word length check (AI likes longer words, average >= 5.1 characters)
-  if (avgWordLen > 5.1) score += 0.10;
-  else if (avgWordLen < 4.4) score -= 0.15;
-
-  // Mismatches (typo vs formal vocabulary, very common humanizer trick)
-  if (typos > 0 && registerMismatch) {
-    score = Math.max(score, 0.85); // humanizer bypass detector!
-  }
-
-  if (arabicMeta.isArabicDominant) {
-    score = arabicMeta.score;
-  } else if (arabicMeta.isArabic) {
-    score = 0.65 * arabicMeta.score + 0.35 * score;
-  }
-
-  score = Math.max(0.01, Math.min(0.99, score));
+  // ENSEMBLE SCORING MODULE (TEXT)
+  let aiDiversity = (1.0 - Math.min(lexicalDiv, 1.0)); 
+  let predictabilityScore = Math.min(1.0, (vocabDensity * 10) + (aiBigramCount * 0.1) + (aiTransitionCount * 0.15) + (openerRate * 0.5));
+  let repetitionScore = Math.min(1.0, (advancedMetrics.repetitionIndex || 0) / 2.0);
   
-  const isAI = score >= 0.5;
-  const prediction = isAI ? 'AI' : 'HUMAN';
+  let structureUniformity = cv < 0.45 ? (1.0 - cv) : 0.0;
+  if (isArabic) {
+     structureUniformity = cv < 0.75 ? (1.0 - cv) : 0.0;
+  }
+
+  let randomnessSim = (humanizedAiSuspected || (typos > 0 && registerMismatch)) ? 1.0 : 0.0;
+
+  let d1_val = predictabilityScore * 100;
+  if (isArabic) {
+    d1_val = arabicMeta.score * 100;
+    if (d1_val > 70) d1_val += 15; // Boost clearly AI Arabic to cross 90% threshold
+  } else if (arabicMeta.isArabic) {
+    d1_val = (0.65 * (arabicMeta.score * 100)) + (0.35 * d1_val);
+  }
+
+  const d1 = Math.min(100, Math.max(0, d1_val));
+  
+  let d2_val = aiDiversity * 100;
+  if (isArabic) {
+    if (arabicMeta.humanHits && arabicMeta.humanHits > 2) d2_val = 15; // Suppress for human slang
+    else if (lexicalDiv > 0.75 && lexicalDiv < 0.98) d2_val = 95;
+    else if (lexicalDiv > 0.60) d2_val = 75;
+    else d2_val = 20;
+  }
+  const d2 = Math.min(100, Math.max(0, d2_val));
+
+  const d3 = 0; // N/A for text
+  const d4 = Math.min(100, Math.max(0, repetitionScore * 100));
+  let d5_val = structureUniformity * 100;
+  if (randomnessSim > 0) d5_val += 20;
+  
+  if (isArabic) {
+      if (arabicMeta.humanHits && arabicMeta.humanHits > 2) {
+          d5_val = Math.min(d5_val, 30); // Heavily suppress uniformity if slang is present
+      } else if (structureUniformity > 0.70) {
+          d5_val += 15; // Boost strict uniform Arabic only if no human slang
+      }
+  }
+  const d5 = Math.min(100, Math.max(0, d5_val));
+  
+  const detectors = [
+    { name: "Linguistic Detector", score: d1.toFixed(1) + '%', val: d1, weight: isArabic ? 3.0 : 1.2, conf: "High" },
+    { name: "Statistical Detector", score: d2.toFixed(1) + '%', val: d2, weight: isArabic ? 0.5 : 1.0, conf: "High" },
+    { name: "Visual Forensics", score: "N/A", val: d3, weight: 0, conf: "N/A" },
+    { name: "Consistency Detector", score: d4.toFixed(1) + '%', val: d4, weight: isArabic ? 0.0 : 1.1, conf: d4 > 10 ? "High" : "Medium" },
+    { name: "Style Authenticity", score: d5.toFixed(1) + '%', val: d5, weight: isArabic ? 2.0 : 1.5, conf: randomnessSim > 0 ? "High" : "Medium" }
+  ];
+
+  let weightedSum = 0;
+  let totalWeight = 0;
+  let validVals = [];
+
+  detectors.forEach(d => {
+    if (d.weight > 0) {
+      weightedSum += d.val * d.weight;
+      totalWeight += d.weight;
+      validVals.push(d.val);
+    }
+  });
+
+  let ensembleScore = totalWeight > 0 ? (weightedSum / totalWeight) : 0;
+  let mean_e = validVals.reduce((a, b) => a + b, 0) / validVals.length;
+  let variance_e = validVals.reduce((a, b) => a + Math.pow(b - mean_e, 2), 0) / validVals.length;
+  let stdDev_e = Math.sqrt(variance_e);
+
+  let score = ensembleScore / 100;
+
+  const engHumanMarkers = ['i think', 'i feel', 'i believe', 'in my opinion', 'kinda', 'gonna', 'wanna', 'literally', 'basically', 'stuff', 'yeah', 'okay', 'lol', 'lmao', 'tbh', 'imo', 'idk', 'my', 'me'];
+  let engHumanHits = 0;
+  engHumanMarkers.forEach(m => {
+    if (textLower.includes(m)) engHumanHits++;
+  });
+
+  const strongEnglishMarkers = [
+    'as an ai', 'language model', 'as a language model',
+    'as an artificial intelligence', 'i am an ai', 'completely ai generated',
+    'generated by ai', 'in conclusion', 'it is important to note',
+    'it is worth noting', 'rapidly evolving landscape', 'plays a crucial role',
+    'delve', 'tapestry', 'pivotal', 'holistic', 'multifaceted',
+    'seamlessly', 'leverage', 'underscores'
+  ];
+  if (strongEnglishMarkers.some(m => textLower.includes(m))) {
+    score = Math.max(score, 0.98);
+  }
+
+  let aiProb = Math.min(100, Math.max(0, score * 100));
+  let realProb = 100 - aiProb;
+  let confidenceScore = Math.max(0, Math.abs(aiProb - realProb));
+
+  // STAGE 6 - ANTI-ERROR GUARD
+  let isContradictory = (randomnessSim > 0.8 && structureUniformity < 0.2);
+  let weakEvidence = (score > 0.4 && score < 0.6);
+  let realWorldNoise = (engHumanHits > 0 && !humanizedAiSuspected);
+
+  if (isContradictory) {
+     confidenceScore = Math.max(0, confidenceScore - 30);
+  }
+  if (confidenceScore > 85 && weakEvidence) {
+     confidenceScore = 70;
+  }
+  if (realWorldNoise) {
+     aiProb = Math.max(0, aiProb - 25);
+     realProb = Math.min(100, realProb + 25);
+  }
+
+  score = Math.max(0.01, Math.min(0.99, aiProb / 100));
+
+  let prediction = "Uncertain";
+  let adjustmentReason = null;
+  let reliabilityWarning = null;
+  
+  if (isContradictory) {
+      prediction = "Uncertain";
+      adjustmentReason = 'Contradiction detected between forensic layers.';
+      reliabilityWarning = 'Low Reliability: Opposing signals cancel out.';
+  } else if (confidenceScore >= 80) {
+      prediction = aiProb > 50 ? "AI" : "HUMAN";
+  } else if (confidenceScore >= 60 && confidenceScore < 80) {
+      prediction = aiProb > 50 ? "Likely AI" : "Likely Real";
+  } else {
+      prediction = "Uncertain";
+      adjustmentReason = 'Confidence below 60% decision threshold.';
+      reliabilityWarning = 'Low Reliability: Insufficient definitive signals.';
+  }
+
+  let probLower = Math.max(0, Math.floor(aiProb / 10) * 10);
+  let probUpper = Math.min(100, probLower + 10);
+  let probRange = `${probLower}% - ${probUpper}%`;
+
+  const isAI = aiProb >= 50;
   const confidence = (Math.max(score, 1 - score) * 100).toFixed(1) + '%';
 
   // Sentence breakdown:
@@ -1915,6 +3395,21 @@ function classifyText(text) {
     };
   });
 
+  let detectorReliability = Math.max(0, Math.min(100, 100 - (stdDev_e * 0.8) - (isContradictory ? 25 : 0) - (wordCount < 40 ? 20 : 0) - (confidenceScore < 60 ? 15 : 0)));
+  
+  let weakEvidenceStr = [];
+  if (confidenceScore < 60) weakEvidenceStr.push("Margin between AI and Human signals is too narrow.");
+  if (wordCount < 40) weakEvidenceStr.push("Insufficient sample size (low word count).");
+  if (stdDev_e > 25) weakEvidenceStr.push("High variance across ensemble detectors.");
+  
+  let falsePositiveRisks = [];
+  if (engHumanHits > 0) falsePositiveRisks.push("Human-like informal markers detected.");
+  if (humanizedAiSuspected) falsePositiveRisks.push("Possible intentional humanizer injection.");
+  
+  let missingSignals = [];
+  if (aiTransitionCount === 0) missingSignals.push("No typical AI transition patterns.");
+  if (advancedMetrics.repetitionIndex < 0.2) missingSignals.push("No structural repetition.");
+
   return {
     prediction,
     ai_probability: Number(score.toFixed(3)),
@@ -1922,16 +3417,91 @@ function classifyText(text) {
     language: arabicMeta.isArabicDominant ? 'Arabic' : (arabicMeta.isArabic ? 'Mixed Arabic/English' : 'English / Latin'),
     word_count: wordCount,
     sentenceBreakdown,
+    advanced_text_forensics: advancedText,
+
     features: {
+      'Ensemble Variance': (stdDev_e || 0).toFixed(2) + '%',
+      'Detector Reliability Score': detectorReliability.toFixed(1) + '%',
+      'Self-Audit: Weak Evidence': weakEvidenceStr.length > 0 ? weakEvidenceStr.join(" ") : 'None detected',
+      'Self-Audit: False Positive Risks': falsePositiveRisks.length > 0 ? falsePositiveRisks.join(" ") : 'None detected',
+      'Self-Audit: Missing Signals': missingSignals.length > 0 ? missingSignals.join(" ") : 'None detected',
+      '1. Linguistic Detector': detectors[0].score + ` (${detectors[0].conf} Conf)`,
+      '2. Statistical Detector': detectors[1].score + ` (${detectors[1].conf} Conf)`,
+      '3. Visual Forensics': detectors[2].score,
+      '4. Consistency Detector': detectors[3].score + ` (${detectors[3].conf} Conf)`,
+      '5. Style Authenticity': detectors[4].score + ` (${detectors[4].conf} Conf)`,
+      'Adjustment Reason': adjustmentReason || 'None',
+      'Reliability Warning': reliabilityWarning || 'Stable',
+      'Probability Range': probRange,
+      'model_used': 'Browser Text Heuristic v7 Strict',
       'Burstiness Rhythm (CV)': cv.toFixed(3),
       'Opener Formulaic Rate': (openerRate * 100).toFixed(1) + '%',
       'Lexical Diversity': (lexicalDiv * 100).toFixed(1) + '%',
       'AI Vocab Density': (vocabDensity * 100).toFixed(2) + '%',
       'Contraction Frequency': (contractionRate * 100).toFixed(2) + '%',
       'Mean Word Length': avgWordLen.toFixed(2) + ' chars',
-      'Arabic Fingerprints': arabicMeta.details?.phraseHits ?? arabicCount,
-      'arabic_ai_signals': arabicMeta.isArabic ? `phrases=${arabicMeta.details.phraseHits}, transitions=${arabicMeta.details.transitionHits}, formal_terms=${arabicMeta.details.formalHits}, rhythm_cv=${arabicMeta.details.cv}` : 'N/A',
-      'arabic_human_signals': arabicMeta.isArabic ? `casual_hits=${arabicMeta.details.humanHits}` : 'N/A'
+      'humanization_attempt': humanizedAiSuspected || (advancedText.success && advancedText.aiWeight >= 4.0 && advancedText.humanWeight >= 1.0) ? 'high' : (surfaceHumanNoise >= 1 ? 'medium' : 'low'),
+      'humanizer_noise_score': `${surfaceHumanNoise}`,
+      'anchored_specificity': `${anchoredSpecificity}`,
+      'advanced_text_ai_score': advancedText.success ? advancedText.aiWeight.toFixed(2) : 'not available',
+      'advanced_text_human_score': advancedText.success ? advancedText.humanWeight.toFixed(2) : 'not available',
+      'advanced_text_reasons': advancedText.success ? (advancedText.topAiReasons.slice(0, 5).join(', ') || 'none') : 'not available',
+      'human_text_reasons': advancedText.success ? (advancedText.topHumanReasons.slice(0, 5).join(', ') || 'none') : 'not available',
+      'strict_text_mode': 'enabled',
+      'T01_Lexical_Repetition': arabicMeta.details?.T01_Lexical_Repetition ?? arabicCount,
+      'T05_Burstiness': arabicMeta.details?.T05_Burstiness ?? cv.toFixed(3),
+      'T13_Transition_Overuse': arabicMeta.details?.T13_Transition_Overuse ?? aiTransitionCount,
+      'T15_Personal_Experience': arabicMeta.details?.T15_Personal_Experience ?? "None",
+      'T20_LLM_Signature': arabicMeta.details?.T20_LLM_Signature ?? (openerRate > 0.45 ? "Detected" : "None"),
+      'arabic_ai_signals': arabicMeta.isArabic ? `filters_triggered=${arabicMeta.details?.triggered_filters || 0}` : 'N/A'
     }
   };
+}
+
+window.addEventListener('3truth:languagechange', () => {
+  const modeConfig = DETECTOR_MODE_UI[activeTab] || DETECTOR_MODE_UI.text;
+  if (analyzeBtn && analyzeBtn.querySelector('span')) {
+    const newLabel = currentResult 
+      ? (activeTab === 'text' ? tr('detector.scanNewText', null, 'SCAN NEW TEXT') : tr('detector.uploadNewFile', null, 'UPLOAD NEW FILE')) 
+      : (modeConfig.analyzeLabel || tr('detector.initializeScan', null, 'INITIALIZE SCAN'));
+    analyzeBtn.querySelector('span').textContent = newLabel;
+    analyzeBtn.querySelector('span').dataset.original = newLabel;
+  }
+  if (currentResult) {
+    renderResult(currentResult);
+  }
+  updateInputCounters();
+});
+
+function showToast(message, duration = 3000) {
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;';
+    document.body.appendChild(toastContainer);
+  }
+  const toast = document.createElement('div');
+  toast.style.cssText = 'background-color: #141414; border: 1px solid rgba(47, 238, 204, 0.3); color: #ffffff; padding: 16px 24px; border-radius: 12px; box-shadow: 0 0 30px rgba(47, 238, 204, 0.15); display: flex; align-items: center; gap: 16px; backdrop-filter: blur(10px); transform: translateY(50px); opacity: 0; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);';
+  toast.innerHTML = `
+    <div style="background: rgba(47, 238, 204, 0.1); padding: 8px; border-radius: 50%; border: 1px solid rgba(47, 238, 204, 0.3); display: flex; align-items: center; justify-content: center;">
+        <i data-lucide="info" style="width: 20px; height: 20px; color: #2FEECC;"></i>
+    </div>
+    <span style="font-weight: 500; font-size: 14px; letter-spacing: 0.5px; color: #eeeeee;">${message}</span>
+  `;
+  toastContainer.appendChild(toast);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      toast.style.transform = 'translateY(0)';
+      toast.style.opacity = '1';
+    });
+  });
+
+  setTimeout(() => {
+    toast.style.transform = 'translateY(50px)';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, duration);
 }

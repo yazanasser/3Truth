@@ -6,7 +6,7 @@
   const dict = {
     en: {
       languageName: 'English',
-      languageToggle: 'العربية',
+      languageToggle: 'Arabic',
       langCode: 'EN',
       dir: 'ltr',
       ui: {
@@ -22,6 +22,13 @@
         returnHome: 'Return Home',
         information: 'Information',
         underConstruction: 'Under Construction'
+      },
+      plans: {
+        free: 'Basic',
+        pro: 'Pro',
+        ultimate: 'Ultimate',
+        tier: '{plan} tier',
+        display: '{plan} Plan'
       },
       detector: {
         title: 'THE APEX DETECTOR',
@@ -44,6 +51,8 @@
         loadingSub: 'Running deep heuristics...',
         verdictLabel: 'Forensic Verdict',
         humanProbability: 'HUMAN PROBABILITY',
+        realPhotoProbability: 'REAL PHOTO PROBABILITY',
+        realVideoProbability: 'REAL VIDEO PROBABILITY',
         aiProbability: 'AI PROBABILITY',
         segmentAnalysis: 'Neural Segment Analysis',
         humanOrigin: 'Human-Origin Content (Green Marker)',
@@ -57,6 +66,8 @@
         noAiSegments: 'No synthetic/AI-generated segments identified.',
         verdictAi: 'AI GENERATED',
         verdictHuman: 'HUMAN',
+        verdictRealPhoto: 'REAL PHOTO',
+        verdictRealVideo: 'REAL VIDEO',
         verdictMixed: 'MIXED',
         aiText: 'AI Text',
         humanText: 'Human Text',
@@ -126,7 +137,7 @@
         enterCodeSent: 'Enter the 6-digit code sent to {email}',
         verifyEnter: 'Verify & Enter',
         authenticating: 'Authenticating...',
-        securedBy: 'Secured by Aetheris Cryptography',
+        securedBy: 'Secured by 3truth Cryptography',
         alreadySignedIn: 'Already Signed In',
         loggedInAs: 'You are logged in as',
         goDetector: 'Go to Detector',
@@ -137,6 +148,7 @@
         failedResend: 'Failed to resend code. Please try again.',
         enterCode: 'Please enter the verification code.',
         invalidCode: 'Invalid verification code. Please check and try again.',
+        emailJsError: 'EmailJS Error: {detail}. Make sure your Public Key in js/signin.js is correct.',
         errors: {
           invalidEmail: 'Invalid email address.',
           disabled: 'This user account has been disabled.',
@@ -150,16 +162,18 @@
         back: 'Back to Pricing',
         title: 'Secure Checkout',
         selectedPlan: 'Selected Plan',
-        oneTimeFee: 'One-Time Fee',
+        oneTimeFee: 'Monthly Subscription',
         secureProcessing: 'Secure Payment Processing',
         instantActivation: 'Instant Account Activation',
         initializingPlan: 'Initializing {plan} Plan',
         activatingBasic: 'Activating Basic Plan...',
-        oneTime: 'ONE-TIME',
+        oneTime: 'MONTHLY',
         cardholderName: 'Cardholder Name',
         cardDetails: 'Card Details',
         payNow: 'Pay Now',
         processing: 'Processing Payment...',
+        processorFailed: 'Payment processor failed to load. Please refresh the page and try again.',
+        notAuthenticated: 'Not authenticated',
         ssl: 'SSL Secured Payment',
         cardholderPlaceholder: 'John Doe',
         previewName: 'CARDHOLDER NAME'
@@ -216,7 +230,7 @@
       languageName: 'العربية',
       languageToggle: 'English',
       langCode: 'AR',
-      dir: 'rtl',
+      dir: 'ltr',
       ui: {
         home: 'الرئيسية',
         detector: 'الكاشف',
@@ -231,8 +245,15 @@
         information: 'معلومات',
         underConstruction: 'قيد الإنشاء'
       },
+      plans: {
+        free: 'الأساسية',
+        pro: 'الاحترافية',
+        ultimate: 'الكاملة',
+        tier: 'الخطة {plan}',
+        display: 'الخطة {plan}'
+      },
       detector: {
-        title: 'كاشف Aetheris المتقدم',
+        title: 'الكاشف المتقدم',
         subtitle: 'ألصق النص أو ارفع الملف، وسيحلل المحرك الإشارات للكشف عن الحقيقة.',
         inputSource: 'مصدر الإدخال',
         text: 'نص',
@@ -252,6 +273,8 @@
         loadingSub: 'يتم تشغيل التحليل العميق...',
         verdictLabel: 'نتيجة الفحص',
         humanProbability: 'احتمال أنه بشري',
+        realPhotoProbability: 'احتمال أنها صورة حقيقية',
+        realVideoProbability: 'احتمال أنه فيديو حقيقي',
         aiProbability: 'احتمال أنه ذكاء اصطناعي',
         segmentAnalysis: 'تحليل المقاطع',
         humanOrigin: 'محتوى بشري المصدر (علامة خضراء)',
@@ -265,6 +288,8 @@
         noAiSegments: 'لم يتم تحديد مقاطع مولدة بالذكاء الاصطناعي.',
         verdictAi: 'مولد بالذكاء الاصطناعي',
         verdictHuman: 'بشري',
+        verdictRealPhoto: 'صورة حقيقية',
+        verdictRealVideo: 'فيديو حقيقي',
         verdictMixed: 'مختلط',
         aiText: 'نص ذكاء اصطناعي',
         humanText: 'نص بشري',
@@ -334,8 +359,8 @@
         enterCodeSent: 'أدخل الرمز المكون من 6 أرقام المرسل إلى {email}',
         verifyEnter: 'تحقق وادخل',
         authenticating: 'جار التحقق...',
-        securedBy: 'محمي بتشفير Aetheris',
-        alreadySignedIn: 'تم تسجيل الدخول مسبقا',
+        securedBy: 'محمي بتشفير 3truth',
+        alreadySignedIn: 'تم تسجيل الدخول مسبقاً',
         loggedInAs: 'أنت مسجل الدخول باسم',
         goDetector: 'الانتقال إلى الكاشف',
         signOut: 'تسجيل الخروج',
@@ -345,6 +370,7 @@
         failedResend: 'فشل إعادة إرسال الرمز. يرجى المحاولة مرة أخرى.',
         enterCode: 'يرجى إدخال رمز التحقق.',
         invalidCode: 'رمز التحقق غير صحيح. يرجى التحقق والمحاولة مرة أخرى.',
+        emailJsError: 'خطأ EmailJS: {detail}. تأكد من صحة المفتاح العام في js/signin.js.',
         errors: {
           invalidEmail: 'البريد الإلكتروني غير صالح.',
           disabled: 'تم تعطيل هذا الحساب.',
@@ -358,16 +384,18 @@
         back: 'العودة إلى الأسعار',
         title: 'دفع آمن',
         selectedPlan: 'الخطة المحددة',
-        oneTimeFee: 'رسوم لمرة واحدة',
+        oneTimeFee: 'اشتراك شهري',
         secureProcessing: 'معالجة دفع آمنة',
         instantActivation: 'تفعيل فوري للحساب',
-        initializingPlan: 'تهيئة خطة {plan}',
-        activatingBasic: 'جار تفعيل خطة Basic...',
-        oneTime: 'مرة واحدة',
+        initializingPlan: 'جار تهيئة الخطة {plan}...',
+        activatingBasic: 'جار تفعيل الخطة الأساسية...',
+        oneTime: 'شهرياً',
         cardholderName: 'اسم حامل البطاقة',
         cardDetails: 'بيانات البطاقة',
         payNow: 'ادفع الآن',
         processing: 'جار معالجة الدفع...',
+        processorFailed: 'فشل تحميل معالج الدفع. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
+        notAuthenticated: 'لم يتم تسجيل الدخول',
         ssl: 'دفع مؤمن SSL',
         cardholderPlaceholder: 'الاسم الكامل',
         previewName: 'اسم حامل البطاقة'
@@ -429,9 +457,10 @@
     'DOCUMENTATION': 'التوثيق',
     'ABOUT US': 'من نحن',
     'CONTACT': 'اتصل بنا',
+    'PLANS': 'الخطط',
     'LOGIN': 'تسجيل الدخول',
     'SIGN OUT': 'تسجيل الخروج',
-    'THE APEX DETECTOR': 'كاشف Aetheris المتقدم',
+    'THE APEX DETECTOR': 'الكاشف المتقدم',
     'Unescapable intelligence. Drop your content below and let the neural engine dissect the truth.': 'ألصق النص أو ارفع الملف، وسيحلل المحرك الإشارات للكشف عن الحقيقة.',
     'TEXT': 'نص',
     'IMAGE': 'صورة',
@@ -458,14 +487,14 @@
     'CONVERT TO PDF': 'تحويل إلى PDF',
     'ACCESS LEVELS': 'مستويات الوصول',
     'Choose the bandwidth and capability level required for your forensic operations.': 'اختر مستوى السعة والقدرات المطلوب لعمليات الفحص.',
-    'BASIC': 'BASIC',
-    'PRO': 'PRO',
-    'ULTIMATE': 'ULTIMATE',
+    'BASIC': 'الأساسية',
+    'PRO': 'الاحترافية',
+    'ULTIMATE': 'الكاملة',
     'For casual verification.': 'للتحقق السريع.',
     'For professionals & creators.': 'للمحترفين وصناع المحتوى.',
     'Unrestricted forensic dominance.': 'فحص غير محدود بقدرات متقدمة.',
     '/forever': '/دائما',
-    '/one-time': '/مرة واحدة',
+    '/month': '/شهرياً',
     '1 Scan per detector': 'فحص واحد لكل كاشف',
     'Standard Heuristics': 'تحليل قياسي',
     'Text, Image & Video': 'النص والصورة والفيديو',
@@ -480,31 +509,52 @@
     'Omni-channel Forensics': 'تحليل شامل متعدد الوسائط',
     'Advanced PDF Reports': 'تقارير PDF متقدمة',
     'Priority Support': 'دعم ذو أولوية',
-    'GET ULTIMATE': 'احصل على ULTIMATE',
+    'GET ULTIMATE': 'احصل على الخطة الكاملة',
+    'MONTHLY': 'شهرياً',
+    'Free Plan': 'الخطة الأساسية',
+    'Pro Plan': 'الخطة الاحترافية',
+    'Ultimate Plan': 'الخطة الكاملة',
+    'Basic Plan': 'الخطة الأساسية',
+    'free tier': 'الخطة الأساسية',
+    'pro tier': 'الخطة الاحترافية',
+    'ultimate tier': 'الخطة الكاملة',
     'Secure Access': 'وصول آمن',
     'Verify your email to enter': 'تحقق من بريدك الإلكتروني للدخول',
     'Email Address': 'البريد الإلكتروني',
     'Verification Code': 'رمز التحقق',
     'Resend in 60s': 'إعادة الإرسال خلال 60ث',
+    'Resend Code': 'إعادة إرسال الرمز',
     'Send Code': 'إرسال الرمز',
-    'Secured by Aetheris Cryptography': 'محمي بتشفير Aetheris',
+    'Sending...': 'جار الإرسال...',
+    'Verify Identity': 'تحقق من الهوية',
+    'Verify & Enter': 'تحقق وادخل',
+    'Authenticating...': 'جار التحقق...',
+    'Already Signed In': 'تم تسجيل الدخول مسبقاً',
+    'You are logged in as': 'أنت مسجل الدخول باسم',
+    'Go to Detector': 'الانتقال إلى الكاشف',
+    'Sign Out': 'تسجيل الخروج',
+    'Secured by 3truth Cryptography': 'محمي بتشفير 3truth',
     'Secure Checkout': 'دفع آمن',
     'Back to Pricing': 'العودة إلى الأسعار',
     'Selected Plan': 'الخطة المحددة',
-    'One-Time Fee': 'رسوم لمرة واحدة',
+    'Monthly Subscription': 'اشتراك شهري',
     'Secure Payment Processing': 'معالجة دفع آمنة',
     'Instant Account Activation': 'تفعيل فوري للحساب',
     'Initializing Plan': 'تهيئة الخطة',
-    'AETHERIS_PAY': 'AETHERIS_PAY',
+    '3TRUTH_PAY': '3TRUTH_PAY',
     'CARDHOLDER NAME': 'اسم حامل البطاقة',
     'Cardholder Name': 'اسم حامل البطاقة',
     'Card Details': 'بيانات البطاقة',
     'Pay Now': 'ادفع الآن',
+    'Processing Payment...': 'جار معالجة الدفع...',
+    'Payment processor failed to load. Please refresh the page and try again.': 'فشل تحميل معالج الدفع. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
+    'Not authenticated': 'لم يتم تسجيل الدخول',
     'SSL Secured Payment': 'دفع مؤمن SSL',
     'Information': 'معلومات',
     'Return Home': 'العودة للرئيسية',
     'NEURAL INTERROGATION ENGINE ONLINE': 'محرك الفحص الذكي جاهز',
     'ULTIMATE DETECTION PROTOCOL': 'بروتوكول الكشف المتقدم',
+    'Beta v is open now: Text, Image, and Video detectors are free and unlimited for every signed-in user. Paid subscriptions are locked until production launch.': 'الإصدار التجريبي متاح الآن: أدوات الكشف عن النصوص والصور والفيديوهات مجانية وغير محدودة لجميع المستخدمين المسجلين. الاشتراكات المدفوعة مقفلة حتى إطلاق النسخة النهائية.',
     'INITIALIZE SCANNER': 'بدء الفحص',
     'SYS.METRIC // ACCURACY': 'مؤشر النظام // الدقة',
     'SYS.METRIC // LATENCY': 'مؤشر النظام // السرعة',
@@ -522,7 +572,7 @@
     'Target Acquisition': 'استقبال الهدف',
     'Neural Dissection': 'تحليل الإشارات',
     'Terminal Verdict': 'النتيجة النهائية',
-    'SECURE YOUR PERIMETER': 'احم نطاقك الرقمي',
+    'START DETECTING NOW': 'ابدأ الكشف الآن',
     'EXECUTE SCANNER': 'تشغيل الكاشف'
   };
 
@@ -533,6 +583,10 @@
   };
 
   const textNodeSources = new WeakMap();
+  const exactEn = {};
+  for (const [en, ar] of Object.entries(exactAr)) {
+    exactEn[ar] = en;
+  }
 
   function getInitialLanguage() {
     const params = new URLSearchParams(window.location.search);
@@ -574,8 +628,8 @@
 
   function updateDocumentDirection() {
     document.documentElement.lang = currentLanguage;
-    document.documentElement.dir = dict[currentLanguage].dir;
-    document.body && document.body.classList.toggle('is-rtl', isArabic());
+    document.documentElement.dir = 'ltr'; // ALWAYS keep LTR layout for both languages
+    document.body && document.body.classList.toggle('is-rtl', false); // Disable RTL styling
   }
 
   function translateElementAttrs(root) {
@@ -612,13 +666,23 @@
       let source = textNodeSources.get(node);
       if (!source) {
         source = trimmed;
+        if (exactEn[source]) source = exactEn[source]; // Recover English if it was cached as Arabic
         textNodeSources.set(node, source);
       }
-      const translated = isArabic() ? exactAr[source] : source;
+      const translated = isArabic() ? (exactAr[source] || source) : source;
       if (translated && translated !== trimmed) {
         const leading = raw.match(/^\s*/)[0];
         const trailing = raw.match(/\s*$/)[0];
         node.nodeValue = `${leading}${translated}${trailing}`;
+
+        if (node.parentElement) {
+          if (node.parentElement.hasAttribute('data-original')) {
+            node.parentElement.setAttribute('data-original', translated);
+          }
+          if (node.parentElement.hasAttribute('data-en')) {
+            node.parentElement.setAttribute('data-en', translated);
+          }
+        }
       }
     }
   }
@@ -655,8 +719,9 @@
       const navLogin = document.getElementById('nav-login-btn');
       const target = navLogin && navLogin.parentElement;
       if (target) {
-        target.classList.add('gap-3');
-        const btn = makeLangButton('px-4 py-2 border border-white/15 text-white hover:text-[var(--accent-1)] hover:border-[var(--accent-1)] transition-colors font-black text-xs tracking-wider');
+        target.classList.remove('gap-3');
+        target.classList.add('gap-4');
+        const btn = makeLangButton('h-10 px-6 flex items-center justify-center border border-white/15 text-white hover:text-[var(--accent-1)] hover:border-[var(--accent-1)] transition-colors font-black text-sm tracking-wider whitespace-nowrap flex-shrink-0');
         btn.dataset.languageSwitcher = 'desktop';
         target.insertBefore(btn, navLogin);
       }
@@ -680,8 +745,8 @@
     renderLangButtons();
   }
 
-  function applyTranslations(root) {
-    updateDocumentDirection();
+  function applyTranslations(root, updateDir = false) {
+    if (updateDir) updateDocumentDirection();
     injectLanguageControls();
     const scope = root || document.body || document.documentElement;
     translateElementAttrs(scope);
@@ -695,13 +760,14 @@
     if (!SUPPORTED.has(lang) || lang === currentLanguage) return;
     currentLanguage = lang;
     try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
-    applyTranslations(document.body || document.documentElement);
-    window.dispatchEvent(new CustomEvent('aetheris:languagechange', { detail: { language: currentLanguage } }));
+    applyTranslations(document.body || document.documentElement, true);
+    window.dispatchEvent(new CustomEvent('3truth:languagechange', { detail: { language: currentLanguage } }));
   }
 
   updateDocumentDirection();
+  applyTranslations(document.body || document.documentElement, true);
 
-  window.AetherisI18n = {
+  window._3truthI18n = {
     dict,
     t,
     setLang,
@@ -710,9 +776,21 @@
     isArabic,
     featureLabel(key) {
       return t(`detector.featureLabels.${key}`, null, key.replace(/_/g, ' '));
+    },
+    planLabel(plan) {
+      const key = String(plan || '').toLowerCase();
+      return t(`plans.${key}`, null, plan || '');
+    },
+    planDisplay(plan) {
+      const label = this.planLabel(plan);
+      return t('plans.display', { plan: label }, `${label} Plan`);
+    },
+    planTier(plan) {
+      const label = this.planLabel(plan);
+      return t('plans.tier', { plan: label }, `${label} tier`);
     }
   };
-  window.I18N = window.AetherisI18n;
+  window.I18N = window._3truthI18n;
 
-  document.addEventListener('DOMContentLoaded', () => applyTranslations(document.body));
+  document.addEventListener('DOMContentLoaded', () => applyTranslations(document.body, false));
 })();

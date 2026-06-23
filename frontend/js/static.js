@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Getting Started</h3>
                   <div class="space-y-3">
-                    <p><strong class="text-white">1. Create an Account</strong> — Sign up at <span class="text-[var(--accent-1)]">aetheris.ai/signin</span> using email or Google OAuth.</p>
-                    <p><strong class="text-white">2. Choose a Plan</strong> — The Basic plan gives you free scans across all detectors. Pro and Ultimate unlock advanced features and higher limits.</p>
+                    <p><strong class="text-white">1. Create an Account</strong> — Sign up at <span class="text-[var(--accent-1)]">3truth.com/signin</span> using email or Google OAuth.</p>
+                    <p><strong class="text-white">2. Beta Access</strong> — During beta, every signed-in user gets free unlimited scans across Text, Image, and Video detectors. Paid subscriptions are locked until production launch.</p>
                     <p><strong class="text-white">3. Start Scanning</strong> — Navigate to the Detector page, select your mode (Text, Image, or Video), paste or upload your content, and hit Analyze.</p>
                   </div>
                 </div>
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="space-y-3">
                     <p><strong class="text-white">Analysis Failed</strong> — Ensure your file is within size limits and a supported format.</p>
                     <p><strong class="text-white">Slow Processing</strong> — Video analysis may take up to 60 seconds for large files. Text and image analysis typically completes in under 5 seconds.</p>
-                    <p><strong class="text-white">Scan Quota Reached</strong> — Upgrade your plan for additional scans, or wait for your quota to reset (monthly cycle).</p>
+                    <p><strong class="text-white">Beta Access</strong> — Scan quotas are disabled during beta. If scanning is blocked, refresh the page and sign in again.</p>
                   </div>
                 </div>
               </div>
@@ -98,12 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Our Mission</h3>
-                  <p>Aetheris was founded by a collective of cybersecurity experts, AI researchers, and data scientists who recognized the growing threat of undetectable synthetic media. In an era where deepfakes and AI-generated misinformation can disrupt markets and damage reputations, we built the ultimate defense mechanism.</p>
+                  <p>3truth was founded by a collective of cybersecurity experts, AI researchers, and data scientists who recognized the growing threat of undetectable synthetic media. In an era where deepfakes and AI-generated misinformation can disrupt markets and damage reputations, we built the ultimate defense mechanism.</p>
                 </div>
 
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">What We Do</h3>
-                  <p>We establish a digital perimeter of truth. By continuously training our models against the latest generative adversarial networks (GANs) and large language models (LLMs), Aetheris stays one step ahead of synthetic content generation. Our platform processes millions of scans daily, protecting journalists, educators, legal teams, and enterprises from misinformation.</p>
+                  <p>We establish a digital perimeter of truth. By continuously training our models against the latest generative adversarial networks (GANs) and large language models (LLMs), 3truth stays one step ahead of synthetic content generation. Our platform processes millions of scans daily, protecting journalists, educators, legal teams, and enterprises from misinformation.</p>
                 </div>
 
                 <div>
@@ -179,43 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Contact Channels</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center">
-                      <p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">General Inquiries</p>
-                      <p class="text-white font-bold">info@aetheris.ai</p>
-                    </div>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center">
-                      <p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">Technical Support</p>
-                      <p class="text-white font-bold">support@aetheris.ai</p>
-                    </div>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center">
-                      <p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">Enterprise Sales</p>
-                      <p class="text-white font-bold">sales@aetheris.ai</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Headquarters</h3>
-                  <div class="bg-black/40 border border-white/10 rounded-lg p-5">
-                    <p class="text-white font-bold mb-1">Aetheris Global Intelligence</p>
-                    <p class="text-gray-400">100 Cyber Security Way</p>
-                    <p class="text-gray-400">San Francisco, CA 94105</p>
-                    <p class="text-gray-400">United States</p>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Support Hours</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5">
-                      <p class="text-white font-bold mb-1">Enterprise Customers</p>
-                      <p class="text-gray-400 text-sm">24/7 priority support with dedicated account manager. Average response time: &lt;15 minutes.</p>
-                    </div>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5">
-                      <p class="text-white font-bold mb-1">Standard Support</p>
-                      <p class="text-gray-400 text-sm">Monday–Friday, 9 AM – 6 PM PST. We aim to respond to all tickets within 2 hours.</p>
-                    </div>
+                  <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center">
+                    <p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">General Inquiries</p>
+                    <a href="mailto:info@3truth.com" class="text-xl text-white font-bold hover:text-[var(--accent-1)] transition-colors inline-block">info@3truth.com</a>
                   </div>
                 </div>
               </div>
@@ -243,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    if (window.AetherisI18n && window.AetherisI18n.isArabic()) {
+    if (window._3truthI18n && window._3truthI18n.isArabic()) {
         Object.assign(pageContent.docs, {
             title: 'التوثيق',
             subtitle: 'كل ما تحتاج معرفته عن AI Detector.',
@@ -253,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">البدء</h3>
                   <div class="space-y-3">
                     <p><strong class="text-white">1. أنشئ حسابا</strong> — سجل الدخول باستخدام البريد الإلكتروني.</p>
-                    <p><strong class="text-white">2. اختر خطة</strong> — تمنحك الخطة Basic فحوصات أساسية، بينما تفتح Pro وUltimate حدودا أعلى وميزات إضافية.</p>
+                    <p><strong class="text-white">2. وصول بيتا</strong> — خلال فترة البيتا يحصل كل مستخدم مسجل الدخول على فحوصات مجانية وغير محدودة للنصوص والصور والفيديو. الاشتراكات المدفوعة مقفلة حتى إطلاق النسخة الإنتاجية.</p>
                     <p><strong class="text-white">3. ابدأ الفحص</strong> — انتقل إلى صفحة الكاشف، اختر نصا أو صورة أو فيديو، ثم الصق المحتوى أو ارفع الملف وابدأ التحليل.</p>
                   </div>
                 </div>
@@ -283,12 +249,68 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         Object.assign(pageContent.about, {
             title: 'من نحن',
-            subtitle: 'نساعد على بناء الثقة في العصر الرقمي.',
+            subtitle: 'نبني أساس الثقة للعصر الرقمي.',
             content: `
-              <div class="space-y-8">
-                <div><h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">مهمتنا</h3><p>تعمل Aetheris على كشف المحتوى الاصطناعي وحماية المستخدمين من التضليل الرقمي عبر تحليل النصوص والصور والفيديو.</p></div>
-                <div><h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">ماذا نفعل</h3><p>نبني طبقة تحقق رقمية تساعد الصحفيين والمعلمين والشركات والأفراد على تقييم أصالة المحتوى قبل الاعتماد عليه.</p></div>
-                <div><h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">تقنيتنا</h3><p>نجمع بين البصمات الأسلوبية، التحليل الإحصائي، فحص البيانات الوصفية، والمؤشرات البصرية لاكتشاف أنماط التوليد الاصطناعي.</p></div>
+              <div class="space-y-12">
+                
+                <section>
+                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-4 uppercase tracking-wider">مهمتنا</h3>
+                  <p>تأسست 3truth بواسطة مجموعة من خبراء الأمن السيبراني وباحثي الذكاء الاصطناعي وعلماء البيانات الذين أدركوا التهديد المتزايد للوسائط الاصطناعية غير القابلة للكشف. في عصر يمكن فيه للتزييف العميق والمعلومات المضللة المولدة بالذكاء الاصطناعي أن تعطل الأسواق وتضر بالسمعة، قمنا ببناء آلية الدفاع النهائية.</p>
+                </section>
+
+                <section>
+                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-4 uppercase tracking-wider">ماذا نفعل</h3>
+                  <p>نحن نؤسس محيطاً رقمياً للحقيقة. من خلال تدريب نماذجنا باستمرار ضد أحدث شبكات التوليد التنافسية (GANs) والنماذج اللغوية الكبيرة (LLMs)، تظل 3truth متقدمة بخطوة على توليد المحتوى الاصطناعي. تعالج منصتنا ملايين الفحوصات يومياً، لحماية الصحفيين والمعلمين والفرق القانونية والشركات من المعلومات المضللة.</p>
+                </section>
+
+                <section>
+                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-4 uppercase tracking-wider">تقنيتنا</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-black/40 border border-white/10 rounded-lg p-6 hover:border-[var(--accent-1)]/50 transition-colors">
+                      <h4 class="text-lg font-bold text-white mb-2">البصمات العصبية</h4>
+                      <p class="text-sm text-gray-400">تكتشف نماذجنا الخاصة تواقيع إحصائية دقيقة تتركها مولدات الذكاء الاصطناعي - أنماط غير مرئية للعين البشرية ولكن لا يمكن تخطيها من قبل خوارزمياتنا.</p>
+                    </div>
+                    <div class="bg-black/40 border border-white/10 rounded-lg p-6 hover:border-[var(--accent-1)]/50 transition-colors">
+                      <h4 class="text-lg font-bold text-white mb-2">التدريب التنافسي</h4>
+                      <p class="text-sm text-gray-400">نقوم باستمرار بتحدي نماذجنا الخاصة ضد أحدث المولدات، مما يضمن بقاء كشفنا متقدماً على منحنى التوليد.</p>
+                    </div>
+                    <div class="bg-black/40 border border-white/10 rounded-lg p-6 hover:border-[var(--accent-1)]/50 transition-colors">
+                      <h4 class="text-lg font-bold text-white mb-2">التحليل متعدد الوسائط</h4>
+                      <p class="text-sm text-gray-400">يتم تشغيل تحليل النصوص والصور والفيديو على شبكات عصبية متخصصة ومنفصلة تم تحسينها لكل نوع من أنواع المحتوى.</p>
+                    </div>
+                    <div class="bg-black/40 border border-white/10 rounded-lg p-6 hover:border-[var(--accent-1)]/50 transition-colors">
+                      <h4 class="text-lg font-bold text-white mb-2">المعالجة في الوقت الفعلي</h4>
+                      <p class="text-sm text-gray-400">توفر البنية التحتية من مستوى المؤسسات تحليلاً في أجزاء من الثانية للنصوص والصور، مع اتفاقية مستوى خدمة لجهوزية بنسبة 99.99٪.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-4 uppercase tracking-wider">التواجد العالمي</h3>
+                  <p>يعمل فريقنا عالمياً مع مراكز أبحاث في سان فرانسيسكو ولندن وطوكيو. نحن مكرسون لدفع حدود التحليل الجنائي وتزويد عملائنا بالثقة المطلقة في الوسائط التي يستهلكونها ويوزعونها.</p>
+                </section>
+
+                <section class="border-t border-white/10 pt-8 mt-8">
+                  <h3 class="text-xl font-bold text-center mb-8 uppercase tracking-wider">بالأرقام</h3>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <p class="text-3xl font-black text-[var(--accent-1)]">500M+</p>
+                      <p class="text-gray-500 text-xs uppercase tracking-widest mt-1">عينات التدريب</p>
+                    </div>
+                    <div>
+                      <p class="text-3xl font-black text-[var(--accent-1)]">47</p>
+                      <p class="text-gray-500 text-xs uppercase tracking-widest mt-1">النماذج الإرشادية</p>
+                    </div>
+                    <div>
+                      <p class="text-3xl font-black text-white">99.99%</p>
+                      <p class="text-gray-500 text-xs uppercase tracking-widest mt-1">اتفاقية مستوى الخدمة</p>
+                    </div>
+                    <div>
+                      <p class="text-3xl font-black text-white">&lt;340ms</p>
+                      <p class="text-gray-500 text-xs uppercase tracking-widest mt-1">متوسط الاستجابة</p>
+                    </div>
+                  </div>
+                </section>
               </div>
             `
         });
@@ -297,20 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
             subtitle: 'يسعدنا سماعك.',
             content: `
               <div class="space-y-8">
-                <div><h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">تواصل معنا</h3><p>للاستفسارات العامة أو الدعم الفني أو طلبات الشركات، يمكنك التواصل معنا عبر القنوات التالية.</p></div>
+                <div>
+                  <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">تواصل معنا</h3>
+                  <p>سواء كنت تبحث عن تكامل مؤسسي أو تواجه مشكلات تقنية أو تريد معرفة المزيد عن تقنيتنا الجنائية، فريقنا هنا لمساعدتك.</p>
+                </div>
+
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">قنوات التواصل</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center"><p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">استفسارات عامة</p><p class="text-white font-bold">info@aetheris.ai</p></div>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center"><p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">الدعم الفني</p><p class="text-white font-bold">support@aetheris.ai</p></div>
-                    <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center"><p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">الشركات</p><p class="text-white font-bold">sales@aetheris.ai</p></div>
+                  <div class="bg-black/40 border border-white/10 rounded-lg p-5 text-center">
+                    <p class="text-[var(--accent-1)] text-xs uppercase tracking-widest mb-2">استفسارات عامة</p>
+                    <a href="mailto:info@3truth.com" class="text-xl text-white font-bold hover:text-[var(--accent-1)] transition-colors inline-block">info@3truth.com</a>
                   </div>
                 </div>
               </div>
             `
         });
         ['careers', 'blog', 'privacy', 'terms', 'cookies', 'security'].forEach(key => {
-            const localized = window.AetherisI18n.dict.ar.staticPages[key];
+            const localized = window._3truthI18n.dict.ar.staticPages[key];
             if (localized) Object.assign(pageContent[key], localized);
         });
     }
@@ -344,8 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const returnBtn = document.getElementById('page-return');
 
     // Update Content
-    document.title = `${pageData.title} - Aetheris`;
+    document.title = `${pageData.title} - 3truth`;
+    titleEl.textContent = pageData.title;
+    titleEl.style.opacity = '0';
+    titleEl.style.transform = 'translateY(20px)';
+    
     subtitleEl.textContent = pageData.subtitle;
+    subtitleEl.style.opacity = '0';
+    
     contentEl.innerHTML = pageData.content;
 
     // Set Label Icon
@@ -360,40 +391,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Re-initialize icons since we changed an attribute
     lucide.createIcons();
 
-    // GSAP Animations (Replicating LetterPullUp and BlurText)
-    
-    // 1. LetterPullUp for Title
-    const letters = pageData.title.split('');
-    titleEl.innerHTML = '';
-    letters.forEach(letter => {
-        const span = document.createElement('span');
-        span.textContent = letter === ' ' ? '\u00A0' : letter;
-        span.style.display = 'inline-block';
-        span.style.opacity = '0';
-        span.style.transform = 'translateY(20px)';
-        titleEl.appendChild(span);
-    });
-
     // Start Animations Sequence
     setTimeout(() => {
         // Show Label
         labelContainer.classList.remove('opacity-0', 'translate-y-4');
         
-        // Title Letters
-        gsap.to(titleEl.children, {
+        // Simple fade in for Title
+        gsap.to(titleEl, {
             opacity: 1,
             y: 0,
             duration: 0.8,
-            stagger: 0.05,
             ease: 'power3.out'
         });
 
-        // BlurText Subtitle
+        // Simple fade in for Subtitle (no blur)
         gsap.to(subtitleEl, {
             opacity: 1,
-            filter: 'blur(0px)',
             duration: 1.2,
-            delay: 0.5,
+            delay: 0.3,
             ease: 'power2.out'
         });
         
@@ -404,6 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 });
 
-window.addEventListener('aetheris:languagechange', () => {
+window.addEventListener('3truth:languagechange', () => {
     window.location.reload();
 });

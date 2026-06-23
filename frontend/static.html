@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Information - Aetheris</title>
+  <title>Information - 3truth</title>
+  <link rel="icon" href="assets/favicon.svg">
   
   <link rel="stylesheet" href="css/tailwind.css">
   <script>
@@ -16,8 +17,8 @@
           },
           colors: {
             cyan: {
-              400: '#22d3ee',
-              500: '#06b6d4',
+              400: '#2FEECC',
+              500: '#2FEECC',
             }
           }
         }
@@ -32,12 +33,12 @@
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/main.css?v=6.1">
   <style>
     body {
       font-family: 'Sora', sans-serif;
-      background-color: #000;
-      color: #fff;
+      background-color: #031f1a;
+      color: #FFFFFF;
     }
     
     .glow-border {
@@ -51,6 +52,7 @@
       padding: 1px;
       background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.05), rgba(255,255,255,0.1));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       pointer-events: none;
@@ -66,37 +68,34 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="selection:bg-cyan-500/30 overflow-x-hidden">
+<body class="overflow-x-hidden">
   
   <!-- Film Grain Overlay -->
   <div class="film-grain"></div>
 
-  <!-- Fixed aurora background with cinematic flares -->
-  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" style="background: radial-gradient(circle at 50% 0%, #0a0a0c 0%, #000 100%);">
-    <div class="cinematic-flare w-[800px] h-[800px] bg-cyan-600/30 -top-96 -left-96"></div>
-    <div class="cinematic-flare w-[600px] h-[600px] bg-purple-600/20 top-1/4 -right-64" style="animation-delay:-5s;"></div>
-    <div class="aurora-bg absolute inset-0 opacity-40"></div>
-    <div class="tilted-grid opacity-10"><div class="tilted-grid-inner"></div></div>
-  </div>
+  <!-- Background removed to ensure dark theme stays dark -->
 
   <!-- Navigation -->
   <div class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
     <!-- Left Logo -->
-    <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity w-1/4">
-      <img src="assets/Logo.png" alt="Logo" class="w-16 h-16 md:w-20 md:h-20">
-      <span class="font-outfit font-black tracking-widest text-xl md:text-2xl text-white">AETHER<span class="text-[var(--accent-1)]">IS</span></span>
+    <a href="/" class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
+        <span class="beta-logo-badge" title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
+      </div>
+      <span class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By Futuregen</span>
     </a>
     
     <!-- Centered Navigating Buttons -->
     <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-      <a href="index.html" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
-      <a href="detector.html" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="pricing.html" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
+      <a href="/" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
+      <a href="/scan" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
+      <a href="/plans" class="beta-nav-link text-white hover:text-[var(--accent-1)] transition-colors">PRICING<span class="beta-nav-badge">BETA</span></a>
     </div>
 
     <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-1/4">
-      <a href="signin.html" id="nav-login-btn" class="px-6 py-2 bg-[var(--accent-1)] text-black hover:bg-white transition-colors">LOGIN</a>
+    <div class="hidden md:flex justify-end items-center w-auto gap-4">
+      <a href="/login" id="nav-login-btn" class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
     </div>
 
     <!-- Mobile Toggle -->
@@ -111,14 +110,14 @@
       <i data-lucide="x" class="w-8 h-8"></i>
     </button>
     <div class="flex flex-col gap-6 text-2xl font-black">
-      <a href="index.html" class="text-white hover:text-[var(--accent-1)]">HOME</a>
-      <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="pricing.html" class="text-white hover:text-[var(--accent-1)]">PRICING</a>
+      <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
+      <a href="/scan" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
+      <a href="/plans" class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<span class="beta-nav-badge">BETA</span></a>
 
-      <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
-      <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
-      <a href="contact.html" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
-      <a href="signin.html" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
+      <a href="/info?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
+      <a href="/info?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
+      <a href="/support" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
+      <a href="/login" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
     </div>
   </div>
 
@@ -129,7 +128,7 @@
       <!-- Label -->
       <div id="page-label" class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mx-auto opacity-0 translate-y-4 transition-all duration-1000 ease-out">
         <i data-lucide="info" class="w-4 h-4 text-cyan-400" id="label-icon"></i>
-        <span class="text-[10px] font-black tracking-[0.3em] uppercase text-gray-400" id="label-text">
+        <span class="text-[12px] md:text-[14px] font-black tracking-[0.3em] uppercase text-gray-400" id="label-text">
           Information
         </span>
       </div>
@@ -145,7 +144,7 @@
       </p>
       
       <!-- Content Card -->
-      <div class="holo-panel glow-border max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out" id="page-content-container">
+      <div class="glow-border bg-[#031f1a]/80 backdrop-blur-md max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out" id="page-content-container">
         <div class="text-gray-300 leading-relaxed text-base md:text-lg font-light space-y-6" id="page-content">
           <!-- Text animated via JS -->
         </div>
@@ -153,7 +152,7 @@
       
       <!-- Return Button -->
       <div class="pt-12 opacity-0 translate-y-4 transition-all duration-1000 delay-500 ease-out" id="page-return">
-        <a href="index.html" class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors font-bold uppercase tracking-widest text-sm text-gray-300 hover:text-white group">
+        <a href="/" class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors font-bold uppercase tracking-widest text-sm text-gray-300 hover:text-white group">
           <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
           Return Home
         </a>
@@ -169,12 +168,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- External Scripts -->
-  <script src="js/nav.js"></script>
   <script src="js/i18n.js?v=1"></script>
   <script src="js/animations.js"></script>
-  <script src="js/cinematic.js"></script>
+    <script src="js/cinematic.js?v=6.0"></script>
   <script src="js/footer.js?v=3"></script>
   <script src="js/static.js"></script>
+  <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
 
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment | Aetheris</title>
-  <link rel="icon" href="assets/Logo.png">
+  <title>Payment | 3truth</title>
+  <link rel="icon" href="assets/favicon.svg">
   <!-- Tailwind -->
   <link rel="stylesheet" href="css/tailwind.css">
   <!-- GSAP + plugins -->
@@ -16,20 +16,20 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <!-- Stripe.js for Real Money Processing -->
-  <script src="https://js.stripe.com/v3/"></script>
+  <!-- Stripe disabled: paid subscriptions are locked during beta. -->
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <!-- Shared CSS -->
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main.css?v=6.1">
+    <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1">
 </head>
-<body class="bg-[var(--bg-primary)] text-white overflow-x-hidden selection:bg-cyan-500">
+<body class="bg-[var(--bg-primary)] text-white overflow-x-hidden">
 
   <!-- Film Grain Overlay -->
   <div class="film-grain"></div>
 
   <!-- Fixed aurora background with cinematic flares -->
-  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" style="background: radial-gradient(circle at 50% 0%, #0a0a0c 0%, #000 100%);">
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(47,238,204,0.20) 0%, #031f1a 100%);">
     <div class="cinematic-flare w-[800px] h-[800px] bg-cyan-600/30 -top-96 -left-96"></div>
     <div class="cinematic-flare w-[600px] h-[600px] bg-purple-600/20 top-1/4 -right-64" style="animation-delay:-5s;"></div>
     <div class="aurora-bg absolute inset-0 opacity-40"></div>
@@ -45,25 +45,25 @@
         </button>
         
         <h1 class="text-5xl font-black tracking-tighter whitespace-nowrap" id="payment-title">
-          Secure Checkout
+          Beta Access
         </h1>
         
         <div class="holo-panel p-8 rounded-[2.5rem] space-y-6">
           <div class="flex justify-between items-end border-b border-white/5 pb-6">
             <div>
               <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Selected Plan</p>
-              <h3 class="text-3xl font-black text-white capitalize" id="plan-name-display">Pro Plan</h3>
+            <h3 class="text-3xl font-black text-white capitalize" id="plan-name-display">Basic Beta Plan</h3>
             </div>
             <div class="text-right">
-              <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">One-Time Fee</p>
-              <p class="text-3xl font-black font-mono" id="plan-price-display">$1<span class="text-xs text-gray-600"> ONE-TIME</span></p>
+              <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Subscription Status</p>
+              <p class="text-3xl font-black font-mono" id="plan-price-display">$0<span class="text-xs text-gray-600"> BETA</span></p>
             </div>
           </div>
           
           <div class="space-y-4">
             <div class="flex items-center gap-3 text-gray-400 font-bold text-sm">
               <i data-lucide="shield-check" class="w-[18px] h-[18px] text-white"></i>
-              <span>Secure Payment Processing</span>
+              <span>Payments locked during beta</span>
             </div>
             <div class="flex items-center gap-3 text-gray-400 font-bold text-sm">
               <i data-lucide="zap" class="w-[18px] h-[18px] text-white"></i>
@@ -79,7 +79,7 @@
           <div class="absolute inset-0 border-2 border-white/10 rounded-[2.5rem] opacity-20 pointer-events-none"></div>
 
           <div class="lg:hidden mb-8 text-center">
-             <h2 class="text-3xl font-black mb-2 whitespace-nowrap">Secure Checkout</h2>
+             <h2 class="text-3xl font-black mb-2 whitespace-nowrap">Beta Access</h2>
              <p class="text-gray-400 font-black uppercase text-xs tracking-widest" id="mobile-plan-display">Initializing Plan</p>
           </div>
 
@@ -88,36 +88,36 @@
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             <div class="flex justify-between items-start relative z-10">
                <i data-lucide="cpu" class="w-8 h-8 text-white/50"></i>
-               <div class="text-[10px] font-black text-gray-600 tracking-[0.3em]">AETHERIS_PAY</div>
+                <div class="text-[10px] font-black text-gray-600 tracking-[0.3em]">BETA_UNLOCKED</div>
             </div>
             <div class="relative z-10">
-              <p class="text-xl font-mono tracking-[0.2em] mb-2" id="preview-number">•••• •••• •••• ••••</p>
+              <p class="text-xl font-mono tracking-[0.2em] mb-2" id="preview-number">FREE • UNLIMITED • BETA</p>
               <div class="flex justify-between text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <span id="preview-name">CARDHOLDER NAME</span>
-                <span id="preview-expiry">MM/YY</span>
+                <span id="preview-name">SUBSCRIPTIONS LOCKED</span>
+                <span id="preview-expiry">BETA V</span>
               </div>
             </div>
           </div>
 
-          <div id="error-msg" class="hidden mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-black flex items-center justify-center gap-2 text-xs">
+          <div id="error-msg" class="hidden mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-black gap-2 text-xs">
           </div>
 
           <form id="payment-form" class="space-y-6">
             <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Cardholder Name</label>
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Beta access note</label>
               <input 
                 id="input-name"
-                type="text" required 
+                type="text" disabled
                 class="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-white/50 transition-all text-sm"
-                placeholder="John Doe"
+                placeholder="All detectors are free and unlimited during beta."
               />
             </div>
 
             <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Card Details</label>
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Subscription checkout</label>
               <!-- Stripe Elements Mount Point -->
               <div id="card-element" class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-white/50 transition-all text-sm tracking-widest">
-                <!-- A Stripe Element will be inserted here. -->
+                Locked for beta. No card is required.
               </div>
               <!-- Used to display professional real-time validation errors -->
               <div id="card-errors" role="alert" class="text-red-400 text-xs font-bold mt-2 ml-1 min-h-[16px]"></div>
@@ -126,14 +126,14 @@
             <div class="pt-4">
               <button type="submit" id="submit-btn" class="w-full py-5 bg-[var(--accent-1)] text-black font-black rounded-full transition-all duration-300 border-2 border-transparent hover:bg-transparent hover:text-[var(--accent-1)] hover:border-[var(--accent-1)]/50 transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-3 text-lg group shadow-[0_0_30px_rgba(0,229,255,0.3)]">
                 <i data-lucide="lock" id="submit-icon" class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
-                <span id="submit-text">Pay Now</span>
+                <span id="submit-text">Go To Detector</span>
               </button>
             </div>
           </form>
           
           <div class="mt-8 flex items-center justify-center gap-4 border-t border-white/5 pt-8 text-gray-600">
              <i data-lucide="shield-check" class="w-4 h-4"></i>
-             <span class="text-[10px] font-black uppercase tracking-[0.2em]">SSL Secured Payment</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.2em]">Beta v: free unlimited access</span>
           </div>
         </div>
       </div>
@@ -146,8 +146,11 @@
   <script src="js/i18n.js?v=1"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/animations.js"></script>
-  <script src="js/cinematic.js"></script>
+  <script src="js/cinematic.js?v=6.0"></script>
   <script src="js/footer.js"></script>
   <script src="js/payment.js"></script>
+    <script src="js/nav-state.js?v=20260613-ui1"></script>
+    <script src="js/aurora-fix.js?v=20260613-ui1"></script>
+    <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
 </body>
 </html>

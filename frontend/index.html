@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aetheris | Global Intelligence</title>
-  <link rel="icon" href="assets/Logo.png">
+  <title>3truth | Global Intelligence</title>
+  <link rel="icon" href="assets/favicon.svg">
 
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;600;800;900&display=swap"
@@ -18,7 +18,134 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
   <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
 
-  <link rel="stylesheet" href="css/main.css?v=5.0">
+  <link rel="stylesheet" href="css/main.css?v=6.1">
+
+  <style>
+    /* Custom CSS Particles */
+    .panel-particles {
+      mask-image: radial-gradient(white, black);
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+    }
+
+    .particle-wrap {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      perspective: 400px;
+      transform-style: preserve-3d;
+    }
+
+    .particle {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: var(--accent-1);
+      border-radius: 50%;
+      box-shadow: 0 0 16px var(--accent-1), 0 0 32px rgba(0, 229, 255, 0.35);
+      animation: float 10s infinite linear;
+      opacity: 0;
+    }
+
+    .particle-wrap:nth-child(1) .particle {
+      left: 10%;
+      top: 20%;
+      animation-duration: 8s;
+      animation-delay: 0s;
+    }
+
+    .particle-wrap:nth-child(2) .particle {
+      left: 80%;
+      top: 40%;
+      animation-duration: 12s;
+      animation-delay: -2s;
+      background: var(--accent-2);
+      box-shadow: 0 0 10px var(--accent-2);
+    }
+
+    .particle-wrap:nth-child(3) .particle {
+      left: 40%;
+      top: 80%;
+      animation-duration: 9s;
+      animation-delay: -5s;
+    }
+
+    .particle-wrap:nth-child(4) .particle {
+      left: 70%;
+      top: 10%;
+      animation-duration: 15s;
+      animation-delay: -7s;
+    }
+
+    .particle-wrap:nth-child(5) .particle {
+      left: 30%;
+      top: 50%;
+      animation-duration: 11s;
+      animation-delay: -1s;
+      background: var(--accent-3);
+      box-shadow: 0 0 10px var(--accent-3);
+    }
+
+    .particle-wrap:nth-child(6) .particle {
+      left: 90%;
+      top: 70%;
+      animation-duration: 14s;
+      animation-delay: -4s;
+    }
+
+    .particle-wrap:nth-child(7) .particle {
+      left: 20%;
+      top: 90%;
+      animation-duration: 10s;
+      animation-delay: -8s;
+    }
+
+    .particle-wrap:nth-child(8) .particle {
+      left: 50%;
+      top: 30%;
+      animation-duration: 13s;
+      animation-delay: -3s;
+    }
+
+    .particle-wrap:nth-child(9) .particle {
+      left: 85%;
+      top: 85%;
+      animation-duration: 16s;
+      animation-delay: -9s;
+      background: var(--accent-2);
+      box-shadow: 0 0 10px var(--accent-2);
+    }
+
+    .particle-wrap:nth-child(10) .particle {
+      left: 15%;
+      top: 15%;
+      animation-duration: 11s;
+      animation-delay: -6s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100px) scale(0);
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      80% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-100px) scale(1);
+        opacity: 0;
+      }
+    }
+  </style>
+
+  <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1">
 </head>
 
 <body class="bg-[var(--bg-100)] text-white" style="font-family: var(--font-primary);">
@@ -32,9 +159,6 @@
     style="width:100%; height:2px; background:var(--accent-2); position:fixed; top:0; z-index:9999; transform-origin:left;">
   </div>
 
-  <div id="cursor-dot"></div>
-  <div id="cursor-ring"></div>
-
   <!-- Backgrounds -->
   <div class="aurora-container">
     <div class="aurora-blob cyan"></div>
@@ -43,43 +167,40 @@
   </div>
   <div class="grid-overlay"></div>
 
-  <!-- SVG Connection Line (Radar Data Stream) -->
-  <svg class="fixed top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0 opacity-40 mix-blend-screen"
-    viewBox="0 0 100 1000" preserveAspectRatio="none">
-    <path id="scroll-path" d="M 50 0 C 90 250, 10 750, 50 1000" fill="none" stroke="var(--accent-1)" stroke-width="0.5"
-      stroke-dasharray="2 6" />
-    <path id="scroll-glow" d="M 50 0 C 90 250, 10 750, 50 1000" fill="none" stroke="var(--accent-1)" stroke-width="2"
-      style="filter: drop-shadow(0 0 10px var(--accent-1));" />
-  </svg>
+
 
 
   <!-- Navigation -->
   <div
     class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
     <!-- Left Logo -->
-    <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity w-1/4">
-      <img src="assets/Logo.png" alt="Logo" class="w-16 h-16 md:w-20 md:h-20">
-      <span class="font-outfit font-black tracking-widest text-xl md:text-2xl text-white">AETHER<span
-          class="text-[var(--accent-1)]">IS</span></span>
+    <a href="index.html"
+      class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
+        <span class="beta-logo-badge"
+          title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
+      </div>
+      <span
+        class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By
+        Futuregen</span>
     </a>
 
     <!-- Centered Navigating Buttons -->
     <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-      <a href="index.html" class="text-[var(--accent-1)] transition-colors">HOME</a>
+      <a href="index.html" aria-current="page" class="text-[var(--accent-1)] transition-colors">HOME</a>
       <a href="detector.html" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="pricing.html" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
+      <span style="position:relative;display:inline-flex;align-items:center;">
+        <a href="pricing.html" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
+        <span class="beta-nav-badge" style="top:-1.05rem;right:-1.35rem;">BETA</span>
+      </span>
     </div>
 
     <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-1/4">
+    <div class="hidden md:flex justify-end items-center w-auto gap-4">
       <a href="signin.html" id="nav-login-btn"
-        class="px-6 py-2 bg-[var(--accent-1)] text-black hover:bg-white transition-colors">LOGIN</a>
+        class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
     </div>
-
-    <!-- Mobile Toggle -->
-    <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="menu" class="w-8 h-8"></i>
-    </button>
   </div>
 
   <!-- Sidebar (Mobile Menu) -->
@@ -91,7 +212,9 @@
     <div class="flex flex-col gap-6 text-2xl font-black">
       <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
       <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="pricing.html" class="text-white hover:text-[var(--accent-1)]">PRICING</a>
+      <a href="pricing.html"
+        class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<span
+          class="beta-nav-badge">BETA</span></a>
 
       <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
       <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
@@ -114,17 +237,12 @@
         class="hero-title text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase">
         <span class="scramble-hover inline-block">ULTIMATE DETECTION PROTOCOL</span>
       </h1>
+      <p class="text-white/80 max-w-2xl mx-auto mb-10 hero-elem text-sm md:text-base font-medium">
+        Beta v is open now: Text, Image, and Video detectors are free and unlimited for every signed-in user. Paid
+        subscriptions are locked until production launch.
+      </p>
 
-      <div class="flex flex-col sm:flex-row gap-6 sm:gap-8 hero-elem w-full sm:w-auto px-4 sm:px-0">
-        <a href="detector.html"
-          class="btn-magnetic shadow-[0_0_30px_var(--accent-1)] group px-12 py-4.5 text-base md:text-lg font-black tracking-widest">
-          <span class="scramble-hover">INITIALIZE SCANNER</span>
-        </a>
-        <a href="pricing.html"
-          class="btn-glass flex items-center justify-center gap-2 group px-12 py-4.5 text-base md:text-lg font-black tracking-widest">
-          <span class="scramble-hover text-white group-hover:text-[var(--accent-1)] transition-colors">PRICING</span>
-        </a>
-      </div>
+
     </section>
 
     <!-- <div class="marquee-container mb-32 md:mb-48 mt-6 md:mt-10">
@@ -141,9 +259,14 @@
     </div> -->
 
     <!-- Glowing Divider Line -->
-    <div style="width: 100%; margin: 4rem 0 6rem 0; display: flex; align-items: center; justify-content: center; position: relative;">
-      <div style="height: 1px; width: 100%; background: linear-gradient(90deg, transparent, var(--accent-1), transparent); opacity: 0.8;"></div>
-      <div style="position: absolute; width: 60%; height: 3px; background-color: var(--accent-1); box-shadow: 0 0 40px 5px var(--accent-1); border-radius: 9999px;"></div>
+    <div
+      style="width: 100%; margin: 4rem 0 6rem 0; display: flex; align-items: center; justify-content: center; position: relative;">
+      <div
+        style="height: 1px; width: 100%; background: linear-gradient(90deg, transparent, var(--accent-1), transparent); opacity: 0.8;">
+      </div>
+      <div
+        style="position: absolute; width: 60%; height: 3px; background-color: var(--accent-1); box-shadow: 0 0 40px 5px var(--accent-1); border-radius: 9999px;">
+      </div>
     </div>
 
     <!-- Stats Section -->
@@ -286,9 +409,44 @@
     <section class="horizontal-section border-y border-[var(--accent-1)]/30" id="horizontal-trigger">
       <div class="horizontal-track" id="horizontal-track">
         <div class="horizontal-panel relative" style="background: var(--bg-200);">
+
+          <div
+            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+          </div>
+
           <div class="panel-inner">
             <span
-              class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-1)] inline-block px-3 py-1 bg-[var(--accent-1)]/10">>
+              class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-1)] inline-block px-3 py-1" style="background-color: rgba(47, 238, 204, 0.1);">
               PHASE 01: INGESTION</span>
             <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase text-glow">Target Acquisition</h3>
             <p class="text-[var(--accent-1)] opacity-80 text-xl leading-relaxed">Input target data vector. Accepts raw
@@ -297,9 +455,44 @@
           <div class="panel-number text-[var(--accent-1)] opacity-5">01</div>
         </div>
         <div class="horizontal-panel relative" style="background: var(--bg-300);">
+
+          <div
+            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+          </div>
+
           <div class="panel-inner">
             <span
-              class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-3)] inline-block px-3 py-1 bg-[var(--accent-3)]/10">>
+              class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-3)] inline-block px-3 py-1" style="background-color: rgba(223, 255, 248, 0.1);">
               PHASE 02: ANALYSIS</span>
             <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase"
               style="text-shadow: 0 0 15px var(--accent-3)">Neural Dissection</h3>
@@ -309,9 +502,44 @@
           <div class="panel-number text-[var(--accent-3)] opacity-5">02</div>
         </div>
         <div class="horizontal-panel relative" style="background: var(--bg-400);">
+
+          <div
+            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+            <div class="particle-wrap">
+              <div class="particle"></div>
+            </div>
+          </div>
+
           <div class="panel-inner">
             <span
-              class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-2)] inline-block px-3 py-1 bg-[var(--accent-2)]/10">>
+              class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-2)] inline-block px-3 py-1" style="background-color: rgba(168, 255, 240, 0.1);">
               PHASE 03: EXECUTION</span>
             <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase"
               style="text-shadow: 0 0 15px var(--accent-2)">Terminal Verdict</h3>
@@ -329,7 +557,7 @@
         class="relative z-10 border border-[var(--accent-1)] p-8 md:p-12 bg-black/80 backdrop-blur-md shadow-[0_0_40px_rgba(6,182,212,0.1)]">
         <i data-lucide="shield-alert" class="w-20 h-20 text-[var(--accent-2)] mx-auto mb-8 animate-pulse"></i>
         <h2 class="text-6xl md:text-7xl font-outfit font-black mb-8 text-white uppercase tracking-wider text-glow">
-          SECURE YOUR PERIMETER</h2>
+          START DETECTING NOW</h2>
         <p class="text-[var(--accent-1)] font-mono text-xl mb-12">> AWAITING COMMAND. INITIATE PROTOCOL TO BEGIN
           FORENSIC SCAN.</p>
         <a href="detector.html"
@@ -343,7 +571,7 @@
 
   <footer
     class="site-footer border-t border-[var(--accent-1)]/30 mt-20 pt-10 pb-10 text-center font-mono text-sm text-[var(--accent-1)]/50 bg-black/50">
-    <div>AETHERIS GLOBAL INTELLIGENCE © 2026. ALL SYSTEMS CLASSIFIED.</div>
+    <div>3TRUTH GLOBAL INTELLIGENCE Â© 2026. ALL SYSTEMS CLASSIFIED.</div>
   </footer>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -353,7 +581,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/footer.js?v=3"></script>
   <script src="js/animations.js"></script>
-  <script src="js/cinematic.js"></script>
+  <script src="js/cinematic.js?v=9.0"></script>
   <script>
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
@@ -410,6 +638,9 @@
       }
     }, 1000);
   </script>
+  <script src="js/nav-state.js?v=20260613-ui1"></script>
+  <script src="js/aurora-fix.js?v=20260613-ui1"></script>
+  <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
 </body>
 
 </html>

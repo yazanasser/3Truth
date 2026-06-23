@@ -7,31 +7,140 @@ import exifr from 'exifr';
 import * as mm from 'music-metadata';
 import { fileURLToPath } from 'url';
 import os from 'os';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 5001;
+const frontendDir = path.join(__dirname, '../frontend');
 
 app.use(cors({
     origin: '*',
     allowedHeaders: ['Content-Type', 'X-User-Email']
 }));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
+app.use(express.static(frontendDir));
 
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
+const PAGE_ROUTES = {
+    '/detector': 'detector.html',
+    '/scan': 'detector.html',
+    '/pricing': 'pricing.html',
+    '/plans': 'pricing.html',
+    '/signin': 'signin.html',
+    '/login': 'signin.html',
+    '/payment': 'payment.html',
+    '/checkout': 'payment.html',
+    '/contact': 'contact.html',
+    '/support': 'contact.html'
+};
+
+Object.entries(PAGE_ROUTES).forEach(([route, fileName]) => {
+    app.get([route, `${route}.html`], (req, res) => {
+        res.sendFile(path.join(frontendDir, fileName));
+    });
+});
+
+app.get(['/docs', '/docs.html', '/about', '/about.html', '/info', '/info.html'], (req, res) => {
+    res.sendFile(path.join(frontendDir, 'static.html'));
+});
+
 const upload = multer({ dest: os.tmpdir() });
 
-app.use((err, req, res, next) => {
-    console.error('SERVER ERROR:', err);
-    res.status(500).json({ error: 'Internal Server Error', details: err.message });
-});
+function cleanupUploadedFile(file) {
+    if (!file || !file.path) return;
+    fs.unlink(file.path, (err) => {
+        if (err && err.code !== 'ENOENT') {
+            console.warn(`[TEMP_FILE_CLEANUP_FAILED] ${file.path}: ${err.message}`);
+        }
+    });
+}
+
+const TEXT_FILE_EXTENSIONS = new Set([
+    '.txt', '.md', '.markdown', '.csv', '.tsv', '.json', '.jsonl', '.xml',
+    '.html', '.htm', '.rtf', '.log', '.yaml', '.yml', '.ini', '.cfg',
+    '.conf', '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.c', '.cpp',
+    '.h', '.hpp', '.cs', '.go', '.rs', '.php', '.rb', '.swift', '.kt',
+    '.sql', '.sh', '.bat', '.ps1', '.css', '.scss', '.less', '.srt',
+    '.vtt'
+]);
+const IMAGE_FILE_EXTENSIONS = new Set([
+    '.jpg', '.jpeg', '.jfif', '.png', '.webp', '.gif', '.bmp', '.tif',
+    '.tiff', '.heic', '.heif', '.avif', '.svg', '.ico', '.raw', '.dng',
+    '.cr2', '.cr3', '.nef', '.arw', '.orf', '.rw2', '.raf', '.pef',
+    '.srw', '.x3f'
+]);
+const VIDEO_FILE_EXTENSIONS = new Set([
+    '.mp4', '.m4v', '.mov', '.webm', '.avi', '.mkv', '.wmv', '.flv',
+    '.mpeg', '.mpg', '.3gp', '.3g2', '.mts', '.m2ts', '.ts', '.ogv',
+    '.hevc', '.h265', '.h264'
+]);
+
+function getFileExtension(fileName = '') {
+    const cleanName = String(fileName || '').toLowerCase().split(/[?#]/)[0];
+    const lastDot = cleanName.lastIndexOf('.');
+    return lastDot >= 0 ? cleanName.slice(lastDot) : '';
+}
+
+function isTextLikeMime(mimeType = '') {
+    const mime = String(mimeType || '').toLowerCase();
+    return mime.startsWith('text/') ||
+        mime.includes('json') ||
+        mime.includes('xml') ||
+        mime.includes('javascript') ||
+        mime.includes('x-yaml') ||
+        mime.includes('rtf');
+}
+
+function inferAnalysisTypeFromFile(file, requestedType = 'text') {
+    const mime = String(file?.mimetype || '').toLowerCase();
+    const ext = getFileExtension(file?.originalname);
+    if (mime.startsWith('image/') || IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
+    if (mime.startsWith('video/') || VIDEO_FILE_EXTENSIONS.has(ext)) return 'video';
+    if (isTextLikeMime(mime) || TEXT_FILE_EXTENSIONS.has(ext)) return 'text';
+    const normalizedRequested = String(requestedType || '').toLowerCase();
+    return ['text', 'image', 'video'].includes(normalizedRequested) ? normalizedRequested : 'text';
+}
+
+function decodeUploadedTextBuffer(buffer, ext = '') {
+    let text = buffer.toString('utf8').replace(/\0/g, ' ');
+    if (ext === '.rtf') {
+        text = text
+            .replace(/\\'[0-9a-fA-F]{2}/g, ' ')
+            .replace(/\\[a-z]+-?\d* ?/gi, ' ')
+            .replace(/[{}]/g, ' ')
+            .replace(/\s+/g, ' ');
+    } else if (ext === '.html' || ext === '.htm') {
+        text = text.replace(/<script[\s\S]*?<\/script>/gi, ' ')
+            .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ');
+    }
+    return text.trim();
+}
+
+async function extractTextFromUploadedFile(file) {
+    const ext = getFileExtension(file?.originalname);
+    const mime = String(file?.mimetype || '').toLowerCase();
+    if (!file || !file.path) return '';
+    if (!TEXT_FILE_EXTENSIONS.has(ext) && !isTextLikeMime(mime)) {
+        throw new Error('Unsupported text file type. Use plain text/code/data files, or upload PDF/DOCX through the browser extractor.');
+    }
+    const buffer = await fs.promises.readFile(file.path);
+    return decodeUploadedTextBuffer(buffer, ext);
+}
 
 console.log('[ENGINE] AI Detector self-contained detection engine — zero external APIs.');
 
@@ -109,13 +218,25 @@ const ARABIC_AI_PHRASES = [
     'دورا محوريا', 'يسهم بشكل كبير', 'يساهم بشكل كبير',
     'يمثل خطوة مهمة', 'يشكل عاملا أساسيا', 'تحقيق التنمية المستدامة',
     'تعزيز الكفاءة', 'تحسين جودة', 'مواكبة التطورات',
-    'في ظل التطورات المتسارعة'
+    'في ظل التطورات المتسارعة', 'مما لا شك فيه', 'لا يخفى على أحد',
+    'في عالمنا اليوم', 'في العصر الرقمي', 'في عالمنا المترابط',
+    'لا يمكن إنكار أن', 'من الواضح أن', 'من أبرز الجوانب',
+    'على نطاق واسع', 'بشكل متزايد', 'بشكل ملحوظ', 'بصورة فعالة',
+    'بشكل فعال', 'يلعب دورا حيويا', 'دورا حيويا', 'أمرا بالغ الأهمية',
+    'أمر بالغ الأهمية', 'يسلط الضوء على', 'يسلط الضوء', 'يعكس أهمية',
+    'يعزز القدرة على', 'مفتاحا أساسيا', 'ركيزة أساسية', 'حجر الزاوية',
+    'حلولا مبتكرة', 'نهجا شاملا', 'إطارا متكاملا', 'تجربة أكثر سلاسة',
+    'التحول الرقمي', 'المشهد الرقمي', 'المشهد المتطور بسرعة',
+    'التطور السريع', 'التغيرات المتسارعة', 'الخوض في', 'نسيجا من',
+    'نسيج غني', 'متعدد الأوجه'
 ];
 
 const ARABIC_AI_TRANSITIONS = [
     'أولا', 'ثانيا', 'ثالثا', 'أخيرا', 'لذلك', 'وبالتالي', 'ومن ثم',
     'علاوة', 'بالإضافة', 'فضلا', 'فضلاً', 'كذلك', 'أيضا', 'أيضاً',
-    'في المقابل', 'من ناحية', 'من جهة', 'على الرغم', 'بالرغم', 'ومع ذلك'
+    'في المقابل', 'من ناحية', 'من جهة', 'على الرغم', 'بالرغم', 'ومع ذلك',
+    'بالمثل', 'من ثم', 'ومن هنا', 'عليه', 'بناء عليه', 'نتيجة لذلك',
+    'إضافة إلى ذلك', 'علاوة على ذلك', 'من جانب آخر'
 ];
 
 const ARABIC_FORMAL_WORDS = [
@@ -123,7 +244,18 @@ const ARABIC_FORMAL_WORDS = [
     'منظومة', 'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'تسهم', 'يسهم',
     'تساهم', 'يساهم', 'يعد', 'تعد', 'يعتبر', 'تعتبر', 'ضرورة',
     'أهمية', 'الرقمي', 'التحول', 'الكفاءة', 'الجودة', 'المستقبل',
-    'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'المختلفة'
+    'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'المختلفة',
+    'حيوي', 'بالغ', 'الأهمية', 'إطار', 'نهج', 'حلول', 'متطورة',
+    'متسارعة', 'سلاسة', 'مرونة', 'فعالية', 'رئيسي', 'أساسي'
+];
+
+const ARABIC_FORMAL_ROOTS = [
+    'محور', 'استراتيج', 'شامل', 'مستدام', 'مبتكر', 'فعال', 'متكامل',
+    'منظوم', 'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'كفاء', 'جود',
+    'ابتكار', 'تحدي', 'فرص', 'مجال', 'ضرور', 'اهمي', 'رقمي',
+    'تحول', 'مستقبل', 'حلول', 'نهج', 'اطار', 'متسارع', 'متطور',
+    'حيوي', 'بالغ', 'رئيسي', 'اساسي', 'ركيز', 'يسلط', 'مواكب',
+    'يسهم', 'يساهم', 'تعكس', 'يعكس'
 ];
 
 const ARABIC_HUMAN_MARKERS = [
@@ -265,7 +397,9 @@ function scoreArabicText(text) {
     const phraseHits = countArabicPhraseHits(text, ARABIC_AI_PHRASES);
     const transitionHits = countArabicPhraseHits(text, ARABIC_AI_TRANSITIONS);
     const humanHits = countArabicPhraseHits(text, ARABIC_HUMAN_MARKERS);
-    const formalHits = words.filter(w => ARABIC_FORMAL_WORDS.includes(w)).length;
+    const formalHits = words.filter(w =>
+        ARABIC_FORMAL_WORDS.includes(w) || ARABIC_FORMAL_ROOTS.some(root => w.includes(root))
+    ).length;
 
     const lens = sentences.map(s => arabicWords(s).length).filter(Boolean);
     let cv = 0.55;
@@ -290,10 +424,10 @@ function scoreArabicText(text) {
     const humanDensity = humanHits.count / wc * 100;
 
     let score = 0.18;
-    score += Math.min(0.34, phraseHits.count * 0.13);
-    score += Math.min(0.18, transitionDensity * 0.045);
-    score += Math.min(0.20, formalDensity * 0.035);
-    score += Math.min(0.10, balanceHits * 0.035);
+    score += Math.min(0.52, phraseHits.count * 0.20);
+    score += Math.min(0.30, transitionDensity * 0.07);
+    score += Math.min(0.32, formalDensity * 0.06);
+    score += Math.min(0.15, balanceHits * 0.05);
 
     if (sentences.length >= 3) {
         if (cv < 0.22) score += 0.16;
@@ -302,13 +436,16 @@ function scoreArabicText(text) {
     }
     if (openerRatio >= 0.45) score += 0.10;
     else if (openerRatio >= 0.25) score += 0.05;
-    if (wc >= 45 && uniqueRatio >= 0.55 && uniqueRatio <= 0.86) score += 0.07;
+    if (wc >= 35 && uniqueRatio >= 0.50 && uniqueRatio <= 0.90 && formalDensity >= 3) score += 0.11;
+    else if (wc >= 45 && uniqueRatio >= 0.55 && uniqueRatio <= 0.86) score += 0.07;
     if (avgLen >= 5.2) score += 0.05;
     if (tashkeelDensity > 0 && tashkeelDensity < 0.006) score += 0.04;
 
-    if (phraseHits.count >= 3) score = Math.max(score, 0.86);
-    else if (phraseHits.count >= 2 && (formalDensity > 3 || transitionHits.count >= 2)) score = Math.max(score, 0.78);
-    else if (phraseHits.count >= 1 && formalDensity > 6) score = Math.max(score, 0.68);
+    if (phraseHits.count >= 3) score = Math.max(score, 0.95);
+    else if (phraseHits.count >= 2 && (formalDensity > 3 || transitionHits.count >= 2)) score = Math.max(score, 0.88);
+    else if (phraseHits.count >= 1 && formalDensity > 6) score = Math.max(score, 0.82);
+    else if (transitionHits.count >= 3 && formalDensity >= 5 && humanHits.count === 0) score = Math.max(score, 0.78);
+    else if (wc >= 45 && formalDensity >= 8 && humanHits.count === 0 && cv < 0.48) score = Math.max(score, 0.74);
 
     score -= Math.min(0.34, humanHits.count * 0.08 + humanDensity * 0.02);
     if (humanHits.count >= 3 && phraseHits.count === 0 && formalDensity < 4) score = Math.min(score, 0.24);
@@ -555,6 +692,284 @@ function signalArabicTells(text, isArabic) {
     };
 }
 
+function computeAdvancedTextForensics(text) {
+    const raw = text || '';
+    const lower = raw.toLowerCase();
+    const words = tokenizeLower(raw);
+    const wc = words.length;
+    const sentences = splitSentences(raw);
+    if (!wc) return { success: false, reason: 'empty text' };
+
+    const countPhrase = (term) => term ? (lower.split(term.toLowerCase()).length - 1) : 0;
+    const countWord = (term) => {
+        const safe = escapeRegExp(term.toLowerCase());
+        const re = new RegExp(`(^|[^\\p{L}\\p{N}_])${safe}([^\\p{L}\\p{N}_]|$)`, 'gu');
+        return (lower.match(re) || []).length;
+    };
+    const normalizeAr = (value) => (value || '')
+        .replace(/[\u064B-\u065F\u0670]/g, '')
+        .replace(/ـ/g, '')
+        .replace(/[إأآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي');
+
+    const formalWords = [
+        'utilize', 'facilitate', 'demonstrate', 'significant', 'essential',
+        'effective', 'efficient', 'strategic', 'sustainable', 'framework',
+        'implementation', 'development', 'innovation', 'optimization',
+        'integration', 'analysis', 'approach', 'solution', 'outcomes',
+        'implications', 'productivity', 'accessibility', 'scalability'
+    ];
+    const narrativePhrases = [
+        'somewhere in the distance', 'cool morning air', 'old brick wall',
+        'city slowly woke', 'tiny reflections', 'gold and orange',
+        'nobody noticed', 'small notebook', 'park bench', 'unfinished ideas',
+        'dreams that had never been shared', 'as if nothing unusual had happened',
+        'for a brief moment', 'holding a secret', 'the world felt like',
+        'just before sunrise', 'by noon', 'would be gone', 'whispering',
+        'secrets older than time', 'single candle', 'long-forgotten',
+        'painting the sky', 'somewhere far away', 'echoing through',
+        'edge of the city', 'empty platform', 'everything was calm',
+        'everything just seemed', 'slow down', 'far away places',
+        'fresh bread', 'old train station'
+    ];
+    const scenicWords = [
+        'rain', 'sunrise', 'streets', 'reflections', 'gold', 'orange',
+        'bicycle', 'brick', 'wall', 'city', 'distance', 'train', 'bridge',
+        'echoing', 'cool', 'morning', 'air', 'notebook', 'bench', 'sketches',
+        'dreams', 'pavement', 'secret', 'shadow', 'candle', 'window',
+        'moonlight', 'silence', 'whisper', 'forest', 'river', 'station',
+        'platform', 'cafe', 'coffee', 'bread', 'traveler', 'travelers',
+        'stories', 'smell', 'sun', 'hills', 'lights', 'empty', 'quiet',
+        'evening', 'edge', 'calm'
+    ];
+    const simpleNarrativeOpeners = ['the', 'it', 'there', 'they', 'when', 'for', 'every'];
+    const simpleNarrativeVerbs = [
+        'was', 'were', 'had', 'would', 'came', 'went', 'made', 'seemed',
+        'stood', 'sat', 'looked', 'felt', 'became'
+    ];
+    const businessPhrases = [
+        'modern support teams', 'consistent process', 'customer requests',
+        'urgent cases', 'response quality', 'over time', 'clear workflow',
+        'reduce delays', 'better visibility', 'recurring issues',
+        'improving response quality', 'reviewing customer requests',
+        'prioritizing urgent cases', 'performance and recurring issues',
+        'improve response', 'operational efficiency', 'data-driven insights',
+        'cross-functional collaboration', 'measurable outcomes'
+    ];
+    const businessWords = [
+        'modern', 'support', 'teams', 'consistent', 'process', 'reviewing',
+        'customer', 'requests', 'prioritizing', 'urgent', 'cases', 'improving',
+        'response', 'quality', 'workflow', 'reduce', 'delays', 'managers',
+        'visibility', 'performance', 'recurring', 'issues', 'strategy',
+        'strategies', 'organizations', 'stakeholders', 'operations', 'efficiency',
+        'productivity', 'insights', 'outcomes', 'scalable', 'alignment',
+        'optimization', 'collaboration', 'implementation', 'framework'
+    ];
+    const humanMarkers = [
+        'i', 'we', 'my', 'me', 'our', 'personally', 'honestly', 'today',
+        'yesterday', 'tomorrow', 'kinda', 'gonna', 'wanna', 'yeah', 'okay',
+        'lol', 'lmao', 'tbh', 'imo', 'idk', 'stuff', 'things'
+    ];
+    const casualMarkers = [
+        'kinda', 'gonna', 'wanna', 'yeah', 'okay', 'lol', 'lmao', 'tbh',
+        'imo', 'idk', 'stuff', 'bruh', 'dude', 'nah', 'yep', 'nope',
+        'honestly', 'basically', 'literally'
+    ];
+    const genericFrames = ['in conclusion', 'in summary', 'to sum up', 'overall', 'ultimately', 'in essence'];
+    const arabicFormalWords = [
+        'محوري', 'استراتيجي', 'شامل', 'مستدام', 'مبتكر', 'منظومة',
+        'تعزيز', 'تحسين', 'تطوير', 'تحقيق', 'الكفاءة', 'الجودة',
+        'الابتكار', 'التحديات', 'الفرص', 'المجالات', 'حيوي', 'بالغ',
+        'إطار', 'نهج', 'حلول', 'متطورة', 'متسارعة', 'أساسي'
+    ].map(normalizeAr);
+
+    const aiTermHits = AI_VOCAB.reduce((sum, term) => sum + countWord(term), 0);
+    const aiPhraseHits = AI_BIGRAMS.reduce((sum, term) => sum + countPhrase(term), 0) + HEDGES.reduce((sum, term) => sum + countPhrase(term), 0);
+    const transitionHits = AI_TRANSITIONS.reduce((sum, term) => sum + countWord(term), 0);
+    const formalHits = formalWords.reduce((sum, term) => sum + countWord(term), 0);
+    const humanHits = humanMarkers.reduce((sum, term) => sum + countWord(term), 0);
+    const casualHits = casualMarkers.reduce((sum, term) => sum + countWord(term), 0);
+    const normalizedAr = normalizeAr(lower);
+    const arabicAiHits = ARABIC_AI_PHRASES.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+    const arabicTransitionHits = ARABIC_AI_TRANSITIONS.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+    const arabicHumanHits = ARABIC_HUMAN_MARKERS.reduce((sum, term) => sum + (normalizedAr.split(normalizeAr(term.toLowerCase())).length - 1), 0);
+    const arabicFormalHits = words.filter(w => {
+        const normalizedWord = normalizeAr(w);
+        return arabicFormalWords.includes(normalizedWord) || ARABIC_FORMAL_ROOTS.some(root => normalizedWord.includes(normalizeAr(root)));
+    }).length;
+    const contractionHits = (lower.match(/\b\w+'(?:s|t|re|ve|ll|d|m)\b/g) || []).length;
+    const firstPersonHits = (lower.match(/\b(?:i|i'm|i've|i'll|we|we're|my|me|our|us)\b/g) || []).length;
+    const numbers = (lower.match(/\b\d{1,4}(?:[/:.-]\d{1,4})?\b/g) || []).length;
+    const namedLike = (raw.match(/\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b/g) || [])
+        .filter(name => !['the', 'a', 'an', 'by', 'yet', 'nobody', 'somewhere'].includes(name.split(/\s+/)[0].toLowerCase()))
+        .length;
+    const punctuationMess = (raw.match(/!|\.\.\.|…|\?\?|!!/g) || []).length;
+    const typoLike = (lower.match(/\b(?:teh|recieve|seperate|definately|occured|alot|wich|thier)\b/g) || []).length;
+    const emojiNoise = (raw.match(/[\u{1F300}-\u{1FAFF}]/gu) || []).length + (raw.match(/[•◕ಠツ¯]{1,}/g) || []).length;
+    const narrativeHits = narrativePhrases.reduce((sum, term) => sum + countPhrase(term), 0);
+    const scenicHits = words.filter(word => scenicWords.includes(word)).length;
+    const simpleNarrativeVerbHits = words.filter(word => simpleNarrativeVerbs.includes(word)).length;
+    const businessPhraseHits = businessPhrases.reduce((sum, term) => sum + countPhrase(term), 0);
+    const businessWordHits = words.filter(word => businessWords.includes(word)).length;
+
+    const lens = sentences.map(s => tokenize(s).length).filter(Boolean);
+    const meanLen = lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+    const variance = lens.length ? lens.reduce((a, len) => a + Math.pow(len - meanLen, 2), 0) / lens.length : 0;
+    const cv = meanLen ? Math.sqrt(variance) / meanLen : 0.55;
+    const openers = sentences.map(s => tokenizeLower(s)[0]).filter(Boolean);
+    const openerHits = openers.filter(op => AI_TRANSITIONS.includes(op) || ['in', 'as', 'therefore', 'however', 'moreover', 'furthermore'].includes(op)).length;
+    const openerRate = openerHits / Math.max(openers.length, 1);
+    const simpleNarrativeOpenerRate = openers.filter(op => simpleNarrativeOpeners.includes(op)).length / Math.max(openers.length, 1);
+    const openerDiversity = new Set(openers).size / Math.max(openers.length, 1);
+    const starts = sentences.map(s => tokenizeLower(s).slice(0, 2).join(' ')).filter(Boolean);
+    const repeatedTemplateRate = starts.length >= 3 ? 1 - (new Set(starts).size / starts.length) : 0;
+    const uniqueRatio = new Set(words).size / Math.max(wc, 1);
+    const avgWordLen = words.reduce((sum, w) => sum + w.length, 0) / Math.max(wc, 1);
+    const aiDensity = ((aiTermHits + 2 * aiPhraseHits + transitionHits + 0.75 * formalHits + 2.25 * arabicAiHits + 1.25 * arabicTransitionHits) / Math.max(wc, 1)) * 100;
+    const formalDensity = ((formalHits + arabicFormalHits) / Math.max(wc, 1)) * 100;
+    const personalSpecificity = firstPersonHits + numbers + Math.min(namedLike, 4) + casualHits + punctuationMess + typoLike;
+    const anchoredSpecificity = firstPersonHits + numbers + Math.min(namedLike, 4) + punctuationMess + typoLike;
+    const surfaceHumanNoise = casualHits + contractionHits + punctuationMess + typoLike + emojiNoise;
+
+    let aiWeight = 0;
+    let humanWeight = 0;
+    let strongAiVotes = 0;
+    let humanVotes = 0;
+    const signals = [];
+    const addSignal = (name, verdict, weight, metric) => {
+        signals.push({ name, verdict, weight: Number(weight.toFixed(3)), metric });
+        if (verdict === 'ai') {
+            aiWeight += weight;
+            if (weight >= 1.0) strongAiVotes += 1;
+        } else {
+            humanWeight += weight;
+            humanVotes += 1;
+        }
+    };
+
+    if (aiDensity >= 6.0 || aiPhraseHits >= 3) addSignal('AI collocation density', 'ai', 1.8, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+    else if (aiDensity >= 3.0 || aiPhraseHits >= 2) addSignal('AI collocation density', 'ai', 1.35, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+    else if (aiDensity >= 1.25 || aiPhraseHits >= 1) addSignal('AI collocation density', 'ai', 0.8, `density=${aiDensity.toFixed(2)}, phrases=${aiPhraseHits}`);
+
+    if (sentences.length >= 3 && cv < 0.23) addSignal('machine-uniform sentence rhythm', 'ai', 1.15, `cv=${cv.toFixed(3)}`);
+    else if (sentences.length >= 3 && cv < 0.40) addSignal('low burstiness', 'ai', 0.85, `cv=${cv.toFixed(3)}`);
+    else if (sentences.length >= 3 && cv > 0.78) addSignal('high human-like burstiness', 'human', 0.75, `cv=${cv.toFixed(3)}`);
+
+    if (openerRate >= 0.45) addSignal('transition/opener overuse', 'ai', 1.05, `opener_rate=${openerRate.toFixed(2)}`);
+    else if (openerRate >= 0.25) addSignal('transition/opener overuse', 'ai', 0.55, `opener_rate=${openerRate.toFixed(2)}`);
+
+    if (repeatedTemplateRate >= 0.50) addSignal('repeated sentence template', 'ai', 0.9, `template_rate=${repeatedTemplateRate.toFixed(2)}`);
+    else if (openerDiversity >= 0.92 && sentences.length >= 5 && cv < 0.45) addSignal('over-controlled opener diversity', 'ai', 0.7, `diversity=${openerDiversity.toFixed(2)}`);
+
+    if (narrativeHits >= 3) addSignal('generated literary scene tropes', 'ai', 1.75, `narrative_hits=${narrativeHits}`);
+    else if (narrativeHits >= 1 && (cv < 0.45 || personalSpecificity <= 1)) addSignal('generated literary scene tropes', 'ai', 1.15, `narrative_hits=${narrativeHits}`);
+
+    if (scenicHits >= 10 && personalSpecificity <= 1 && cv < 0.45) addSignal('cinematic object-scene pattern', 'ai', 1.25, `scenic_hits=${scenicHits}`);
+    else if (scenicHits >= 7 && narrativeHits >= 1) addSignal('cinematic object-scene pattern', 'ai', 0.85, `scenic_hits=${scenicHits}`);
+
+    if (wc >= 55 && anchoredSpecificity === 0 && scenicHits >= 10 && simpleNarrativeVerbHits >= 7 && simpleNarrativeOpenerRate >= 0.42) {
+        addSignal('humanized simple AI story pattern', 'ai', 2.45, `scenic=${scenicHits}, simple_verbs=${simpleNarrativeVerbHits}, opener_rate=${simpleNarrativeOpenerRate.toFixed(2)}`);
+    } else if (wc >= 45 && anchoredSpecificity === 0 && scenicHits >= 8 && simpleNarrativeVerbHits >= 5 && repeatedTemplateRate >= 0.16) {
+        addSignal('rewritten AI narrative template', 'ai', 1.55, `scenic=${scenicHits}, simple_verbs=${simpleNarrativeVerbHits}, template=${repeatedTemplateRate.toFixed(2)}`);
+    }
+
+    if (wc >= 28 && personalSpecificity <= 1 && businessPhraseHits >= 3 && businessWordHits >= 8) {
+        addSignal('generic business/process prose', 'ai', 1.65, `phrases=${businessPhraseHits}, words=${businessWordHits}`);
+    } else if (wc >= 28 && personalSpecificity <= 1 && businessWordHits >= 8 && (cv < 0.35 || avgWordLen >= 5.4)) {
+        addSignal('generic business/process prose', 'ai', 1.25, `phrases=${businessPhraseHits}, words=${businessWordHits}`);
+    }
+
+    if (wc >= 30 && personalSpecificity <= 1 && avgWordLen >= 5.4 && cv < 0.35 && (businessWordHits >= 5 || formalDensity >= 1.5)) {
+        addSignal('smooth abstract explanatory style', 'ai', 1.0, `cv=${cv.toFixed(3)}, avg_word_len=${avgWordLen.toFixed(2)}`);
+    }
+    if (sentences.length >= 4 && anchoredSpecificity === 0 && openerDiversity >= 0.80 && uniqueRatio >= 0.48 && uniqueRatio <= 0.92 && meanLen >= 12 && meanLen <= 30) {
+        addSignal('LLM-balanced paragraph architecture', 'ai', 1.1, `mean_len=${meanLen.toFixed(1)}, diversity=${openerDiversity.toFixed(2)}`);
+    }
+
+    const genericFrameHits = genericFrames.reduce((sum, term) => sum + countPhrase(term), 0);
+    if (genericFrameHits) addSignal('generic conclusion/summary framing', 'ai', 1.0, `frames=${genericFrameHits}`);
+
+    if (wc >= 30 && contractionHits === 0 && formalDensity >= 3.0 && personalSpecificity <= 1) addSignal('polished formal prose with no contractions', 'ai', 1.05, `formal_density=${formalDensity.toFixed(2)}`);
+    else if (wc >= 50 && contractionHits === 0 && avgWordLen >= 4.9 && personalSpecificity <= 1) addSignal('formal zero-contraction style', 'ai', 0.75, `avg_word_len=${avgWordLen.toFixed(2)}`);
+
+    if (wc >= 35 && personalSpecificity === 0 && (formalDensity >= 2.0 || avgWordLen >= 4.8)) addSignal('low personal specificity', 'ai', 0.75, `specificity=${personalSpecificity}`);
+    else if (personalSpecificity >= 4) addSignal('personal/casual specificity', 'human', 0.85, `specificity=${personalSpecificity}`);
+
+    if (casualHits >= 1 && (formalDensity >= 4.0 || aiPhraseHits >= 1 || avgWordLen >= 5.2)) addSignal('humanizer register mismatch', 'ai', 1.15, `casual=${casualHits}, formal=${formalDensity.toFixed(2)}`);
+    if (surfaceHumanNoise >= 1 && anchoredSpecificity <= 1 && wc >= 35 && (cv < 0.48 || avgWordLen >= 4.8 || aiWeight >= 1.5 || narrativeHits >= 1 || businessWordHits >= 6)) {
+        addSignal('surface humanizer noise over AI structure', 'ai', 1.45, `noise=${surfaceHumanNoise}, anchored=${anchoredSpecificity}`);
+    }
+    if (emojiNoise >= 1 && anchoredSpecificity === 0 && sentences.length >= 3 && (cv < 0.55 || narrativeHits >= 1 || scenicHits >= 6 || formalDensity >= 1.5)) {
+        addSignal('emoji/emoticon masking polished AI passage', 'ai', 1.25, `emoji_noise=${emojiNoise}`);
+    }
+    if (contractionHits >= 1 && anchoredSpecificity <= 1 && wc >= 45 && (cv < 0.45 || avgWordLen >= 4.9 || aiWeight >= 1.8)) {
+        addSignal('contractions without lived detail', 'ai', 0.95, `contractions=${contractionHits}, anchored=${anchoredSpecificity}`);
+    }
+    if ((narrativeHits >= 1 || scenicHits >= 6) && surfaceHumanNoise >= 1 && anchoredSpecificity <= 1 && wc >= 35) {
+        addSignal('humanized generated scene', 'ai', 1.25, `narrative=${narrativeHits}, scenic=${scenicHits}, noise=${surfaceHumanNoise}`);
+    }
+    if (casualHits >= 2 && aiDensity < 1.0 && aiWeight < 2.2 && anchoredSpecificity >= 2) addSignal('casual human markers', 'human', 0.8, `casual=${casualHits}`);
+
+    if (arabicAiHits >= 3) addSignal('Arabic formulaic AI phrasing', 'ai', 2.05, `arabic_ai_hits=${arabicAiHits}`);
+    else if (arabicAiHits >= 1 && (arabicFormalHits >= 2 || arabicTransitionHits >= 1)) addSignal('Arabic formal AI phrasing', 'ai', 1.35, `arabic_ai_hits=${arabicAiHits}`);
+    if (arabicTransitionHits >= 3 && arabicFormalHits >= 3 && arabicHumanHits === 0) addSignal('Arabic transition template stack', 'ai', 1.2, `transitions=${arabicTransitionHits}, formal=${arabicFormalHits}`);
+    if (arabicFormalHits >= 7 && arabicHumanHits === 0 && wc >= 35 && cv < 0.52) addSignal('Arabic polished MSA with low lived detail', 'ai', 1.1, `formal=${arabicFormalHits}, cv=${cv.toFixed(3)}`);
+    if (arabicHumanHits >= 2 && arabicAiHits === 0 && arabicFormalHits < 5) addSignal('Arabic dialect/casual markers', 'human', 1.05, `arabic_human_hits=${arabicHumanHits}`);
+
+    if (contractionHits >= 2 && casualHits >= 1 && aiDensity < 1.6) addSignal('contractions plus casual markers', 'human', 0.9, `contractions=${contractionHits}, casual=${casualHits}`);
+    else if (firstPersonHits >= 2 && personalSpecificity >= 3 && aiDensity < 1.8) addSignal('first-person specific experience', 'human', 0.85, `first_person=${firstPersonHits}`);
+
+    if (uniqueRatio < 0.48 && wc >= 70) addSignal('low lexical variety in long text', 'ai', 0.55, `unique_ratio=${uniqueRatio.toFixed(2)}`);
+    else if (uniqueRatio > 0.82 && wc >= 45 && aiDensity < 1.5) addSignal('high varied vocabulary without AI phrases', 'human', 0.35, `unique_ratio=${uniqueRatio.toFixed(2)}`);
+
+    let aiProbabilityFloor = 0;
+    if (aiWeight >= 5.0 && aiWeight >= humanWeight + 1.2) aiProbabilityFloor = 0.93;
+    else if (aiWeight >= 4.0 && aiWeight >= humanWeight + 0.8) aiProbabilityFloor = 0.86;
+    else if (aiWeight >= 3.0 && aiWeight >= humanWeight + 0.4) aiProbabilityFloor = 0.74;
+    else if (aiWeight >= 2.2 && aiWeight > humanWeight) aiProbabilityFloor = 0.60;
+
+    let humanProbabilityCap = 0;
+    if (humanWeight >= 3.0 && aiWeight < 2.6) humanProbabilityCap = 0.34;
+    else if (humanWeight >= 2.0 && aiWeight < 3.2) humanProbabilityCap = 0.44;
+
+    return {
+        success: true,
+        aiWeight: Number(aiWeight.toFixed(3)),
+        humanWeight: Number(humanWeight.toFixed(3)),
+        strongAiVotes,
+        humanVotes,
+        aiProbabilityFloor,
+        humanProbabilityCap,
+        signals: signals.slice(0, 12),
+        topAiReasons: signals.filter(s => s.verdict === 'ai').map(s => s.name).slice(0, 6),
+        topHumanReasons: signals.filter(s => s.verdict === 'human').map(s => s.name).slice(0, 6),
+        metrics: {
+            wordCount: wc,
+            sentenceCount: sentences.length,
+            cv: Number(cv.toFixed(4)),
+            aiDensity: Number(aiDensity.toFixed(4)),
+            formalDensity: Number(formalDensity.toFixed(4)),
+            personalSpecificity,
+            anchoredSpecificity,
+            surfaceHumanNoise,
+            emojiNoise,
+            openerRate: Number(openerRate.toFixed(4)),
+            simpleNarrativeOpenerRate: Number(simpleNarrativeOpenerRate.toFixed(4)),
+            templateRate: Number(repeatedTemplateRate.toFixed(4)),
+            uniqueRatio: Number(uniqueRatio.toFixed(4)),
+            avgWordLen: Number(avgWordLen.toFixed(4)),
+            arabicAiHits,
+            arabicTransitionHits,
+            arabicHumanHits,
+            narrativeHits,
+            scenicHits,
+            simpleNarrativeVerbHits,
+            businessPhraseHits,
+            businessWordHits
+        }
+    };
+}
+
 // Classify an individual sentence as AI or HUMAN for segmented report highlighting
 function classifySentence(sentence, isArabic) {
     const trimmed = sentence.trim();
@@ -645,7 +1060,12 @@ function calculateHeuristicsScore(text) {
     });
 
     // Specific high-indicator LLM signature words
-    const superAiWords = ['delve', 'delves', 'delving', 'tapestry', 'tapestries', 'multifaceted', 'pivotal', 'seamlessly', 'myriad', 'holistic'];
+    const superAiWords = [
+        'delve', 'delves', 'delving', 'tapestry', 'tapestries',
+        'multifaceted', 'pivotal', 'seamlessly', 'myriad', 'holistic',
+        'leverage', 'leveraging', 'underscores', 'comprehensive',
+        'transformative', 'paramount', 'realm', 'landscape'
+    ];
     let superAiHits = 0;
     words.forEach(w => {
         if (superAiWords.includes(w)) superAiHits++;
@@ -777,6 +1197,16 @@ function classifyText(text) {
         ngramRepetition: signalNgramRepetition(words),
         arabic: signalArabicTells(text, isArabic),
     };
+    const advancedText = computeAdvancedTextForensics(text);
+    const advancedMetrics = advancedText.success ? (advancedText.metrics || {}) : {};
+    const surfaceHumanNoise = Number(advancedMetrics.surfaceHumanNoise || 0);
+    const anchoredSpecificity = Number(advancedMetrics.anchoredSpecificity ?? advancedMetrics.personalSpecificity ?? 0);
+    const humanizedAiSuspected = Boolean(
+        surfaceHumanNoise >= 1 &&
+        anchoredSpecificity <= 1 &&
+        advancedText.success &&
+        advancedText.aiWeight >= Math.max(1.4, advancedText.humanWeight + 0.2)
+    );
 
     let prob = calculateHeuristicsScore(text);
     if (arabicMeta.isArabicDominant) {
@@ -793,9 +1223,28 @@ function classifyText(text) {
     else if (wc < 120) confidenceCap = 0.92;
     else confidenceCap = 0.99;
 
+    if (advancedText.success) {
+        if (advancedText.aiProbabilityFloor && advancedText.aiWeight >= advancedText.humanWeight + 0.35) {
+            prob = Math.max(prob, advancedText.aiProbabilityFloor);
+            if (wc < 50 && advancedText.aiProbabilityFloor >= 0.74) confidenceCap = Math.max(confidenceCap, 0.93);
+        }
+        if (
+            advancedText.humanProbabilityCap &&
+            !humanizedAiSuspected &&
+            !(advancedText.aiWeight >= advancedText.humanWeight + 0.8 && advancedText.aiWeight >= 3.0)
+        ) {
+            prob = Math.min(prob, advancedText.humanProbabilityCap);
+        }
+    }
+
+    if (humanizedAiSuspected) {
+        prob = Math.max(prob, advancedText.aiWeight >= 2.2 ? 0.78 : 0.64);
+        if (wc < 120) confidenceCap = Math.max(confidenceCap, 0.90);
+    }
+
     // If humanizer fingerprints fire, push prob toward AI verdict (humanizers ARE AI)
-    if (sigs.humanizer.score >= 0.30 && prob > 0.45) {
-        prob = Math.min(prob + 0.10, 0.99);
+    if (sigs.humanizer.score >= 0.30 && (prob > 0.45 || humanizedAiSuspected)) {
+        prob = Math.min(Math.max(prob, 0.62) + 0.10, 0.99);
     }
 
     // Cap and floor
@@ -804,7 +1253,7 @@ function classifyText(text) {
     const prediction = prob >= 0.5 ? 'AI-Generated' : 'Human';
     const confidencePct = Math.max(prob, 1 - prob) * 100;
 
-    const humanizer_detected = sigs.humanizer.score >= 0.25 ||
+    const humanizer_detected = humanizedAiSuspected || sigs.humanizer.score >= 0.25 ||
         (prob >= 0.55 && sigs.humanizer.signals.length > 0);
 
     const humanizer_signals = humanizer_detected
@@ -812,7 +1261,7 @@ function classifyText(text) {
         : 'none';
 
     const features = {
-        model_used: 'AI Detector Core v6 (Local)',
+        model_used: 'AI Detector Core v7 Strict (Local)',
         burstiness_variance: `CV=${sigs.burstiness.value} (${sigs.burstiness.note})`,
         rhythm_analysis: `opener_diversity=${sigs.openers.value}; avg_sent_len=${sigs.sentLenMean.value}`,
         lexical_fingerprint: `MATTR=${sigs.lexical.value}; AI-vocab/100w=${sigs.aiVocab.value}`,
@@ -822,7 +1271,14 @@ function classifyText(text) {
         punctuation_tells: `dashes=${sigs.punctuation.value.dashes}, oxford=${sigs.punctuation.value.oxford}, mixed_quotes=${sigs.punctuation.value.mixedQuotes}`,
         contraction_rate: `${sigs.contractions.value}`,
         ngram_entropy: `${sigs.ngramRepetition.value}`,
-        humanization_attempt: sigs.humanizer.score >= 0.45 ? 'high' : sigs.humanizer.score >= 0.20 ? 'medium' : 'low'
+        humanization_attempt: humanizedAiSuspected || (advancedText.success && advancedText.aiWeight >= 4.0 && advancedText.humanWeight >= 1.0) ? 'high' : (surfaceHumanNoise >= 1 || sigs.humanizer.score >= 0.20 ? 'medium' : 'low'),
+        humanizer_noise_score: `${surfaceHumanNoise}`,
+        anchored_specificity: `${anchoredSpecificity}`,
+        advanced_text_ai_score: advancedText.success ? `${advancedText.aiWeight.toFixed(2)}` : 'not available',
+        advanced_text_human_score: advancedText.success ? `${advancedText.humanWeight.toFixed(2)}` : 'not available',
+        advanced_text_reasons: advancedText.success ? (advancedText.topAiReasons.slice(0, 5).join(', ') || 'none') : 'not available',
+        human_text_reasons: advancedText.success ? (advancedText.topHumanReasons.slice(0, 5).join(', ') || 'none') : 'not available',
+        strict_text_mode: 'enabled'
     };
 
     if (sigs.arabic.applied) {
@@ -843,6 +1299,7 @@ function classifyText(text) {
         humanizer_signals,
         word_count: wc,
         features,
+        advanced_text_forensics: advancedText,
         sentenceBreakdown,
         signals: Object.fromEntries(Object.entries(sigs).map(([k, v]) => [k, { score: Number(v.score.toFixed(3)), value: v.value }]))
     };
@@ -856,7 +1313,7 @@ const AI_SOFTWARE_TAGS = [
     'midjourney', 'stable diffusion', 'dall', 'dalle', 'dall-e', 'sdxl', 'sd-xl', 'sd 1.5',
     'firefly', 'flux', 'leonardo', 'ideogram', 'invokeai', 'comfyui', 'fooocus', 'foocus',
     'automatic1111', 'civitai', 'novelai', 'craiyon', 'nightcafe', 'krea', 'magnific',
-    'runway', 'imagen', 'gemini', 'chatgpt', 'openai', 'anthropic', 'bing', 'designer', 'canva',
+    'runway', 'google imagen', 'gemini image', 'chatgpt image', 'openai image', 'bing creator',
     'ai generated', 'ai-generated', 'generated by ai', 'genai', 'stablediffusion', 'midjourneybot',
     'tensorrt', 'openvino', 'xformers', 'safetensors', 'ckpt', 'dreambooth', 'lora', 'adobe generative',
     'steps: ', 'cfg scale: ', 'samplers: ', 'denoising strength: ', 'clip skip: ', 'negative prompt',
@@ -870,10 +1327,171 @@ const AI_SOFTWARE_TAGS = [
 ];
 
 const HARDWARE_CAMERA_HINTS = [
-    'apple', 'iphone', 'ipad', 'samsung', 'galaxy', 'pixel', 'sony',
-    'canon', 'nikon', 'fujifilm', 'olympus', 'panasonic', 'leica',
-    'huawei', 'xiaomi', 'oneplus', 'gopro', 'dji', 'red digital', 'arri'
+    'apple', 'iphone', 'ipad', 'samsung', 'galaxy', 'google pixel',
+    'pixel 4', 'pixel 5', 'pixel 6', 'pixel 7', 'pixel 8', 'pixel 9',
+    'pixel xl', 'sony', 'canon', 'nikon', 'fujifilm', 'olympus', 'panasonic', 'leica',
+    'huawei', 'xiaomi', 'oneplus', 'gopro', 'dji camera', 'dji fc', 'dji mavic',
+    'dji mini', 'dji phantom', 'osmo', 'hasselblad', 'red digital', 'arri'
 ];
+
+const EDITOR_SOFTWARE_TAGS = [
+    'adobe photoshop', 'photoshop', 'camera raw', 'lightroom', 'capture one',
+    'affinity photo', 'gimp'
+];
+
+function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasMetadataTag(blob, tag) {
+    const needle = tag.toLowerCase();
+    if (/^[a-z0-9-]+$/.test(needle) && needle.length <= 6) {
+        return new RegExp(`(^|[^a-z0-9])${escapeRegExp(needle)}([^a-z0-9]|$)`, 'i').test(blob);
+    }
+    return blob.includes(needle);
+}
+
+const WEAK_AI_METADATA_TAGS = new Set([
+    'prompt: ', 'class_type', 'inputs', 'nodes', 'links', 'latent', 'diffusion',
+    'synthetic', 'luma', 'pika', 'runway', 'sora', 'kling', 'render', 'upscaled',
+    'photorealistic', '4k', '8k', 'unreal-engine'
+]);
+
+function findAiSoftwareHit(blob) {
+    const strongHit = AI_SOFTWARE_TAGS.find(t => !WEAK_AI_METADATA_TAGS.has(t) && hasMetadataTag(blob, t));
+    if (strongHit) return strongHit;
+
+    const weakHit = AI_SOFTWARE_TAGS.find(t => WEAK_AI_METADATA_TAGS.has(t) && hasMetadataTag(blob, t));
+    if (!weakHit) return null;
+
+    const hasGenerationParameterBlock =
+        /\bsteps:\s*\d+/i.test(blob) ||
+        /\bcfg\s*scale\b/i.test(blob) ||
+        /\bnegative\s+prompt\b/i.test(blob) ||
+        /\bsampler(_name)?\b/i.test(blob) ||
+        /\bsd_model(_name)?\b/i.test(blob) ||
+        /\bmodel_hash\b/i.test(blob) ||
+        /\bdenoising_strength\b/i.test(blob) ||
+        /\bautomatic1111\b/i.test(blob) ||
+        /\bcomfyui\b/i.test(blob);
+
+    return hasGenerationParameterBlock ? weakHit : null;
+}
+
+function decodeMetadataText(buffer, lowercase = true) {
+    if (!buffer) return '';
+    const maxHead = Math.min(buffer.length, 2_000_000);
+    const maxTail = Math.min(buffer.length, 500_000);
+    const source = buffer.length > 2_500_000
+        ? Buffer.concat([buffer.subarray(0, maxHead), buffer.subarray(buffer.length - maxTail)])
+        : buffer;
+    const decoded = source
+        .toString('utf8')
+        .replace(/\0/g, ' ')
+        .replace(/[^\x09\x0a\x0d\x20-\x7E\u0600-\u06FF]+/g, ' ')
+        .replace(/\s+/g, ' ');
+    return lowercase ? decoded.toLowerCase() : decoded;
+}
+
+function readImageDimensions(buffer, mimeType = '', fileName = '') {
+    if (!buffer || buffer.length < 24) return { width: 0, height: 0, format: 'unknown' };
+    const name = fileName.toLowerCase();
+
+    if (buffer.readUInt32BE(0) === 0x89504e47 && buffer.toString('ascii', 1, 4) === 'PNG') {
+        return {
+            width: buffer.readUInt32BE(16),
+            height: buffer.readUInt32BE(20),
+            format: 'png'
+        };
+    }
+
+    if (buffer[0] === 0xff && buffer[1] === 0xd8) {
+        let offset = 2;
+        while (offset + 9 < buffer.length) {
+            if (buffer[offset] !== 0xff) {
+                offset += 1;
+                continue;
+            }
+            const marker = buffer[offset + 1];
+            const length = buffer.readUInt16BE(offset + 2);
+            if (length < 2) break;
+            const isSof = (
+                marker >= 0xc0 && marker <= 0xcf &&
+                ![0xc4, 0xc8, 0xcc].includes(marker)
+            );
+            if (isSof && offset + 8 < buffer.length) {
+                return {
+                    width: buffer.readUInt16BE(offset + 7),
+                    height: buffer.readUInt16BE(offset + 5),
+                    format: 'jpeg'
+                };
+            }
+            offset += 2 + length;
+        }
+        return { width: 0, height: 0, format: 'jpeg' };
+    }
+
+    if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
+        const chunk = buffer.toString('ascii', 12, 16);
+        if (chunk === 'VP8X' && buffer.length >= 30) {
+            return {
+                width: 1 + buffer.readUIntLE(24, 3),
+                height: 1 + buffer.readUIntLE(27, 3),
+                format: 'webp'
+            };
+        }
+        if (chunk === 'VP8 ' && buffer.length >= 30) {
+            return {
+                width: buffer.readUInt16LE(26) & 0x3fff,
+                height: buffer.readUInt16LE(28) & 0x3fff,
+                format: 'webp'
+            };
+        }
+        if (chunk === 'VP8L' && buffer.length >= 25) {
+            const bits = buffer.readUInt32LE(21);
+            return {
+                width: (bits & 0x3fff) + 1,
+                height: ((bits >> 14) & 0x3fff) + 1,
+                format: 'webp'
+            };
+        }
+        return { width: 0, height: 0, format: 'webp' };
+    }
+
+    if (buffer.toString('ascii', 0, 3) === 'GIF' && buffer.length >= 10) {
+        return {
+            width: buffer.readUInt16LE(6),
+            height: buffer.readUInt16LE(8),
+            format: 'gif'
+        };
+    }
+
+    if (buffer.toString('ascii', 0, 2) === 'BM' && buffer.length >= 26) {
+        return {
+            width: Math.abs(buffer.readInt32LE(18)),
+            height: Math.abs(buffer.readInt32LE(22)),
+            format: 'bmp'
+        };
+    }
+
+    if (
+        (buffer.toString('ascii', 0, 2) === 'II' && buffer.readUInt16LE(2) === 42) ||
+        (buffer.toString('ascii', 0, 2) === 'MM' && buffer.readUInt16BE(2) === 42)
+    ) {
+        return { width: 0, height: 0, format: 'tiff' };
+    }
+
+    if (mimeType.includes('png') || name.endsWith('.png')) return { width: 0, height: 0, format: 'png' };
+    if (mimeType.includes('webp') || name.endsWith('.webp')) return { width: 0, height: 0, format: 'webp' };
+    if (mimeType.includes('jpeg') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return { width: 0, height: 0, format: 'jpeg' };
+    if (mimeType.includes('gif') || name.endsWith('.gif')) return { width: 0, height: 0, format: 'gif' };
+    if (mimeType.includes('bmp') || name.endsWith('.bmp')) return { width: 0, height: 0, format: 'bmp' };
+    if (mimeType.includes('tiff') || name.endsWith('.tif') || name.endsWith('.tiff')) return { width: 0, height: 0, format: 'tiff' };
+    if (mimeType.includes('heic') || name.endsWith('.heic') || name.endsWith('.heif')) return { width: 0, height: 0, format: 'heic' };
+    if (mimeType.includes('avif') || name.endsWith('.avif')) return { width: 0, height: 0, format: 'avif' };
+    if (mimeType.includes('svg') || name.endsWith('.svg')) return { width: 0, height: 0, format: 'svg' };
+    return { width: 0, height: 0, format: 'unknown' };
+}
 
 async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
     let metaObj = null;
@@ -882,9 +1500,10 @@ async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
 
     let rawText = '';
     let rawTextUnlowercased = '';
+    let rawBuffer = null;
     try {
-        const buffer = await fs.promises.readFile(filePath);
-        rawTextUnlowercased = buffer.toString('utf8').replace(/\0/g, '');
+        rawBuffer = await fs.promises.readFile(filePath);
+        rawTextUnlowercased = decodeMetadataText(rawBuffer, false);
         rawText = rawTextUnlowercased.toLowerCase();
     } catch (e) { }
 
@@ -910,41 +1529,97 @@ async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
     const model = metaObj?.Model ? String(metaObj.Model).toLowerCase() : '';
     const lens = metaObj?.LensModel ? String(metaObj.LensModel).toLowerCase() : '';
 
-    const aiSoftwareHit = AI_SOFTWARE_TAGS.find(t => softwareField.includes(t) || metaStr.includes(t) || rawText.includes(t));
+    const metadataBlob = `${softwareField}\n${metaStr}\n${rawText}`;
+    const aiSoftwareHit = findAiSoftwareHit(metadataBlob);
+    const editorSoftwareHit = EDITOR_SOFTWARE_TAGS.find(t => metadataBlob.includes(t));
     const hardwareHit = HARDWARE_CAMERA_HINTS.find(t => make.includes(t) || model.includes(t) || lens.includes(t));
     const hasGPS = !!(metaObj?.GPSLatitude || metaObj?.GPSLongitude);
     const hasShutterData = !!(metaObj?.ExposureTime || metaObj?.FNumber || metaObj?.ISO);
     const hasC2PA = metaStr.includes('c2pa') || metaStr.includes('contentcredentials') || rawText.includes('c2pa');
 
     const isPng = mimeType === 'image/png' || fileName.endsWith('.png');
-    let score = 0.12; // default to clean/HUMAN-biased if no explicit tags
+    const isWebLikeImage = isPng || mimeType === 'image/webp' || fileName.endsWith('.webp');
+    const hasMetadata = !!(metaObj && Object.keys(metaObj || {}).length > 0);
+    const dimensions = readImageDimensions(rawBuffer, mimeType, fileName);
+    const standardAiRes = new Set([
+        '512x512', '768x768', '1024x1024', '1536x1536', '2048x2048',
+        '1456x816', '816x1456', '832x1216', '1216x832', '1344x768', '768x1344'
+    ]);
+    const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+    const isAiResolution = standardAiRes.has(dimensionKey);
+    const isGeneratedSquare = dimensions.width === dimensions.height && [512, 768, 1024, 1536, 2048].includes(dimensions.width);
+    const reviewFlags = [];
+    let decisionPath = 'clean metadata fallback';
+    let score = 0.40; // unknown provenance is not proof of AI without stronger evidence
 
-    if (aiSoftwareHit) score = 0.99;
-    else if (isAiFilename) score = 0.88;
-    else if (isRealFilename && !aiSoftwareHit) score = 0.04;
-    else if (hardwareHit && hasShutterData && !rawText.includes('photoshop') && !rawText.includes('adobe')) score = 0.05;
-    else if (hardwareHit && hasShutterData) score = 0.15; // might be edited in photoshop
-    else if (hardwareHit && (metaObj?.FocalLength || metaObj?.FNumber || metaObj?.LensModel)) score = 0.25; // verified active camera profiles
-    else if (hardwareHit) score = 0.35; // screenshot or virtual display profiles
+    if (aiSoftwareHit) {
+        score = 0.99;
+        decisionPath = `AI generator metadata tag: ${aiSoftwareHit}`;
+    }
+    else if (isAiFilename) {
+        score = 0.92;
+        decisionPath = 'AI-like filename signature';
+    }
+    else if (isRealFilename && !aiSoftwareHit) {
+        score = 0.12;
+        decisionPath = 'camera-style filename without AI metadata';
+    }
+    else if (hardwareHit && hasShutterData && !rawText.includes('photoshop') && !rawText.includes('adobe')) {
+        score = 0.05;
+        decisionPath = 'camera hardware plus exposure data';
+    }
+    else if (hardwareHit && hasShutterData) {
+        score = 0.15; // might be edited in photoshop
+        decisionPath = 'camera hardware plus edited exposure data';
+    }
+    else if (editorSoftwareHit && (hasShutterData || hardwareHit)) {
+        score = 0.18;
+        decisionPath = 'edited camera-photo workflow';
+    }
+    else if (editorSoftwareHit) {
+        score = 0.38;
+        decisionPath = 'editor metadata without AI generator signature';
+        reviewFlags.push('edited image, no generator metadata');
+    }
+    else if (hardwareHit && (metaObj?.FocalLength || metaObj?.FNumber || metaObj?.LensModel)) {
+        score = 0.25; // verified active camera profiles
+        decisionPath = 'camera/lens profile present';
+    }
+    else if (hardwareHit) {
+        score = 0.35; // screenshot or virtual display profiles
+        decisionPath = 'partial camera hardware metadata';
+        reviewFlags.push('partial camera metadata');
+    }
     else if (!metaObj || Object.keys(metaObj || {}).length === 0) {
-        // EXIF is completely stripped!
-        if (isPng || !isRealFilename) {
-            score = 0.85; // AI-biased fallback for stripped web/generative files
-        } else {
-            score = 0.15;
-        }
+        score = isWebLikeImage ? 0.46 : 0.40;
+        decisionPath = 'EXIF absent; no AI generator signature in metadata-only fallback';
+        reviewFlags.push('metadata stripped');
     }
     else if (!hasShutterData && !make && !model) {
-        if (isPng || !isRealFilename) {
-            score = 0.85;
-        } else {
-            score = 0.15;
-        }
+        score = isWebLikeImage ? 0.49 : 0.44;
+        decisionPath = 'metadata present but no camera make/model/exposure';
+        reviewFlags.push('no camera exposure metadata');
     }
-    else if (hasShutterData && !aiSoftwareHit) score = 0.30;
+    else if (hasShutterData && !aiSoftwareHit) {
+        score = 0.30;
+        decisionPath = 'exposure data present without AI metadata';
+    }
 
     if (hasGPS) score = Math.max(0.02, score - 0.35);
-    if (hasC2PA && (metaStr.includes('ai') || rawText.includes('ai') || rawText.includes('generated'))) score = Math.max(score, 0.98);
+    if (hasC2PA && (metaStr.includes('ai') || rawText.includes('ai') || rawText.includes('generated'))) {
+        score = Math.max(score, 0.98);
+        decisionPath = 'C2PA/content credentials indicate generated content';
+    }
+    if (!aiSoftwareHit && !hardwareHit && !editorSoftwareHit && (isAiResolution || isGeneratedSquare)) {
+        score = Math.max(score, isWebLikeImage ? 0.54 : 0.49);
+        reviewFlags.push(`generated-size canvas ${dimensionKey}`);
+        if (isWebLikeImage && isAiFilename) {
+            score = Math.max(score, 0.86);
+            decisionPath = 'AI filename plus generated-size web image';
+        } else if (score >= 0.5) {
+            decisionPath = 'generated-size web image without camera provenance';
+        }
+    }
 
     score = Math.max(0.01, Math.min(0.99, score));
 
@@ -1013,12 +1688,15 @@ async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
         provenanceCodeInfo,
         features: {
             model_used: 'AI Detector Vision Matrix v7 (Deep Binary Forensics)',
-            metadata_integrity: metaObj ? `${Object.keys(metaObj).length} fields present` : 'EXIF absent / stripped',
+            metadata_integrity: hasMetadata ? `${Object.keys(metaObj).length} fields present` : 'EXIF absent / stripped',
             structural_anomalies: aiSoftwareHit
                 ? `AI generator tag: ${aiSoftwareHit}`
                 : (hardwareHit ? 'camera hardware tag intact' : 'no hardware provenance'),
             lighting_analysis: hasShutterData ? 'shutter/aperture data present' : 'no exposure metadata',
             suspected_generator: aiSoftwareHit ? aiSoftwareHit.toUpperCase() : (score > 0.6 ? 'Unknown AI Tool' : 'N/A'),
+            decision_path: decisionPath,
+            review_flags: reviewFlags.length ? reviewFlags.join('; ') : 'metadata-only fallback',
+            fallback_dimensions: dimensions.width && dimensions.height ? dimensionKey : 'unknown',
             file_size_kb: Math.round(fileSize / 1024)
         }
     };
@@ -1029,7 +1707,7 @@ async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
 // =========================================================================
 
 const VIDEO_AI_TAGS = ['sora', 'runway', 'pika', 'luma', 'kling', 'haiper', 'genmo', 'synthesia', 'heygen', 'opusclip', 'ai generated', 'ai-generated', 'stable video', 'svd', 'animatediff', 'deforum', 'viggle', 'vidu', 'minimax', 'hailuo', 'moonvalley', 'morph studio', 'pixverse', 'ذكاء اصطناعي', 'مولد بالذكاء', 'مولدة بالذكاء', 'فيديو مولد', 'محتوى اصطناعي', 'سورا', 'رنواي', 'كلينغ', 'لوما', 'بيكا'];
-const VIDEO_HW_TAGS = ['lavf', 'apple', 'sony', 'canon', 'nikon', 'gopro', 'samsung', 'fujifilm', 'dji', 'iphone'];
+const VIDEO_HW_TAGS = ['apple', 'iphone', 'sony', 'canon', 'nikon', 'gopro', 'samsung', 'fujifilm', 'quicktime', 'creation_time'];
 
 async function classifyVideo(filePath, fileSize, originalName = '') {
     let metaCommon = {}, metaFormat = {};
@@ -1058,19 +1736,40 @@ async function classifyVideo(filePath, fileSize, originalName = '') {
     const isRealFilename = realKeywords.some(kw => fileName.includes(kw));
 
     const blob = JSON.stringify({ common: metaCommon, format: metaFormat }).toLowerCase() + rawText;
-    const aiTagHit = VIDEO_AI_TAGS.find(t => blob.includes(t));
-    const hwTagHit = VIDEO_HW_TAGS.find(t => blob.includes(t));
+    const aiTagHit = VIDEO_AI_TAGS.find(t => hasMetadataTag(blob, t));
+    const hwTagHit = VIDEO_HW_TAGS.find(t => hasMetadataTag(blob, t));
     const duration = metaFormat.duration || 0;
     const hasEncoder = blob.includes('encoder') || blob.includes('handler') || blob.includes('creation_time');
 
-    let score = 0.65;
+    let score = 0.72;
+    let decisionPath = 'strict video fallback: unverified video provenance';
+    const reviewFlags = [];
     if (aiTagHit) score = 0.99;
-    else if (isAiFilename) score = 0.88;
-    else if (isRealFilename && !aiTagHit) score = 0.08;
-    else if (hwTagHit && !rawText.includes('photoshop') && !rawText.includes('premiere') && !rawText.includes('aftereffects')) score = 0.12;
-    else if (hwTagHit) score = 0.30;
-    else if (!hasEncoder) score = 0.92; // missing encoder metadata heavily implies AI/scraper output
-    else if (duration > 0 && duration <= 8) score = 0.78; // AI clips are generally short 3-8s
+    else if (isAiFilename) score = 0.94;
+    else if (isRealFilename && !aiTagHit) {
+        score = 0.12;
+        decisionPath = 'camera-style video filename without AI tag';
+    }
+    else if (hwTagHit && !rawText.includes('photoshop') && !rawText.includes('premiere') && !rawText.includes('aftereffects')) {
+        score = 0.16;
+        decisionPath = `hardware/encoder provenance: ${hwTagHit}`;
+    }
+    else if (hwTagHit) {
+        score = 0.34;
+        decisionPath = `edited hardware provenance: ${hwTagHit}`;
+        reviewFlags.push('edited video metadata');
+    }
+    else if (!hasEncoder) {
+        score = 0.94; // missing encoder metadata heavily implies AI/scraper output
+        decisionPath = 'encoder metadata absent';
+    }
+    else if (duration > 0 && duration <= 12) {
+        score = 0.82; // current AI clips are commonly short
+        decisionPath = 'short unverified generated-video style clip';
+    }
+
+    if (aiTagHit) decisionPath = `AI video generator tag detected: ${aiTagHit}`;
+    if (isAiFilename) decisionPath = 'AI-like video filename signature';
 
     score = Math.max(0.01, Math.min(0.99, score));
     const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Video';
@@ -1101,6 +1800,8 @@ async function classifyVideo(filePath, fileSize, originalName = '') {
             encoder_tool: hasEncoder ? 'encoder field present' : 'absent',
             hardware_provenance: hwTagHit ? `hardware tag: ${hwTagHit}` : 'absent',
             suspected_generator: aiTagHit ? aiTagHit.toUpperCase() : (score > 0.6 ? 'Unknown AI Tool' : 'N/A'),
+            decision_path: decisionPath,
+            review_flags: reviewFlags.length ? reviewFlags.join('; ') : 'strict video provenance scan',
             duration_seconds: duration ? Number(duration.toFixed(2)) : 'unknown',
             file_size_mb: Number((fileSize / 1024 / 1024).toFixed(2))
         }
@@ -1142,11 +1843,12 @@ async function tryProxyToPython(endpoint, bodyData, file = null, fileFieldName =
             headers = { 'Content-Type': 'application/json' };
         }
 
+        const proxyTimeoutMs = bodyData?.type === 'image' ? 90000 : (bodyData?.type === 'video' ? 60000 : 12000);
         const response = await fetch(pythonUrl, {
             method: 'POST',
             headers: headers,
             body: body,
-            signal: AbortSignal.timeout(12000) // 12 second threshold for temporal video clips
+            signal: AbortSignal.timeout(proxyTimeoutMs)
         });
 
         if (response.ok) {
@@ -1183,10 +1885,16 @@ app.post('/detect/text', async (req, res) => {
 });
 
 app.post('/api/analyze', upload.single('file'), async (req, res) => {
-    const type = req.body.type || 'text';
+    const requestedType = String(req.body.type || 'text').toLowerCase();
+    const type = req.file ? inferAnalysisTypeFromFile(req.file, requestedType) : requestedType;
     try {
         if (type === 'text') {
-            const text = req.body.content || '';
+            let text = req.body.content || '';
+            if (!text.trim() && req.file) {
+                text = await extractTextFromUploadedFile(req.file);
+            }
+            cleanupUploadedFile(req.file);
+            if (!text.trim()) return res.status(400).json({ error: 'No text provided' });
             const language = req.body.language || 'auto';
             const pyResult = await tryProxyToPython('/api/analyze', { type, content: text, language });
             if (pyResult) {
@@ -1197,33 +1905,61 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
             const file = req.file;
             if (!file) return res.status(400).json({ error: 'No image file provided' });
 
+            // 1. Run local metadata/EXIF heuristics
+            const localResult = await classifyImage(file.path, file.size, file.mimetype || 'image/jpeg', file.originalname);
+            
+            // 2. Try Python Deep Learning models
             const pyResult = await tryProxyToPython('/api/analyze', { type }, file, 'file');
+            
+            cleanupUploadedFile(file);
+
             if (pyResult) {
-                fs.unlink(file.path, () => { });
+                // Merge features for rich UI display
+                pyResult.features = { ...localResult.features, ...pyResult.features };
+                
+                // If local heuristics found a hardcoded AI tag (very high confidence), override Python's pixel analysis
+                if (localResult.ai_probability > 0.95) {
+                    pyResult.prediction = localResult.prediction;
+                    pyResult.ai_probability = localResult.ai_probability;
+                    pyResult.confidence = localResult.confidence;
+                    pyResult.features.decision_path = localResult.features.decision_path;
+                }
                 return res.json(pyResult);
             }
+            res.json(localResult);
 
-            const result = await classifyImage(file.path, file.size, file.mimetype || 'image/jpeg', file.originalname);
-            fs.unlink(file.path, () => { });
-            res.json(result);
         } else if (type === 'video') {
             const file = req.file;
             if (!file) return res.status(400).json({ error: 'No video file provided' });
 
+            // 1. Run local binary/ffprobe heuristics
+            const localResult = await classifyVideo(file.path, file.size, file.originalname);
+            
+            // 2. Try Python Deep Learning models
             const pyResult = await tryProxyToPython('/api/analyze', { type }, file, 'file');
+            
+            cleanupUploadedFile(file);
+
             if (pyResult) {
-                fs.unlink(file.path, () => { });
+                // Merge features for rich UI display
+                pyResult.features = { ...localResult.features, ...pyResult.features };
+                
+                // If local heuristics found a hardcoded AI tag (very high confidence), override Python's pixel analysis
+                if (localResult.ai_probability > 0.95) {
+                    pyResult.prediction = localResult.prediction;
+                    pyResult.ai_probability = localResult.ai_probability;
+                    pyResult.confidence = localResult.confidence;
+                    pyResult.features.decision_path = localResult.features.decision_path;
+                }
                 return res.json(pyResult);
             }
-
-            const result = await classifyVideo(file.path, file.size, file.originalname);
-            fs.unlink(file.path, () => { });
-            res.json(result);
+            res.json(localResult);
         } else {
+            cleanupUploadedFile(req.file);
             res.status(400).json({ error: 'Invalid analysis type' });
         }
     } catch (e) {
-        if (req.file) fs.unlink(req.file.path, () => { });
+        cleanupUploadedFile(req.file);
         handleDetectionError(e, res, type);
     }
 });
@@ -1233,14 +1969,14 @@ app.post('/detect/image', upload.single('image'), async (req, res) => {
     try {
         const pyResult = await tryProxyToPython('/api/analyze', { type: 'image' }, req.file, 'file');
         if (pyResult) {
-            fs.unlink(req.file.path, () => { });
+            cleanupUploadedFile(req.file);
             return res.json(pyResult);
         }
         const result = await classifyImage(req.file.path, req.file.size, req.file.mimetype || 'image/jpeg', req.file.originalname);
-        fs.unlink(req.file.path, () => { });
+        cleanupUploadedFile(req.file);
         res.json(result);
     } catch (e) {
-        if (req.file) fs.unlink(req.file.path, () => { });
+        cleanupUploadedFile(req.file);
         handleDetectionError(e, res, 'image');
     }
 });
@@ -1250,39 +1986,94 @@ app.post('/detect/video', upload.single('video'), async (req, res) => {
     try {
         const pyResult = await tryProxyToPython('/api/analyze', { type: 'video' }, req.file, 'file');
         if (pyResult) {
-            fs.unlink(req.file.path, () => { });
+            cleanupUploadedFile(req.file);
             return res.json(pyResult);
         }
         const result = await classifyVideo(req.file.path, req.file.size, req.file.originalname);
-        fs.unlink(req.file.path, () => { });
+        cleanupUploadedFile(req.file);
         res.json(result);
     } catch (e) {
-        if (req.file) fs.unlink(req.file.path, () => { });
+        cleanupUploadedFile(req.file);
         handleDetectionError(e, res, 'video');
+    }
+});
+
+app.post('/api/send-otp', async (req, res) => {
+    const { email, otp_code } = req.body;
+    if (!email || !otp_code) return res.status(400).json({ error: 'Email and OTP code are required' });
+
+    // You need to replace these with real credentials (e.g. Gmail App Password)
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', // or your SMTP provider
+        auth: {
+            user: process.env.SMTP_EMAIL || 'yazanasser2013@gmail.com',
+            pass: process.env.SMTP_PASSWORD || 'ddgq ezvm fknf filx'
+        }
+    });
+
+    const mailOptions = {
+        from: `"3truth Secure Auth" <${process.env.SMTP_EMAIL || 'yazanasser2013@gmail.com'}>`,
+        to: email,
+        subject: 'Your 3truth Verification Code',
+        text: `Your 3truth secure verification code is: ${otp_code}`,
+        html: `
+            <div style="background-color: #0d0d0d; color: #ffffff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px 0; width: 100%;">
+                <div style="max-width: 500px; margin: 0 auto; background-color: #141414; border: 1px solid rgba(47, 238, 204, 0.2); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+                    <div style="text-align: center; padding: 30px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                        <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">
+                            <span style="color: #2FEECC;">3</span>truth
+                        </h2>
+                        <p style="margin: 5px 0 0; font-size: 11px; color: #888; letter-spacing: 3px; text-transform: uppercase;">Zero Trust Protocol</p>
+                    </div>
+                    <div style="padding: 40px 30px; text-align: center;">
+                        <h3 style="margin: 0 0 15px; font-size: 18px; font-weight: 600; color: #eeeeee;">Authentication Code</h3>
+                        <p style="margin: 0 0 30px; font-size: 14px; color: #a0a0a0; line-height: 1.6;">
+                            We received a request to sign in to your 3truth account. Enter the following securely generated code to verify your identity.
+                        </p>
+                        <div style="display: inline-block; background: rgba(47, 238, 204, 0.05); border: 1px solid rgba(47, 238, 204, 0.3); border-radius: 8px; padding: 15px 30px; margin-bottom: 30px;">
+                            <span style="font-family: monospace; font-size: 36px; font-weight: 800; color: #2FEECC; letter-spacing: 8px;">${otp_code}</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12px; color: #777;">
+                            This code will securely expire in <strong style="color: #bbb;">10 minutes</strong>. If you did not request this, please ignore this email.
+                        </p>
+                    </div>
+                    <div style="background-color: #0f0f0f; padding: 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                        <p style="margin: 0; font-size: 10px; color: #555;">&copy; ${new Date().getFullYear()} 3truth AI Detector. All rights reserved.</p>
+                        <p style="margin: 5px 0 0; font-size: 10px; color: #444;">Secured by Multi-Spectral Forensics</p>
+                    </div>
+                </div>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: 'OTP sent successfully' });
+    } catch (err) {
+        console.error('Nodemailer Error:', err);
+        res.status(500).json({ error: 'Failed to send OTP email', details: err.message });
     }
 });
 
 app.get('/health', (req, res) => res.json({ status: 'healthy', backend: 'AI Detector Core v6 — Self-Contained Engine' }));
 
+// Live-reload endpoint for development
+app.get('/livereload', (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    });
+    res.write('data: connected\n\n');
+});
+
+app.use((err, req, res, next) => {
+    console.error('SERVER ERROR:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`AI Detector Core listening on http://0.0.0.0:${PORT}`);
-
-    // Automatically launch browser to frontend portal on startup
-    const startUrl = `http://localhost:${PORT}`;
-    const startCmd = process.platform === 'win32'
-        ? `start ${startUrl}`
-        : process.platform === 'darwin'
-            ? `open ${startUrl}`
-            : `xdg-open ${startUrl}`;
-
-    import('child_process').then(cp => {
-        cp.exec(startCmd, (err) => {
-            if (err) console.warn('[AUTO_LAUNCH_FAILED] Could not launch browser automatically:', err.message);
-            else console.log(`[AUTO_LAUNCH] Successfully opened default browser to ${startUrl}`);
-        });
-    }).catch(err => {
-        console.error('[AUTO_LAUNCH_IMPORT_FAILED] Could not load child_process:', err);
-    });
 });
 
 setInterval(() => { }, 60000);

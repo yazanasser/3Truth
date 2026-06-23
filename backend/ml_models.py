@@ -1,10 +1,13 @@
-import torch  # type: ignore
-import torch.nn as nn  # type: ignore
-import torchvision.models as models  # type: ignore
+# pyrefly: ignore [missing-import]
+import torch
+# pyrefly: ignore [missing-import]
+import torch.nn as nn
+# pyrefly: ignore [missing-import]
+import torchvision.models as models
 import os
 import logging
-from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
-from sklearn.linear_model import LogisticRegression  # type: ignore
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +22,26 @@ ARABIC_AI_PHRASES = [
     "على سبيل المثال لا الحصر", "يلعب دورا محوريا", "دورا محوريا",
     "يسهم بشكل كبير", "يساهم بشكل كبير", "يمثل خطوة مهمة",
     "يشكل عاملا أساسيا", "تحقيق التنمية المستدامة", "تعزيز الكفاءة",
-    "تحسين جودة", "مواكبة التطورات", "في ظل التطورات المتسارعة"
+    "تحسين جودة", "مواكبة التطورات",
+    "مما لا شك فيه", "في العصر الحديث", "في ظل التطورات", "لا يخفى على أحد",
+    "أصبح من الضروري", "مما يسهم في", "مما يؤدي إلى", "بناء على ذلك", "نتيجة لذلك", "في ظل التطورات المتسارعة",
+    "في عالمنا اليوم", "في العصر الرقمي", "في عالمنا المترابط", "من المهم أن ندرك",
+    "من المهم ملاحظة", "لا يمكن إنكار أن", "من الواضح أن", "من أبرز الجوانب",
+    "على نطاق واسع", "بشكل متزايد", "بشكل ملحوظ", "بصورة فعالة", "بشكل فعال",
+    "يلعب دورا حيويا", "دورا حيويا", "أمرا بالغ الأهمية", "أمر بالغ الأهمية",
+    "يسلط الضوء على", "يسلط الضوء", "يعكس أهمية", "يعزز القدرة على",
+    "مفتاحا أساسيا", "ركيزة أساسية", "حجر الزاوية", "حلولا مبتكرة",
+    "نهجا شاملا", "إطارا متكاملا", "تجربة أكثر سلاسة", "التحول الرقمي",
+    "المشهد الرقمي", "المشهد المتطور بسرعة", "التطور السريع", "التغيرات المتسارعة",
+    "الخوض في", "نسيجا من", "نسيج غني", "متعدد الأوجه"
 ]
 
 ARABIC_AI_TRANSITIONS = [
     "أولا", "ثانيا", "ثالثا", "أخيرا", "لذلك", "وبالتالي", "ومن ثم",
     "علاوة", "بالإضافة", "فضلا", "كذلك", "أيضا", "في المقابل",
-    "من ناحية", "من جهة", "على الرغم", "بالرغم", "ومع ذلك"
+    "من ناحية", "من جهة", "على الرغم", "بالرغم", "ومع ذلك",
+    "بالمثل", "من ثم", "ومن هنا", "عليه", "بناء عليه", "نتيجة لذلك",
+    "إضافة إلى ذلك", "علاوة على ذلك", "من جانب آخر"
 ]
 
 ARABIC_FORMAL_WORDS = [
@@ -33,7 +49,18 @@ ARABIC_FORMAL_WORDS = [
     "منظومة", "تعزيز", "تحسين", "تطوير", "تحقيق", "تسهم", "يسهم",
     "تساهم", "يساهم", "يعد", "تعد", "يعتبر", "تعتبر", "ضرورة",
     "أهمية", "الرقمي", "التحول", "الكفاءة", "الجودة", "المستقبل",
-    "الابتكار", "التحديات", "الفرص", "المجالات", "المختلفة"
+    "الابتكار", "التحديات", "الفرص", "المجالات", "المختلفة",
+    "حيوي", "بالغ", "الأهمية", "إطار", "نهج", "حلول", "متطورة",
+    "متسارعة", "سلاسة", "مرونة", "فعالية", "رئيسي", "أساسي"
+]
+
+ARABIC_FORMAL_ROOTS = [
+    "محور", "استراتيج", "شامل", "مستدام", "مبتكر", "فعال", "متكامل",
+    "منظوم", "تعزيز", "تحسين", "تطوير", "تحقيق", "كفاء", "جود",
+    "ابتكار", "تحدي", "فرص", "مجال", "ضرور", "اهمي", "رقمي",
+    "تحول", "مستقبل", "حلول", "نهج", "اطار", "متسارع", "متطور",
+    "حيوي", "بالغ", "رئيسي", "اساسي", "ركيز", "يسلط", "مواكب",
+    "يسهم", "يساهم", "تعكس", "يعكس"
 ]
 
 ARABIC_HUMAN_MARKERS = [
@@ -74,12 +101,17 @@ def split_text_sentences(text):
 
 
 def count_phrase_hits(text, phrases):
+    import re
     normalized = normalize_arabic_text(text.lower())
     count = 0
     found = []
     for phrase in phrases:
         phrase_norm = normalize_arabic_text(phrase.lower())
-        hits = normalized.count(phrase_norm)
+        # Use regex to match only whole words/phrases
+        # We replace spaces with \s+ to handle multiple spaces
+        escaped_phrase = re.escape(phrase_norm).replace(r'\ ', r'\s+')
+        pattern = r'(?<![\w\u0600-\u06FF])' + escaped_phrase + r'(?![\w\u0600-\u06FF])'
+        hits = len(re.findall(pattern, normalized))
         if hits:
             count += hits
             found.append(phrase)
@@ -88,6 +120,8 @@ def count_phrase_hits(text, phrases):
 
 def compute_arabic_ai_heuristics(text):
     import math
+    import re
+
     words = arabic_words(text)
     wc = len(words)
     if wc == 0:
@@ -101,80 +135,142 @@ def compute_arabic_ai_heuristics(text):
 
     sentences = split_text_sentences(text)
     normalized_lower = normalize_arabic_text(text.lower())
-    phrase_hits, phrase_found = count_phrase_hits(text, ARABIC_AI_PHRASES)
-    transition_hits, transition_found = count_phrase_hits(text, ARABIC_AI_TRANSITIONS)
-    formal_hits = sum(1 for w in words if w in ARABIC_FORMAL_WORDS)
-    human_hits, human_found = count_phrase_hits(text, ARABIC_HUMAN_MARKERS)
 
+    # ---------------------------------------------------------
+    # PHASE 1 & 2: 20 Filters Forensic Extraction
+    # ---------------------------------------------------------
+
+    # A01: Lexical Repetition (transition phrases)
+    a01_hits, _ = count_phrase_hits(text, ["من المهم أن", "يجدر بالذكر", "تجدر الإشارة", "من الجدير بالذكر", "لا بد من الإشارة", "من المهم الإشارة", "مما تجدر الإشارة إليه", "من المهم ملاحظة", "يجب أن نلاحظ"])
+
+    # A02 & A13: Transition Overuse
+    a13_hits, transition_found = count_phrase_hits(text, ["علاوة على ذلك", "بالإضافة إلى ذلك", "فضلا عن ذلك", "لذلك", "وبالتالي", "ومن ثم", "كذلك", "بالتأكيد", "في الواقع", "في هذا السياق", "ونتيجة لذلك", "من جهة أخرى", "علاوة على ما سبق", "وبناء على ذلك"])
+
+    # A03: Paragraph DNA (Paragraph starters)
+    paragraphs = [p.strip() for p in text.split('\n') if len(p.strip()) > 10]
+    p_starts = [arabic_words(p)[0] for p in paragraphs if arabic_words(p)]
+    a03_hits = len(p_starts) - len(set(p_starts)) if len(p_starts) > 2 else 0
+
+    # A04: Formality & A12: Safe Language & A18: Generic Content
+    a04_hits, formal_found = count_phrase_hits(text, ["مما لا شك فيه", "في العصر الحديث", "في ظل التطورات", "لا يخفى على أحد", "أصبح من الضروري", "في ظل التطورات المتسارعة", "في عالمنا اليوم", "في العصر الرقمي", "في عالمنا المترابط"])
+    a12_hits, _ = count_phrase_hits(text, ["بشكل عام", "بصورة عامة", "يمكن القول", "في نهاية المطاف", "خلاصة القول", "في الختام", "يمكن القول إن", "في جوهرها", "باختصار", "ختاما"])
+    a18_hits, _ = count_phrase_hits(text, ["يلعب دورا محوريا", "يسهم بشكل كبير", "يمثل خطوة مهمة", "يشكل عاملا أساسيا", "تحقيق التنمية المستدامة", "تعزيز الكفاءة", "مواكبة التطورات", "الخوض في", "نسيجا من", "نسيج غني من", "متعدد الأوجه", "يسلط الضوء على", "بوصلة", "حجر الزاوية"])
+    formal_root_hits = sum(
+        1 for word in words
+        if word in ARABIC_FORMAL_WORDS or any(root in word for root in ARABIC_FORMAL_ROOTS)
+    )
+
+    # A14 & A15 & A19: Emotional/Personal/Dialect (Human Markers)
+    a15_hits = sum(1 for w in words if w in ["أنا", "تجربتي", "رأيي", "شخصيا", "أعتقد", "أتوقع"])
+    human_hits, _ = count_phrase_hits(text, ARABIC_HUMAN_MARKERS)
+
+    # Casual dialect (Gulf/Iraqi/Levantine) using precise word matching, not substring!
+    casual_words = ["ليش", "شنو", "مو", "شلون", "عشان", "مشان", "بدي", "ابغى"]
+    human_hits += sum(1 for w in words if w in casual_words)
+
+    # A16: Contradiction & A17: Over-Optimization & A20: LLM Signature
+    a17_triggered = 1 if text.count(":") >= 2 and text.count("-") >= 3 else 0
+    a20_hits, _ = count_phrase_hits(text, ["أولا", "ثانيا", "ثالثا", "أخيرا"])
+
+    # ChatGPT Creative Storytelling Markers
+    story_hits, _ = count_phrase_hits(text, ["في مكان ما وسط كل ذلك", "لم تكن تنام حقا", "بينما امتلأت", "لكن في هذه الليلة", "بشيء غير متوقع", "وفي مكان ما", "وسط كل ذلك"])
+    a20_hits += story_hits * 2
+    a20_triggered = 1 if a20_hits >= 2 else 0
+
+    # A05: Burstiness (Variance in sentence lengths)
     lens = [len(arabic_words(s)) for s in sentences if arabic_words(s)]
     cv = 0.55
     if len(lens) >= 2:
         mean_len = sum(lens) / len(lens)
         variance = sum((l - mean_len) ** 2 for l in lens) / len(lens)
         cv = math.sqrt(variance) / mean_len if mean_len else 0.55
+    a05_triggered = 1 if cv < 0.35 else 0
 
+    # A06: Perplexity & A08: Info Density
     unique_ratio = len(set(words)) / wc if wc else 1.0
+    a06_triggered = 1 if unique_ratio < 0.60 and wc > 50 else 0
     avg_len = sum(len(w) for w in words) / wc if wc else 0
-    starts = [arabic_words(s)[0] for s in sentences if arabic_words(s)]
-    opener_ratio = 0.0
-    if starts:
-        opener_ratio = sum(1 for s in starts if s in ARABIC_AI_TRANSITIONS or s in ["كما", "لذلك", "وبالتالي", "ختاما"]) / len(starts)
+    a08_triggered = 1 if avg_len >= 5.2 else 0
 
+    # A07: Semantic Redundancy & A10: Topic Expansion
+    a07_hits, _ = count_phrase_hits(text, ["بعبارة أخرى", "أي أن", "بمعنى آخر", "كما ذكرنا سابقا"])
+    a10_hits, _ = count_phrase_hits(text, ["على سبيل المثال لا الحصر", "بما في ذلك", "من بينها", "مثل"])
+
+    # A09: AI Rhythm (sentence balance)
     balance_hits = sum(1 for p in ["من ناحية", "من جهة", "في المقابل", "على الرغم", "ومع ذلك", "إلا أن"] if normalize_arabic_text(p) in normalized_lower)
-    tashkeel_count = len(__import__("re").findall(r"[\u064B-\u065F\u0670]", text))
-    tashkeel_density = tashkeel_count / max(len(text), 1)
+    a09_triggered = 1 if balance_hits >= 2 else 0
 
-    phrase_density = phrase_hits / wc * 100
-    transition_density = transition_hits / wc * 100
-    formal_density = formal_hits / wc * 100
-    human_density = human_hits / wc * 100
+    # A11: Hedging
+    a11_hits, _ = count_phrase_hits(text, ["ربما", "قد", "يمكن", "يحتمل", "من الممكن", "يعتقد البعض"])
 
-    score = 0.18
-    score += min(0.34, phrase_hits * 0.13)
-    score += min(0.18, transition_density * 0.045)
-    score += min(0.20, formal_density * 0.035)
-    score += min(0.10, balance_hits * 0.035)
 
-    if len(sentences) >= 3:
-        if cv < 0.22:
-            score += 0.16
-        elif cv < 0.35:
-            score += 0.11
-        elif cv > 0.75:
-            score -= 0.08
 
-    if opener_ratio >= 0.45:
-        score += 0.10
-    elif opener_ratio >= 0.25:
-        score += 0.05
+    # ---------------------------------------------------------
+    # PHASE 3: Cross-Filter Validation (Thresholds)
+    # ---------------------------------------------------------
+    triggered_filters = 0
+    # Additive phrase hits (AI frequently stacks these)
+    triggered_filters += (a01_hits * 1.5)
+    triggered_filters += (a13_hits * 1.5)
+    triggered_filters += (a04_hits * 1.5)
+    triggered_filters += (a12_hits * 1.5)
+    triggered_filters += (a18_hits * 1.5)
+    triggered_filters += a07_hits
+    triggered_filters += a10_hits
+    triggered_filters += a11_hits
+    triggered_filters += min(4.0, formal_root_hits * 0.22)
 
-    if wc >= 45 and 0.55 <= unique_ratio <= 0.86:
-        score += 0.07
+    # Structural triggers
+    if a03_hits >= 1: triggered_filters += 1
+    if a05_triggered: triggered_filters += 2.5
+    if a06_triggered: triggered_filters += 2.0
+    if a08_triggered: triggered_filters += 1
+    if a09_triggered: triggered_filters += 1.5
+    if a17_triggered: triggered_filters += 1.5
+    if a20_triggered: triggered_filters += 1.5
+    if wc >= 35 and formal_root_hits >= 7 and cv < 0.52 and human_hits == 0:
+        triggered_filters += 3.0
+    elif wc >= 35 and formal_root_hits >= 5 and human_hits == 0:
+        triggered_filters += 1.6
+    if len(sentences) > 0 and len([s for s in sentences if s.endswith("!")]) == 0: triggered_filters += 1
 
-    if avg_len >= 5.2:
-        score += 0.05
+    # Human dialect points heavily reduce the triggered count, but MSA personal pronouns (a15_hits) shouldn't blind the detector
+    if human_hits > 0:
+        if triggered_filters > 8:
+            triggered_filters -= (human_hits * 1) # Less reduction if highly AI structured
+        else:
+            triggered_filters -= (human_hits * 3)
+    elif a15_hits >= 3 and triggered_filters <= 5:
+        # Only slightly reduce if there are personal pronouns but weak AI signals
+        triggered_filters -= 1
 
-    if 0 < tashkeel_density < 0.006:
-        score += 0.04
+    triggered_filters = max(0, float(triggered_filters))
 
-    if phrase_hits >= 3:
-        score = max(score, 0.86)
-    elif phrase_hits >= 2 and (formal_density > 3 or transition_hits >= 2):
-        score = max(score, 0.78)
-    elif phrase_hits >= 1 and formal_density > 6:
-        score = max(score, 0.68)
+    # Base Probability map based on triggers
+    if triggered_filters <= 3:
+        score = 0.15 + (triggered_filters * 0.10)  # 0.15 -> 0.45
+    elif triggered_filters <= 8:
+        score = 0.50 + ((triggered_filters - 3) * 0.05)  # 0.50 -> 0.75
+    elif triggered_filters <= 14:
+        score = 0.75 + ((triggered_filters - 8) * 0.03)  # 0.75 -> 0.93
+    else:
+        score = 0.95 + ((triggered_filters - 14) * 0.01) # 0.95 -> 0.99
 
-    human_penalty = min(0.34, human_hits * 0.08 + human_density * 0.02)
-    score -= human_penalty
-    if human_hits >= 3 and phrase_hits == 0 and formal_density < 4:
-        score = min(score, 0.24)
-    elif human_hits >= 2 and phrase_hits <= 1 and formal_density < 3:
-        score = min(score, 0.32)
-
+    # PHASE 4: Anti-False Positives
     if wc < 20:
-        score = min(score, 0.65)
-    elif wc < 50:
-        score = min(score, 0.84)
+        score = min(score, 0.45) # Too short to be confident
+
+    # Only override if it's explicitly a local dialect (human_hits), NOT standard MSA personal pronouns (a15_hits)
+    # ChatGPT translations use 'أنا' and 'أعتقد', so capping based on a15_hits causes false negatives for translated AI text!
+    if human_hits >= 2 and triggered_filters <= 6 and formal_root_hits < 5:
+        score = min(score, 0.45)
+    elif a15_hits >= 2 and triggered_filters <= 4:
+        score = min(score, 0.49)
+
+    if a01_hits + a04_hits + a12_hits + a18_hits >= 3:
+        score = max(score, 0.92)
+    elif (a13_hits >= 3 or formal_root_hits >= 7) and human_hits == 0 and wc >= 35:
+        score = max(score, 0.76)
 
     score = max(0.02, min(0.99, score))
     ratio = arabic_ratio(text)
@@ -186,18 +282,17 @@ def compute_arabic_ai_heuristics(text):
         "is_arabic": ratio >= 0.20,
         "is_arabic_dominant": ratio >= 0.45,
         "details": {
-            "phrase_hits": phrase_hits,
-            "phrase_found": phrase_found[:6],
-            "transition_hits": transition_hits,
-            "transition_found": transition_found[:6],
-            "formal_hits": formal_hits,
-            "human_hits": human_hits,
-            "human_found": human_found[:6],
-            "cv": round(cv, 3),
-            "unique_ratio": round(unique_ratio, 3),
-            "opener_ratio": round(opener_ratio, 3),
-            "balance_hits": balance_hits,
-            "tashkeel_density": round(tashkeel_density, 4)
+            "T01_Lexical_Repetition": a01_hits + a04_hits + a12_hits + a18_hits,
+            "T05_Burstiness": "Low (AI Signal)" if a05_triggered else "High (Human)",
+            "T06_Perplexity": "Low (Predictable)" if a06_triggered else "Normal",
+            "T09_Rhythm_Balance": balance_hits,
+            "T13_Transition_Overuse": a13_hits,
+            "T14_Formal_Root_Density": formal_root_hits,
+            "T15_Personal_Experience": "Detected" if a15_hits > 0 else "None",
+            "T19_Dialect_Authenticity": "Detected" if human_hits > 0 else "None",
+            "T20_LLM_Signature": "Detected" if a20_triggered else "None",
+            "triggered_filters": triggered_filters,
+            "cv": round(cv, 3)
         }
     }
 
@@ -216,30 +311,30 @@ class TextMultiHeadAttention(nn.Module):
         assert embed_dim % num_heads == 0, "Embedding dimension must be divisible by num_heads"
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
-        
+
         self.q_proj = nn.Linear(embed_dim, embed_dim)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
         self.v_proj = nn.Linear(embed_dim, embed_dim)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
-        
+
     def forward(self, x):
         # x shape: [batch_size, seq_len, embed_dim]
         batch_size, seq_len, embed_dim = x.size()
-        
+
         # Linear projections & split into heads
         # Shape: [batch_size, seq_len, num_heads, head_dim] -> transpose to [batch_size, num_heads, seq_len, head_dim]
         q = self.q_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         k = self.k_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         v = self.v_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        
+
         # Scaled dot-product attention
         # scores: [batch_size, num_heads, seq_len, seq_len]
         scores = torch.matmul(q, k.transpose(-2, -1)) / (self.head_dim ** 0.5)
         attn_weights = torch.softmax(scores, dim=-1)
-        
+
         # context: [batch_size, num_heads, seq_len, head_dim]
         context = torch.matmul(attn_weights, v)
-        
+
         # Concatenate heads and project
         # context: [batch_size, seq_len, embed_dim]
         context = context.transpose(1, 2).contiguous().view(batch_size, seq_len, embed_dim)
@@ -256,11 +351,11 @@ class CustomAttentionTextClassifier(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
         self.gru = nn.GRU(
-            embedding_dim, 
-            hidden_dim, 
-            num_layers=2, 
-            bidirectional=True, 
-            batch_first=True, 
+            embedding_dim,
+            hidden_dim,
+            num_layers=2,
+            bidirectional=True,
+            batch_first=True,
             dropout=dropout
         )
         self.attention = TextMultiHeadAttention(hidden_dim * 2, num_heads=num_heads)
@@ -271,15 +366,15 @@ class CustomAttentionTextClassifier(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(64, output_dim)
         )
-        
+
     def forward(self, text):
         # text: [batch size, seq_len]
         embedded = self.embedding(text)  # [batch size, seq_len, emb_dim]
         gru_out, _ = self.gru(embedded)  # [batch size, seq_len, hidden_dim * 2]
-        
+
         # Multi-Head Attention pooling
         attn_out, weights = self.attention(gru_out)
-        
+
         # Global average pooling over the sequence dimension
         pooled = torch.mean(attn_out, dim=1)
         return self.fc(pooled)
@@ -298,14 +393,15 @@ class TextDetectorModel:
         self.custom_model = None
         self.vocab = {}
         self.max_len = 256
-        
+
         os.makedirs(model_dir, exist_ok=True)
         self.init_transformer()
         self.init_custom_gru()
-        
+
     def init_transformer(self):
         try:
-            from transformers import AutoTokenizer, AutoModelForSequenceClassification  # type: ignore
+            # pyrefly: ignore [missing-import]
+            from transformers import AutoTokenizer, AutoModelForSequenceClassification
             logger.info("Initializing pre-trained Hugging Face RoBERTa Text Forensics pipeline...")
             model_name = "shahrukhx01/roberta-base-openai-detector"
             # Attempt to load from local cache first, or connect online using Hugging Face token if missing
@@ -320,7 +416,7 @@ class TextDetectorModel:
             self.transformer_model.eval()
             logger.info("RoBERTa AI Text Detector online.")
         except Exception as e:
-            logger.warning(f"RoBERTa transformer failed to initialize: {e}. Falling back to local high-fidelity ML ensemble.")
+            logger.info("RoBERTa offline: Falling back to local high-fidelity ML ensemble (no API key required).")
             self.transformer_model = None
             self.tokenizer = None
 
@@ -329,10 +425,10 @@ class TextDetectorModel:
         self.custom_model = CustomAttentionTextClassifier(vocab_size=self.vocab_size)
         self.custom_model.to(self.device)
         self.custom_model.eval()
-        
+
         self.vectorizer = None
         self.classifier = None
-        
+
         checkpoint_path = os.path.join(self.model_dir, "text_detector.pth")
         if os.path.exists(checkpoint_path):
             try:
@@ -373,16 +469,16 @@ class TextDetectorModel:
         arabic_meta = compute_arabic_ai_heuristics(text)
         if arabic_meta.get("is_arabic_dominant"):
             return arabic_meta["score"]
-        
+
         text_lower = text.lower()
         # Strip punctuation from words so "crucial." matches "crucial"
         words = re.findall(r"[a-z'-]+", text_lower)
         wc = len(words)
         if wc == 0:
             return 0.05
-        
+
         scores = {}
-        
+
         # ── Signal 1: AI Vocabulary Fingerprint ──────────────────────────
         # ChatGPT/Claude/Gemini have strong lexical preferences
         tier1_words = [  # Almost never used by humans in casual writing
@@ -408,10 +504,10 @@ class TextDetectorModel:
             'underscore', 'spearheading', 'pioneering',
             'overarching', 'foundational', 'cornerstone',
         ]
-        
+
         t1_hits = sum(1 for w in words if w in tier1_words)
         t2_hits = sum(1 for w in words if w in tier2_words)
-        
+
         if t1_hits >= 2:
             scores['vocab'] = 0.97
         elif t1_hits == 1:
@@ -424,7 +520,7 @@ class TextDetectorModel:
             scores['vocab'] = 0.45
         else:
             scores['vocab'] = 0.10
-        
+
         # ── Signal 2: Burstiness (Sentence Length Variation) ─────────────
         sentences = re.split(r'[.!?]+', text)
         sentences = [s.strip() for s in sentences if len(s.strip()) > 0]
@@ -436,7 +532,7 @@ class TextDetectorModel:
                 var_len = sum((l - mean_len) ** 2 for l in lens) / len(lens)
                 std_len = var_len ** 0.5
                 cv = std_len / mean_len
-        
+
         # AI text: very uniform lengths (CV < 0.35). Humans: erratic (CV > 0.5)
         if cv < 0.25:
             scores['burstiness'] = 0.92
@@ -446,12 +542,12 @@ class TextDetectorModel:
             scores['burstiness'] = 0.50
         else:
             scores['burstiness'] = 0.15
-        
+
         # ── Signal 3: Contraction Absence ────────────────────────────────
         # AI almost never uses contractions; humans use them constantly
         contractions = len(re.findall(r"\b\w+'(?:s|t|re|ve|ll|d|m)\b", text_lower))
         contraction_rate = contractions / wc if wc > 0 else 0.0
-        
+
         if contraction_rate == 0.0:
             scores['contractions'] = 0.80
         elif contraction_rate < 0.01:
@@ -460,7 +556,7 @@ class TextDetectorModel:
             scores['contractions'] = 0.30
         else:
             scores['contractions'] = 0.08
-        
+
         # ── Signal 4: Passive Voice Density ──────────────────────────────
         # AI heavily uses passive voice ("is considered", "are utilized")
         passive_patterns = re.findall(
@@ -468,7 +564,7 @@ class TextDetectorModel:
             text_lower
         )
         passive_rate = len(passive_patterns) / max(len(sentences), 1)
-        
+
         if passive_rate > 0.5:
             scores['passive'] = 0.85
         elif passive_rate > 0.25:
@@ -477,7 +573,7 @@ class TextDetectorModel:
             scores['passive'] = 0.40
         else:
             scores['passive'] = 0.15
-        
+
         # ── Signal 5: Hedging / Filler Language ──────────────────────────
         # AI constantly hedges: "it is important to note", "it is worth mentioning"
         hedging_phrases = [
@@ -494,7 +590,7 @@ class TextDetectorModel:
             'continue to', 'continues to',
         ]
         hedge_hits = sum(1 for p in hedging_phrases if p in text_lower)
-        
+
         if hedge_hits >= 3:
             scores['hedging'] = 0.92
         elif hedge_hits >= 2:
@@ -503,7 +599,7 @@ class TextDetectorModel:
             scores['hedging'] = 0.55
         else:
             scores['hedging'] = 0.12
-        
+
         # ── Signal 6: Sentence Starter Monotony ──────────────────────────
         # AI starts sentences with "The", "This", "It", "These" repeatedly
         if len(sentences) >= 3:
@@ -511,10 +607,10 @@ class TextDetectorModel:
             boring_starters = ['the', 'this', 'it', 'these', 'that', 'such', 'in', 'as', 'by']
             boring_count = sum(1 for s in starters if s.lower() in boring_starters)
             boring_ratio = boring_count / len(starters)
-            
+
             unique_starters = len(set(s.lower() for s in starters))
             starter_diversity = unique_starters / len(starters)
-            
+
             if boring_ratio > 0.7 and starter_diversity < 0.5:
                 scores['starters'] = 0.85
             elif boring_ratio > 0.5:
@@ -523,12 +619,12 @@ class TextDetectorModel:
                 scores['starters'] = 0.15
         else:
             scores['starters'] = 0.35
-        
+
         # ── Signal 7: Comma Density ──────────────────────────────────────
         # AI produces consistently high comma rates (subordinate clauses)
         comma_count = text.count(',')
         comma_rate = comma_count / wc if wc > 0 else 0
-        
+
         if comma_rate > 0.12:
             scores['commas'] = 0.78
         elif comma_rate > 0.08:
@@ -537,7 +633,7 @@ class TextDetectorModel:
             scores['commas'] = 0.30
         else:
             scores['commas'] = 0.15
-        
+
         # ── Signal 8: Lexical Diversity (Type-Token Ratio) ───────────────
         # AI tends to reuse the same formal words; humans use more varied vocab
         unique_words = set(words)
@@ -610,7 +706,7 @@ class TextDetectorModel:
             scores['narrative'] = 0.65
         else:
             scores['narrative'] = 0.15
-        
+
         # ── Weighted Fusion ──────────────────────────────────────────────
         weights = {
             'vocab': 0.20,       # Strongest single signal
@@ -623,22 +719,22 @@ class TextDetectorModel:
             'lexical': 0.05,
             'narrative': 0.20,   # Catch AI stories and sci-fi tropes
         }
-        
+
         final = sum(scores[k] * weights[k] for k in weights)
-        
+
         # ── Hard overrides for extreme cases ─────────────────────────────
         # If we found tier-1 AI vocabulary, floor the score at 0.80
         if t1_hits >= 1:
             final = max(final, 0.80)
-            
+
         # Hard overrides for narrative cliché hits
         if cliche_hits >= 2:
             final = max(final, 0.90)
         elif cliche_hits == 1 and contraction_rate == 0.0:
             final = max(final, 0.78)
-        
+
         # If text has contractions AND slang, cap at 0.35 (very likely human)
-        slang_words = ['kinda', 'gonna', 'wanna', 'gotta', 'lol', 'omg', 'tbh', 
+        slang_words = ['kinda', 'gonna', 'wanna', 'gotta', 'lol', 'omg', 'tbh',
                        'ngl', 'imo', 'idk', 'lmao', 'bruh', 'dude', 'yeah', 'nah',
                        'chill', 'vibe', 'vibes', 'lowkey', 'highkey', 'fr', 'smh',
                        'btw', 'rn', 'nvm', 'haha', 'hehe', 'yep', 'nope', 'ok',
@@ -646,20 +742,25 @@ class TextDetectorModel:
                        'pretty', 'stuff', 'things', 'cool', 'nice', 'awesome',
                        'sucks', 'weird', 'crazy', 'super', 'totally', 'actually']
         slang_hits = sum(1 for w in words if w in slang_words)
-        if slang_hits >= 2 and contraction_rate > 0.02:
-            final = min(final, 0.15)
-        elif slang_hits >= 1 and contraction_rate > 0.01:
-            final = min(final, 0.30)
-        
+        # Catch humanizers: Do NOT let slang override if strong AI vocabulary is present!
+        if t1_hits == 0 and t2_hits <= 2:
+            if slang_hits >= 2 and contraction_rate > 0.02:
+                final = min(final, 0.15)
+            elif slang_hits >= 1 and contraction_rate > 0.01:
+                final = min(final, 0.35)
+        elif slang_hits > 0 and (t1_hits > 0 or t2_hits > 2):
+            # This is "Structural Dissonance": highly formal AI words mixed with forced slang
+            final = max(final, 0.85)
+
         # Short text with many tier-2 formal words and zero contractions = AI
         if wc < 80 and t2_hits >= 3 and contraction_rate == 0.0:
             final = max(final, 0.82)
-        
+
         # Clamp
         final = max(0.02, min(0.99, final))
-        
+
         logger.debug(f"Heuristic scores: {scores} -> final={final:.3f} (t1={t1_hits}, t2={t2_hits}, slang={slang_hits}, cv={cv:.3f}, contr_rate={contraction_rate:.4f})")
-        
+
         return final
 
     def predict(self, text):
@@ -669,7 +770,7 @@ class TextDetectorModel:
         arabic_meta = compute_arabic_ai_heuristics(text)
         if arabic_meta.get("is_arabic_dominant"):
             return arabic_meta["score"]
-            
+
         # 1. Hugging Face Transformer Pipeline (if loaded and online)
         transformer_prob = None
         if self.transformer_model and self.tokenizer:
@@ -684,7 +785,7 @@ class TextDetectorModel:
 
         # 2. Extract heuristics signal
         stat_prob = self.compute_heuristics(text)
-        
+
         # 3. Local Machine Learning TF-IDF Ensemble Classifier
         ml_prob = None
         if self.vectorizer and self.classifier:
@@ -694,7 +795,7 @@ class TextDetectorModel:
                 ml_prob = probs[0][1] # Probability of class 1 (AI)
             except Exception as e:
                 logger.error(f"Scikit-Learn TF-IDF inference failed: {e}")
-                
+
         # 4. Custom PyTorch Attention-BiGRU Classifier
         pytorch_prob = None
         try:
@@ -704,22 +805,22 @@ class TextDetectorModel:
                 pytorch_prob = torch.sigmoid(logits).item()
         except Exception as e:
             logger.error(f"Custom MHSA-BiGRU inference failed: {e}")
-            
+
         # 5. Ensemble Decision Fusion
         probs_to_fuse = []
-        
+
         if transformer_prob is not None:
             probs_to_fuse.append((transformer_prob, 0.40)) # Give HF RoBERTa 40% weight if online
-            
+
         if ml_prob is not None:
             # TF-IDF model is highly accurate: give it strong weight
             ml_weight = 0.50 if transformer_prob is not None else 0.65
             probs_to_fuse.append((ml_prob, ml_weight))
-            
+
         if pytorch_prob is not None:
             py_weight = 0.10 if transformer_prob is not None else 0.15
             probs_to_fuse.append((pytorch_prob, py_weight))
-            
+
         if not probs_to_fuse:
             # Absolute fallback to heuristics only
             final_prob = stat_prob
@@ -728,14 +829,14 @@ class TextDetectorModel:
             total_w = sum(w for _, w in probs_to_fuse) + 0.20 # Reserved for heuristics (20%)
             final_prob = sum(p * w for p, w in probs_to_fuse) + stat_prob * 0.20
             final_prob = final_prob / total_w
-            
+
         # Cap/clamp
         final_prob = max(0.02, min(0.99, final_prob))
 
         if arabic_meta.get("is_arabic"):
             # For mixed Arabic/English text, keep Arabic stylistic signals from being
             # diluted by English-only model heads while still allowing English text to matter.
-            final_prob = 0.65 * arabic_meta["score"] + 0.35 * final_prob
+            final_prob = 0.85 * arabic_meta["score"] + 0.15 * final_prob
             final_prob = max(0.02, min(0.99, final_prob))
 
         return final_prob
@@ -757,18 +858,18 @@ class SpectralStreamCNN(nn.Module):
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2), # 32x32 -> 16x16
-            
+
             nn.Conv2d(16, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2), # 16x16 -> 8x8
-            
+
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.AdaptiveAvgPool2d((1, 1)) # -> 64 features
         )
-        
+
     def forward(self, x):
         # Input shape: [batch_size, 1, 32, 32]
         return self.conv(x).squeeze(-1).squeeze(-1)
@@ -788,18 +889,18 @@ class DualStreamImageDetector(nn.Module):
             self.spatial_backbone = models.resnet18(weights=weights)
         else:
             self.spatial_backbone = models.resnet18(pretrained=pretrained)
-            
+
         # Freeze early spatial convolutions for high efficiency on CPU
         for param in list(self.spatial_backbone.parameters())[:-15]:
             param.requires_grad = False
-            
+
         self.spatial_features_dim = self.spatial_backbone.fc.in_features
         self.spatial_backbone.fc = nn.Identity() # Remove default fully-connected head
-        
+
         # 2. Spectral Stream (DCT Block Frequency CNN)
         self.spectral_stream = SpectralStreamCNN()
         self.spectral_features_dim = 64
-        
+
         # 3. Fusion Head
         self.fusion_dim = self.spatial_features_dim + self.spectral_features_dim
         self.fc = nn.Sequential(
@@ -809,14 +910,14 @@ class DualStreamImageDetector(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(128, 1)
         )
-        
+
     def forward(self, spatial_tensor, spectral_tensor):
         # spatial_tensor: [batch_size, 3, 224, 224]
         # spectral_tensor: [batch_size, 1, 32, 32]
-        
+
         feat_spatial = self.spatial_backbone(spatial_tensor) # [batch_size, 512]
         feat_spectral = self.spectral_stream(spectral_tensor) # [batch_size, 64]
-        
+
         # Concatenate Streams
         feat_fused = torch.cat([feat_spatial, feat_spectral], dim=1) # [batch_size, 576]
         return self.fc(feat_fused)
@@ -844,23 +945,23 @@ class VideoTemporalMultiHeadAttention(nn.Module):
         assert embed_dim % num_heads == 0, "Embedding dimension must be divisible by num_heads"
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
-        
+
         self.q_proj = nn.Linear(embed_dim, embed_dim)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
         self.v_proj = nn.Linear(embed_dim, embed_dim)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
-        
+
     def forward(self, x):
         # x shape: [batch_size, seq_len, embed_dim]
         batch_size, seq_len, embed_dim = x.size()
-        
+
         q = self.q_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         k = self.k_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         v = self.v_proj(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        
+
         scores = torch.matmul(q, k.transpose(-2, -1)) / (self.head_dim ** 0.5)
         attn_weights = torch.softmax(scores, dim=-1)
-        
+
         context = torch.matmul(attn_weights, v)
         context = context.transpose(1, 2).contiguous().view(batch_size, seq_len, embed_dim)
         return self.out_proj(context), attn_weights
@@ -878,7 +979,7 @@ class SpatioTemporalVideoDetector(nn.Module):
             self.spatial_spectral_encoder = dual_stream_backbone
         else:
             self.spatial_spectral_encoder = DualStreamImageDetector(pretrained=True)
-            
+
         self.feature_dim = self.spatial_spectral_encoder.fusion_dim # 576 (512 spatial + 64 spectral)
         self.gru = nn.GRU(
             input_size=self.feature_dim,
@@ -894,30 +995,30 @@ class SpatioTemporalVideoDetector(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 1)
         )
-        
+
     def forward(self, spatial_seq, spectral_seq):
         # spatial_seq: [batch_size, seq_len, 3, 224, 224]
         # spectral_seq: [batch_size, seq_len, 1, 32, 32]
         batch_size, seq_len, c, h, w = spatial_seq.size()
         _, _, s_c, s_h, s_w = spectral_seq.size()
-        
+
         # Flatten timeline to extract joint features through our dual-stream image backbone
         flat_spatial = spatial_seq.view(batch_size * seq_len, c, h, w)
         flat_spectral = spectral_seq.view(batch_size * seq_len, s_c, s_h, s_w)
-        
+
         # Extract features: [batch_size * seq_len, 576]
         features = self.spatial_spectral_encoder.extract_joint_features(flat_spatial, flat_spectral)
-        
+
         # Reshape to sequence: [batch_size, seq_len, 576]
         features = features.view(batch_size, seq_len, self.feature_dim)
-        
+
         # Bidirectional GRU: [batch_size, seq_len, hidden_dim * 2]
         gru_out, _ = self.gru(features)
-        
+
         # Multi-Head Temporal Attention
         attn_out, weights = self.temporal_attention(gru_out)
-        
+
         # Temporal average pooling
         context = torch.mean(attn_out, dim=1)
-        
+
         return self.fc(context)

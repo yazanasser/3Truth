@@ -5,9 +5,56 @@ document.addEventListener("DOMContentLoaded", () => {
     window.lucide.createIcons();
   }
 
+  function payTr(key, vars, fallback) {
+    return window._3truthI18n ? window._3truthI18n.t(key, vars, fallback) : (fallback || key);
+  }
+
+  function planDisplay(planName) {
+    return window._3truthI18n && window._3truthI18n.planDisplay
+      ? window._3truthI18n.planDisplay(planName)
+      : `${planName} Plan`;
+  }
+
+  function planLabel(planName) {
+    return window._3truthI18n && window._3truthI18n.planLabel
+      ? window._3truthI18n.planLabel(planName)
+      : planName;
+  }
+
   // Parse URL parameters for plan
   const urlParams = new URLSearchParams(window.location.search);
-  const plan = urlParams.get('plan');
+  const planKey = (urlParams.get('plan') || '').toLowerCase();
+  const PLAN_OPTIONS = {
+    free: { name: 'Beta Unlimited', price: '$0' },
+  pro: { name: 'Basic Beta Plan', price: '$0' },
+  ultimate: { name: 'Basic Beta Plan', price: '$0' }
+  };
+  const selectedPlan = PLAN_OPTIONS[planKey] || { name: 'Beta Unlimited', price: '$0' };
+
+  function updateSelectedPlanDisplays() {
+    if (!selectedPlan) return;
+    const planNameDisplay = document.getElementById('plan-name-display');
+    const planPriceDisplay = document.getElementById('plan-price-display');
+    const mobilePlanDisplay = document.getElementById('mobile-plan-display');
+
+    if (planNameDisplay) planNameDisplay.textContent = planDisplay(selectedPlan.name);
+    if (mobilePlanDisplay) {
+      mobilePlanDisplay.textContent = payTr(
+        'payment.initializingPlan',
+        { plan: planLabel(selectedPlan.name) },
+        `Initializing ${selectedPlan.name} Plan`
+      );
+    }
+    if (planPriceDisplay) {
+      planPriceDisplay.textContent = selectedPlan.price || '';
+      const suffix = document.createElement('span');
+      suffix.className = 'text-xs text-gray-600';
+      suffix.textContent = ' BETA';
+      planPriceDisplay.appendChild(suffix);
+    }
+  }
+
+  window.addEventListener('3truth:languagechange', updateSelectedPlanDisplays);
 
   // Check auth and plan
   firebase.auth().onAuthStateChanged(async (user) => {
@@ -15,40 +62,15 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = 'signin.html';
       return;
     }
-    if (!plan) {
-      window.location.href = 'pricing.html';
-      return;
+    try {
+      await firebase.firestore().collection("users").doc(user.uid).set({
+        plan: "Beta Unlimited",
+        beta_access: true
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Beta access activation skipped:", e);
     }
-
-    // Direct Bypass for Free plan — update in Firestore and redirect instantly!
-    if (plan.toLowerCase() === 'free') {
-      const mobilePlanDisplay = document.getElementById('mobile-plan-display');
-      if (mobilePlanDisplay) mobilePlanDisplay.textContent = 'Activating Basic Plan...';
-      
-      try {
-        await firebase.firestore().collection("users").doc(user.uid).set({
-          plan: 'Free',
-          scans_used: 0
-        }, { merge: true });
-        window.location.href = 'detector.html';
-      } catch (e) {
-        console.error("Free plan activation error:", e);
-        window.location.href = 'detector.html';
-      }
-      return;
-    }
-
-    // Update display texts based on plan
-    const planNameDisplay = document.getElementById('plan-name-display');
-    const planPriceDisplay = document.getElementById('plan-price-display');
-    const mobilePlanDisplay = document.getElementById('mobile-plan-display');
-
-    if (planNameDisplay) planNameDisplay.textContent = plan + ' Plan';
-    if (mobilePlanDisplay) mobilePlanDisplay.textContent = 'Initializing ' + plan + ' Plan';
-    if (planPriceDisplay) {
-      const price = plan.toLowerCase() === 'pro' ? '$1' : '$5';
-      planPriceDisplay.innerHTML = `${price}<span class="text-xs text-gray-600"> ONE-TIME</span>`;
-    }
+    updateSelectedPlanDisplays();
   });
 
   // Spotlight Card Hover Effect (Replaces 3D Parallax to prevent Stripe iframe lag)
@@ -83,125 +105,55 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- STRIPE INTEGRATION ---
-  // IMPORTANT: Replace this placeholder with your REAL Stripe Publishable Key (starts with pk_live_ or pk_test_)
-  // You must register for an account at stripe.com to process real money.
-  const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
-  const elements = stripe.elements();
-
-  // Create a Stripe Card Element with custom dark-mode styling
-  const style = {
-    base: {
-      color: '#ffffff',
-      fontFamily: '"JetBrains Mono", "Courier New", monospace',
-      fontSmoothing: 'antialiased',
-      fontSize: '14px',
-      '::placeholder': {
-        color: '#6b7280'
-      }
-    },
-    invalid: {
-      color: '#f87171',
-      iconColor: '#f87171'
-    }
-  };
-
-  const card = elements.create('card', { 
-    style: style,
-    hidePostalCode: true 
-  });
-  
-  card.mount('#card-element');
-
-  // Real-time validation errors
-  card.on('change', function(event) {
-    const displayError = document.getElementById('card-errors');
-    if (event.error) {
-      displayError.textContent = event.error.message;
-    } else {
-      displayError.textContent = '';
-    }
-    
-    // Auto-update the holographic preview
-    const previewNumber = document.getElementById('preview-number');
-    if (previewNumber && event.brand) {
-       // Just update the visual state to show it's working
-       previewNumber.textContent = event.brand.toUpperCase() + " ••••";
-    }
-  });
-
-  const inputName = document.getElementById('input-name');
-  if (inputName) {
-    inputName.addEventListener('input', () => {
-      const previewName = document.getElementById('preview-name');
-      if (previewName) previewName.textContent = inputName.value.toUpperCase() || "CARDHOLDER NAME";
-    });
+  const betaForm = document.getElementById('payment-form');
+  const betaError = document.getElementById('error-msg');
+  const betaSubmit = document.getElementById('submit-btn');
+  const betaSubmitText = document.getElementById('submit-text');
+  const betaSubmitIcon = document.getElementById('submit-icon');
+  if (betaError) {
+    betaError.textContent = 'Beta v is free and unlimited. Paid subscriptions are locked, and no card is required.';
+    betaError.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-500');
+    betaError.classList.add('flex', 'bg-[#2FEECC]/10', 'border', 'border-[#2FEECC]/40', 'text-[#2FEECC]');
   }
-
-  // Form submission
-  const form = document.getElementById('payment-form');
-  const errorMsg = document.getElementById('error-msg');
-  const submitBtn = document.getElementById('submit-btn');
-  const submitText = document.getElementById('submit-text');
-  const submitIcon = document.getElementById('submit-icon');
-
-  if (form) {
-    form.addEventListener('submit', async (e) => {
+  if (betaSubmitText) betaSubmitText.textContent = 'Go To Detector';
+  if (betaSubmitIcon) betaSubmitIcon.setAttribute('data-lucide', 'unlock');
+  if (betaSubmit) betaSubmit.disabled = false;
+  if (betaForm) {
+    betaForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      errorMsg.classList.add('hidden');
-      errorMsg.textContent = '';
-
-      // Loading state
-      submitBtn.disabled = true;
-      submitText.textContent = 'Processing Payment...';
-      submitIcon.setAttribute('data-lucide', 'loader-2');
-      submitIcon.classList.add('animate-spin');
-      if (window.lucide) window.lucide.createIcons();
-
-      // Ask Stripe to create a secure token from the card
-      const {token, error} = await stripe.createToken(card, {
-        name: inputName.value
-      });
-
-      if (error) {
-        // Validation failed! Card declined or invalid details.
-        const displayError = document.getElementById('card-errors');
-        displayError.textContent = error.message;
-        
-        submitBtn.disabled = false;
-        submitText.textContent = 'Pay Now';
-        submitIcon.setAttribute('data-lucide', 'lock');
-        submitIcon.classList.remove('animate-spin');
-        if (window.lucide) window.lucide.createIcons();
-      } else {
-        // Token successfully created! The card is real and validated by Stripe!
-        // In a real production app, you would send this token to your NodeJS backend to charge the card.
-        // For this frontend, we will proceed to activate their plan.
-        
+      const user = firebase.auth().currentUser;
+      if (user) {
         try {
-          const user = firebase.auth().currentUser;
-          if (!user) throw new Error("Not authenticated");
+          const IS_BETA_LOCKED = true; // Toggle this to false when ready to unlock monthly subscriptions
 
-          // Update user plan in Firestore securely and reset their scans
-          await firebase.firestore().collection("users").doc(user.uid).set({
-            plan: plan,
-            scans_used: 0
-          }, { merge: true });
+          if (IS_BETA_LOCKED) {
+            await firebase.firestore().collection("users").doc(user.uid).set({
+              plan: "Beta Unlimited",
+              beta_access: true
+            }, { merge: true });
+          } else {
+            // Real Monthly Subscription Logic
+            const now = new Date();
+            const nextMonth = new Date(now);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-          // Redirect to the detector interface
-          window.location.href = 'detector.html';
+            await firebase.firestore().collection("users").doc(user.uid).set({
+              plan: selectedPlan.name,
+              subscription_status: "active",
+              billing_cycle: "monthly",
+              current_period_start: firebase.firestore.Timestamp.fromDate(now),
+              current_period_end: firebase.firestore.Timestamp.fromDate(nextMonth),
+              auto_renew: true
+            }, { merge: true });
+
+            // Note: Integrate actual payment gateway (like local processor API) before marking active in production.
+          }
         } catch (err) {
-          errorMsg.textContent = err.message;
-          errorMsg.classList.remove('hidden');
-          
-          submitBtn.disabled = false;
-          submitText.textContent = 'Pay Now';
-          submitIcon.setAttribute('data-lucide', 'lock');
-          submitIcon.classList.remove('animate-spin');
-          if (window.lucide) window.lucide.createIcons();
+          console.warn("Subscription sync skipped:", err);
         }
       }
+      window.location.href = 'detector.html';
     });
   }
+  if (window.lucide) window.lucide.createIcons();
 });
