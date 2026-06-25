@@ -1270,8 +1270,9 @@ if (analyzeBtn) {
     if (!currentUser) {
       const freeScanUsed = localStorage.getItem('3truth_free_scan_used');
       if (freeScanUsed) {
-        showToast(tr('detector.errors.freeScanUsed', null, "Please sign in to continue using 3truth AI Detector. Redirecting..."), 1500);
-        setTimeout(() => window.location.href = 'signin.html', 1500);
+        if (typeof window.openAuthModal === 'function') {
+          window.openAuthModal();
+        }
         return;
       } else {
         localStorage.setItem('3truth_free_scan_used', 'true');

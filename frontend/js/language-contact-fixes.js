@@ -288,6 +288,7 @@
     // Auth
     'Secure Access': 'وصول آمن',
     'SECURE ACCESS': 'وصول آمن',
+    'Thank you for visiting! Please sign in to continue.': 'شكراً لزيارتك! يرجى تسجيل الدخول للمتابعة.',
     'Verify your email to enter': 'تحقق من بريدك الإلكتروني للدخول',
     'Email Address': 'البريد الإلكتروني',
     'Verification Code': 'رمز التحقق',
