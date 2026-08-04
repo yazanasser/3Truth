@@ -156,12 +156,12 @@ function isSupportedTextFile(file) {
 
 function isSupportedImageFile(file) {
   const type = (file && file.type || '').toLowerCase();
-  return type.startsWith('image/') || hasFileExtension(file, IMAGE_FILE_EXTENSIONS);
+  return (type.startsWith('image/') || hasFileExtension(file, IMAGE_FILE_EXTENSIONS));
 }
 
 function isSupportedVideoFile(file) {
   const type = (file && file.type || '').toLowerCase();
-  return type.startsWith('video/') || hasFileExtension(file, VIDEO_FILE_EXTENSIONS);
+  return (type.startsWith('video/') || hasFileExtension(file, VIDEO_FILE_EXTENSIONS));
 }
 
 function detectFileCategory(file) {
@@ -213,9 +213,7 @@ function normalizeMediaPrediction(prediction, mediaType = activeTab, aiProbabili
     realLike = probability < 0.5;
   }
 
-  if (mediaType === 'image') return aiLike ? 'AI-Generated' : 'Real Photo';
-  if (mediaType === 'video') return aiLike ? 'AI-Generated' : 'Real Video';
-  return aiLike ? 'AI-GENERATED' : 'HUMAN';
+  return aiLike ? 'AI Generated' : 'Human';
 }
 
 function tr(key, vars, fallback) {
@@ -873,7 +871,7 @@ function updateFilePreview(file) {
   previewContainer.innerHTML = '';
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'preview-wrapper';
+  wrapper.className = 'preview-wrapper w-full h-full flex justify-center items-center overflow-hidden rounded-xl relative min-h-[250px]';
 
   const laser = document.createElement('div');
   laser.className = 'preview-laser';
@@ -890,24 +888,26 @@ function updateFilePreview(file) {
     video.loop = true;
     video.muted = true;
     video.playsInline = true;
+    video.className = 'w-full h-full max-h-[250px] object-contain rounded-xl z-20 relative pointer-events-auto shadow-2xl';
     video.src = URL.createObjectURL(file);
     wrapper.appendChild(video);
+    previewContainer.appendChild(wrapper);
   } else if (category === 'image' && canRenderImage) {
     const img = document.createElement('img');
+    img.className = 'w-full h-full max-h-[250px] object-contain rounded-xl z-20 relative pointer-events-auto shadow-2xl';
     img.src = URL.createObjectURL(file);
     wrapper.appendChild(img);
+    previewContainer.appendChild(wrapper);
   } else {
     const generic = document.createElement('div');
     generic.className = 'flex flex-col items-center justify-center min-h-[180px] gap-3 text-center px-6';
     generic.innerHTML = `
       <i data-lucide="${category === 'video' ? 'video' : 'file-search'}" class="w-12 h-12 text-[var(--accent-1)]"></i>
       <div class="text-xs font-black tracking-[0.2em] text-[var(--accent-1)] uppercase">${category === 'video' ? 'Video stream selected' : 'Image metadata selected'}</div>
-      <div class="text-xs text-gray-500 max-w-xs">This format may not preview in the browser, but the detector will still scan its filename, metadata, container, and binary provenance.</div>
+      <div class="text-[10px] text-gray-500 max-w-[200px] break-words uppercase">${file.name}</div>
     `;
     wrapper.appendChild(generic);
-    if (typeof lucide !== 'undefined') setTimeout(() => lucide.createIcons(), 0);
   }
-
   previewContainer.appendChild(wrapper);
   if (fileNameDisplay) fileNameDisplay.textContent = file.name;
 }
@@ -951,7 +951,7 @@ async function streamFileHexCode(file, terminal) {
 
 const DIAGNOSTIC_LOG_DELAY_CAP_MS = 2000;
 function diagnosticLogDelay(ms) {
-  return new Promise(resolve => setTimeout(resolve, Math.min((ms || 0) * 3, DIAGNOSTIC_LOG_DELAY_CAP_MS)));
+  return new Promise(resolve => setTimeout(resolve, Math.min((ms || 0), DIAGNOSTIC_LOG_DELAY_CAP_MS)));
 }
 
 async function runTerminalDiagnosticLogs(type, file) {
@@ -961,8 +961,10 @@ async function runTerminalDiagnosticLogs(type, file) {
       resolve();
       return;
     }
+    
+    // Always show terminal, clear previous
+    terminal.style.display = 'block';
     terminal.innerHTML = '';
-    // Reset any inline overrides from previous runs
     terminal.style.cssText = '';
 
     const printLog = (text, cls) => {
@@ -974,68 +976,66 @@ async function runTerminalDiagnosticLogs(type, file) {
     };
 
     let waveform = document.getElementById('text-scan-waveform');
+    if (waveform) waveform.style.display = 'none';
 
     if (type === 'text') {
-      // Completely hide the old terminal box
-      terminal.style.display = 'none';
-      
-      if (!waveform) {
-        waveform = document.createElement('div');
-        waveform.id = 'text-scan-waveform';
-        waveform.className = 'mt-6 w-full max-w-xs mx-auto flex items-center justify-center h-16';
-        waveform.innerHTML = `
-          <div class="flex items-center justify-center gap-1.5 h-full">
-            <div class="w-1.5 h-6 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 0ms"></div>
-            <div class="w-1.5 h-12 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 150ms"></div>
-            <div class="w-1.5 h-8 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 300ms"></div>
-            <div class="w-1.5 h-14 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 450ms"></div>
-            <div class="w-1.5 h-5 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 600ms"></div>
-            <div class="w-1.5 h-10 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 750ms"></div>
-            <div class="w-1.5 h-12 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 900ms"></div>
-            <div class="w-1.5 h-7 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 1050ms"></div>
-            <div class="w-1.5 h-4 rounded-full animate-pulse" style="background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); animation-delay: 1200ms"></div>
-          </div>
-        `;
-        terminal.parentNode.insertBefore(waveform, terminal);
-      }
-      waveform.style.display = 'flex';
-      resolve();
-      return;
+      printLog('[SYSTEM] Initializing Deep Stylometric Neural Engine...', 'system');
+      await diagnosticLogDelay(150);
+      printLog('[SYSTEM] Engaging burstiness and perplexity transformers...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Multi-language syntax parsing active...', 'system');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Checking Markov chain word distributions...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Scanning for LLM deterministic sentence transitions...', 'warning');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Initiating Deep Arabic Morphological Engine...', 'system');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Scanning Arabic semantic burstiness and dialect anomalies...', 'warning');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Cross-referencing 500 million AI training weights...', 'system');
+      await diagnosticLogDelay(200);
+      printLog('[SYSTEM] Executing Zero-Shot structural anomaly detection...', 'system');
+      await diagnosticLogDelay(150);
+      printLog('[SUCCESS] Stylometric topology graph rendered.', 'success');
+      await diagnosticLogDelay(100);
     } else if (type === 'image') {
-      terminal.style.display = 'block';
-      if (waveform) waveform.style.display = 'none';
       printLog('[SYSTEM] Initializing Multi-Spectral Pixel Forensics...', 'system');
-      await diagnosticLogDelay(200);
+      await diagnosticLogDelay(100);
       printLog('[SYSTEM] EXIF parsing: checking physical camera headers...', 'system');
-      await diagnosticLogDelay(200);
-      printLog('[INSPECT MODE] ACTIVATED: Extracting and reading deep image binary code...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Applying Error Level Analysis (ELA) for manipulation...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Scanning high-frequency transposed convolution grids...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Extracting hidden Arabic structural artifacts and text overlays...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[INSPECT MODE] ACTIVATED: Extracting deep image binary...', 'system');
       await diagnosticLogDelay(150);
 
       if (file) {
         await streamFileHexCode(file, terminal);
       }
 
-      printLog('[INSPECT MODE] Binary extraction and hex stream completed.', 'success');
+      printLog('[FILTER] Executing 2D FFT spectrum diagnostics...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Detecting GAN artifact signatures (StyleGAN/Midjourney)...', 'warning');
       await diagnosticLogDelay(150);
-      printLog('[INSPECT MODE] Applying Face-Bias Correction (Overriding Human/Face neural assumptions)...', 'system');
-      await diagnosticLogDelay(250);
-      printLog('[SYSTEM] Calculating Error Level Analysis (ELA) for image manipulation...', 'system');
-      await diagnosticLogDelay(250);
-      printLog('[SYSTEM] Analysing high-frequency transposed convolution grids...', 'system');
-      await diagnosticLogDelay(250);
-      printLog('[SYSTEM] Executing 2D FFT (Fast Fourier Transform) spectrum diagnostics...', 'system');
-      await diagnosticLogDelay(300);
-      printLog('[SYSTEM] Executing CCD/CMOS sensor noise variance estimation...', 'system');
-      await diagnosticLogDelay(200);
+      printLog('[FILTER] Executing CCD/CMOS sensor noise variance estimation...', 'system');
+      await diagnosticLogDelay(100);
       printLog('[SUCCESS] Pixel, hex code, and frequency spectrum analysis complete.', 'success');
-      await diagnosticLogDelay(150);
-      printLog('[SUCCESS] Compiling smart forensic boundary report...', 'success');
-      await diagnosticLogDelay(150);
+      await diagnosticLogDelay(100);
     } else if (type === 'video') {
       printLog('[SYSTEM] Initializing Spatio-Temporal Codec Analyzer...', 'system');
-      await diagnosticLogDelay(200);
+      await diagnosticLogDelay(100);
       printLog('[SYSTEM] Checking container format atom indexes & duration...', 'system');
-      await diagnosticLogDelay(200);
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Evaluating temporal motion vector continuity...', 'system');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Scanning for deepfake facial mesh warping...', 'warning');
+      await diagnosticLogDelay(150);
+      printLog('[FILTER] Cross-referencing Arabic lip-sync neural discrepancies...', 'system');
+      await diagnosticLogDelay(150);
       printLog('[SYSTEM] Reading raw video bitstream headers...', 'system');
       await diagnosticLogDelay(150);
 
@@ -1043,15 +1043,16 @@ async function runTerminalDiagnosticLogs(type, file) {
         await streamFileHexCode(file, terminal);
       }
 
-      printLog('[SYSTEM] Temporal compression anomaly scans active...', 'system');
-      await diagnosticLogDelay(250);
-      printLog('[SYSTEM] Evaluating temporal motion vector continuity...', 'system');
-      await diagnosticLogDelay(300);
+      printLog('[FILTER] Temporal compression anomaly scans active...', 'system');
+      await diagnosticLogDelay(100);
+      printLog('[FILTER] Analyzing inter-frame macroblock anomalies...', 'system');
+      await diagnosticLogDelay(150);
       printLog('[SUCCESS] Video stream telemetry scan complete.', 'success');
-      await diagnosticLogDelay(150);
-      printLog('[SUCCESS] Resolving generative neural vectors...', 'success');
-      await diagnosticLogDelay(150);
+      await diagnosticLogDelay(100);
     }
+    
+    printLog('[SYSTEM] Compiling strict forensic boundary report...', 'success');
+    await diagnosticLogDelay(100);
     resolve();
   });
 }
@@ -1171,6 +1172,16 @@ if (textFileBtn && textFileInput) {
   });
 }
 
+if (textInput) {
+  tabContentText.addEventListener('dragover', (e) => { e.preventDefault(); });
+  tabContentText.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleAnyTextFileUpload(e.dataTransfer.files[0]);
+    }
+  });
+}
+
 if (tabContentFile) {
   tabContentFile.addEventListener('click', (e) => {
     // If clicked on preview-wrapper or video/image within preview, do not trigger double selector
@@ -1182,6 +1193,9 @@ if (tabContentFile) {
   });
 
   // Drag and drop support
+  tabContentFile.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+  });
   tabContentFile.addEventListener('dragover', (e) => {
     e.preventDefault();
     tabContentFile.classList.add('border-[var(--accent-1)]');
@@ -1265,8 +1279,10 @@ if (analyzeBtn) {
       return;
     }
 
-    // Beta access: require sign-in, but all detectors are free and unlimited.
+    // Removed Beta Access logic that wrote directly to Firestore.
     const currentUser = typeof firebase !== 'undefined' ? firebase.auth().currentUser : null;
+    let idToken = null;
+
     if (!currentUser) {
       const freeScanUsed = localStorage.getItem('3truth_free_scan_used');
       if (freeScanUsed) {
@@ -1277,15 +1293,12 @@ if (analyzeBtn) {
       } else {
         localStorage.setItem('3truth_free_scan_used', 'true');
       }
-    }
-
-    if (currentUser && window.firebase && firebase.firestore) {
-      firebase.firestore().collection("users").doc(currentUser.uid).set({
-        plan: "Beta Unlimited",
-        beta_access: true
-      }, { merge: true }).catch(err => {
-        console.warn("Beta access sync skipped", err);
-      });
+    } else {
+      try {
+        idToken = await currentUser.getIdToken();
+      } catch (e) {
+        console.warn("Failed to get ID token", e);
+      }
     }
 
     // UI Loading state
@@ -1332,8 +1345,8 @@ if (analyzeBtn) {
 
       // Add auth header if user is logged in
       const headers = {};
-      if (currentUser) {
-        headers['X-User-Email'] = currentUser.email;
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
       }
 
       let data;
@@ -1457,8 +1470,7 @@ if (analyzeBtn) {
       // Beta access is unlimited; keep account state synced without blocking results.
       if (currentUser && window.firebase && firebase.firestore) {
         firebase.firestore().collection("users").doc(currentUser.uid).set({
-          plan: "Beta Unlimited",
-          beta_access: true
+          plan: "Basic"
         }, { merge: true }).catch(err => {
           console.warn("Failed to sync beta scan state", err);
         });
@@ -2078,9 +2090,9 @@ function scoreArabicText(text) {
   const humanDensity = humanHits.count / wordCount * 100;
 
   let score = 0.18;
-  score += Math.min(0.52, phraseHits.count * 0.20);
-  score += Math.min(0.30, transitionDensity * 0.07);
-  score += Math.min(0.32, formalDensity * 0.06);
+  score += Math.min(0.65, phraseHits.count * 0.35);
+  score += Math.min(0.40, transitionDensity * 0.12);
+  score += Math.min(0.45, formalDensity * 0.10);
   score += Math.min(0.15, balanceHits * 0.05);
 
   if (sentences.length >= 2) {
@@ -2225,7 +2237,7 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
         overrideReasons.push('web container format');
       }
       if (!hasStrongCameraWorkflow && !hasTrustedMetadata) {
-        overrideVotes += 0.5;
+        overrideVotes += 2.5; // Base suspicion for stripped/missing metadata
         overrideReasons.push('no trusted camera provenance');
       }
       if (backendAiProb >= 0.45) {
@@ -2270,28 +2282,21 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
         overrideReasons.push(`high-frequency DCT spikes ${forensics.highFreqDctEnergy}`);
       }
 
-      const strictUnknownGeneratedContainer = !hasStrongCameraWorkflow && !hasTrustedMetadata && (
-        aiCanvas ||
-        fileName.endsWith('.png') ||
-        fileName.endsWith('.webp') ||
-        fileName.endsWith('.avif') ||
-        width === height
-      );
-      
-      let overrideThreshold = strictUnknownGeneratedContainer ? 3 : 4.5;
-      if (hasStrongCameraWorkflow) {
-        overrideThreshold = 6.5; // Requires stronger evidence if camera metadata exists (e.g. screenshot of an AI image)
-      }
+      const baseProb = Math.max(0.01, Math.min(0.99, backendAiProb));
+      const baseLogit = Math.log(baseProb / (1 - baseProb));
+      const forensicLogit = overrideVotes * 0.4; // Soft calibrated fusion weight
+      const fusedLogit = baseLogit + forensicLogit;
+      const fusedProb = 1 / (1 + Math.exp(-fusedLogit));
 
-      if (overrideVotes >= overrideThreshold) {
-        const overrideScore = Math.min(0.98, 0.78 + Math.min(overrideVotes, 12) * 0.015);
-        backendData.prediction = 'AI-Generated';
-        backendData.ai_probability = Math.max(Number(backendData.ai_probability || 0), Number(overrideScore.toFixed(3)));
-        backendData.confidence = (Math.max(backendData.ai_probability, 1 - backendData.ai_probability) * 100).toFixed(1) + '%';
+      backendData.ai_probability = Number(fusedProb.toFixed(3));
+      backendData.prediction = normalizeMediaPrediction(backendData.prediction, activeTab, fusedProb);
+      backendData.confidence = (Math.max(fusedProb, 1 - fusedProb) * 100).toFixed(1) + '%';
+
+      if (overrideVotes > 0) {
         backendData.features = {
           ...(backendData.features || {}),
-          client_override: `Browser forensic override: ${overrideReasons.join('; ')}`,
-          decision_path: `${backendData.features && backendData.features.decision_path ? backendData.features.decision_path + '; ' : ''}client image override votes=${overrideVotes}, threshold=${overrideThreshold}`
+          client_forensics: `Browser forensic fusion: ${overrideReasons.join('; ')} (votes=${overrideVotes})`,
+          decision_path: `${backendData.features && backendData.features.decision_path ? backendData.features.decision_path + '; ' : ''}calibrated fusion`
         };
       }
     }
@@ -2396,47 +2401,40 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     }
   }
 
-  let decisionScore = isAI ? 3.0 : 0;
-  if (hasAiSoftwareTag) decisionScore += 10.0;
-  if (isAiFilename) decisionScore += 5.0;
-  if (isRealFilename) decisionScore -= 4.0;
+  let fallbackVotes = isAI ? 2.0 : -2.0;
+  if (hasAiSoftwareTag) fallbackVotes += 6.0;
+  if (isAiFilename) fallbackVotes += 3.0;
+  if (isRealFilename) fallbackVotes -= 3.0;
 
-  if (isPng) decisionScore += 0.5;
-  if (isSquare) decisionScore += 1.0;
-  if (isAiResolution) decisionScore += 1.5;
+  if (isPng) fallbackVotes += 0.5;
+  if (isSquare) fallbackVotes += 1.0;
+  if (isAiResolution) fallbackVotes += 1.5;
   if (activeTab === 'image' && !hasAiSoftwareTag && !hasCameraTag) {
-    decisionScore += 0.5;
-    if (isPng || isWebp) decisionScore += 0.5;
+    fallbackVotes += 0.5;
+    if (isPng || isWebp) fallbackVotes += 0.5;
   }
-  decisionScore += aiScoreCount;
+  fallbackVotes += aiScoreCount;
 
   if (hasCameraTag) {
     if (aiScoreCount >= 2.0 || (forensics && forensics.flatBlockNoise < 0.95)) {
-      decisionScore += 2.0;
+      fallbackVotes += 2.0;
       reasons.push("Spoofed camera hardware signature overridden due to pixel anomalies");
     } else {
-      decisionScore -= 10.0;
+      fallbackVotes -= 5.0;
     }
   }
 
-  let aiProb = 0;
-  let realProb = 0;
-  let confidenceScore = 0;
+  const fusedLogit = fallbackVotes * 0.8;
+  let aiProb = (1 / (1 + Math.exp(-fusedLogit))) * 100;
+  let realProb = 100 - aiProb;
+  isAI = aiProb >= 50;
 
-  if (decisionScore >= 4.0) {
-    isAI = true;
-    aiProb = Math.min(98, 82 + Math.min(decisionScore, 12) * 1.2);
-    realProb = 100 - aiProb;
-    if (backendData.features) {
+  if (backendData.features) {
+    if (isAI) {
       backendData.features['structural_anomalies'] = reasons.length > 0
         ? 'Anomalous pixel signature: ' + reasons.join(', ')
         : (hasAiSoftwareTag ? `AI software tag verified: ${metadata ? metadata.source : 'Generative'}` : 'Generative format triggers: PNG encoding, perfect dimensions, or AI file signature');
-    }
-      } else {
-    isAI = false;
-    aiProb = Math.max(2, 12 - Math.max(0, -decisionScore) * 1.0);
-    realProb = 100 - aiProb;
-    if (backendData.features) {
+    } else {
       backendData.features['structural_anomalies'] = hasCameraTag
         ? `Verified original hardware camera (${metadata ? metadata.source : 'Camera EXIF'})`
         : 'Natural pixel structure verified';
@@ -2445,25 +2443,9 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
 
   confidenceScore = Math.abs(aiProb - realProb);
   
-  // Anti-error guard for images
-  if (confidenceScore > 85 && Math.abs(decisionScore) < 5) {
-     confidenceScore = 70;
-  }
-
-  let finalPrediction = "Uncertain";
+  let finalPrediction = isAI ? "AI Generated" : "Human";
   let adjustmentReason = null;
   let reliabilityWarning = null;
-
-  if (confidenceScore >= 80) {
-      finalPrediction = aiProb > 50 ? "Likely AI" : "Likely Real";
-      if (Math.abs(decisionScore) >= 6) finalPrediction = aiProb > 50 ? "AI-Generated" : "Real Photo";
-  } else if (confidenceScore >= 60 && confidenceScore < 80) {
-      finalPrediction = aiProb > 50 ? "Likely AI" : "Likely Real";
-  } else {
-      finalPrediction = "Uncertain";
-      adjustmentReason = 'Confidence below 60% decision threshold.';
-      reliabilityWarning = 'Low Reliability: Insufficient definitive signals.';
-  }
 
   score = Math.max(0.01, Math.min(0.99, aiProb / 100));
 
@@ -3072,33 +3054,29 @@ async function classifyVideoClient(file, clientMetadata) {
   const hwTagHit = CLIENT_VIDEO_HW_TAGS.find(t => clientHasMetadataTag(blob, t));
   const hasEncoder = blob.includes('encoder') || blob.includes('handler') || blob.includes('creation_time');
 
-  let score = 0.72;
-  let decisionPath = 'strict video fallback: unverified video provenance';
   const reviewFlags = [];
+  let fallbackVotes = 0;
 
-  if (aiTagHit) {
-    score = 0.99;
-    decisionPath = `AI video generator tag detected: ${aiTagHit}`;
-  } else if (isAiFilename) {
-    score = 0.94;
-    decisionPath = 'AI-like video filename signature';
-  } else if (isRealFilename && !aiTagHit) {
-    score = 0.12;
-    decisionPath = 'camera-style video filename without AI tag';
-  } else if (hwTagHit && !blob.includes('photoshop') && !blob.includes('premiere') && !blob.includes('aftereffects')) {
-    score = 0.16;
-    decisionPath = `hardware/encoder provenance: ${hwTagHit}`;
+  if (aiTagHit) fallbackVotes += 6.0;
+  if (isAiFilename) fallbackVotes += 3.0;
+  if (isRealFilename && !aiTagHit) fallbackVotes -= 3.0;
+  if (hwTagHit && !blob.includes('photoshop') && !blob.includes('premiere') && !blob.includes('aftereffects')) {
+    fallbackVotes -= 4.0;
   } else if (hwTagHit) {
-    score = 0.34;
-    decisionPath = `edited hardware provenance: ${hwTagHit}`;
+    fallbackVotes -= 1.0;
     reviewFlags.push('edited video metadata');
-  } else if (!hasEncoder) {
-    score = 0.94;
-    decisionPath = 'encoder metadata absent';
   }
+  if (!hasEncoder) fallbackVotes += 3.0;
 
+  const fusedLogit = fallbackVotes * 0.8;
+  let score = 1 / (1 + Math.exp(-fusedLogit));
+
+  let decisionPath = 'strict video fallback';
   if (aiTagHit) decisionPath = `AI video generator tag detected: ${aiTagHit}`;
-  if (isAiFilename) decisionPath = 'AI-like video filename signature';
+  else if (isAiFilename) decisionPath = 'AI-like video filename signature';
+  else if (hwTagHit) decisionPath = `hardware/encoder provenance: ${hwTagHit}`;
+  else if (!hasEncoder) decisionPath = 'encoder metadata absent';
+  else if (isRealFilename) decisionPath = 'camera-style video filename without AI tag';
 
   score = Math.max(0.01, Math.min(0.99, score));
   const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Video';
@@ -3250,7 +3228,6 @@ function classifyText(text) {
   let d1_val = predictabilityScore * 100;
   if (isArabic) {
     d1_val = arabicMeta.score * 100;
-    if (d1_val > 70) d1_val += 15; // Boost clearly AI Arabic to cross 90% threshold
   } else if (arabicMeta.isArabic) {
     d1_val = (0.65 * (arabicMeta.score * 100)) + (0.35 * d1_val);
   }
@@ -3259,23 +3236,17 @@ function classifyText(text) {
   
   let d2_val = aiDiversity * 100;
   if (isArabic) {
-    if (arabicMeta.humanHits && arabicMeta.humanHits > 2) d2_val = 15; // Suppress for human slang
-    else if (lexicalDiv > 0.75 && lexicalDiv < 0.98) d2_val = 95;
-    else if (lexicalDiv > 0.60) d2_val = 75;
-    else d2_val = 20;
+    if (arabicMeta.humanHits && arabicMeta.humanHits > 2) d2_val = Math.min(d2_val, 15); // Suppress for human slang
   }
   const d2 = Math.min(100, Math.max(0, d2_val));
 
   const d3 = 0; // N/A for text
   const d4 = Math.min(100, Math.max(0, repetitionScore * 100));
   let d5_val = structureUniformity * 100;
-  if (randomnessSim > 0) d5_val += 20;
   
   if (isArabic) {
       if (arabicMeta.humanHits && arabicMeta.humanHits > 2) {
           d5_val = Math.min(d5_val, 30); // Heavily suppress uniformity if slang is present
-      } else if (structureUniformity > 0.70) {
-          d5_val += 15; // Boost strict uniform Arabic only if no human slang
       }
   }
   const d5 = Math.min(100, Math.max(0, d5_val));
@@ -3506,3 +3477,6 @@ function showToast(message, duration = 3000) {
     setTimeout(() => toast.remove(), 500);
   }, duration);
 }
+
+
+

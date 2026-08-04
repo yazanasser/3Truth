@@ -50,6 +50,19 @@ Thumbs.db
 frontend/js/* copy.js
 .cleanup-empty/
 /models/
+backend/models/arabic_text/
+backend/models/image_vit/
+backend/models/image_diffusion_vit/
+backend/models/image_gan_vit/
+backend/models/audio_deepfake/
+backend/models/whisper/
+backend/models/fusion/
+
+# Downloaded research datasets and generated manifests
+/data/*.jsonl
+/data/*_MANIFEST.json
+/data/huggingface_cache/
+/data/datasets_cache/
 
 # One-off generated maintenance scripts
 backend/custom_urls.js

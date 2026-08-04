@@ -61,8 +61,8 @@ if (typeof window.firebase === 'undefined') {
       doc: () => ({
         set: async () => {},
         update: async () => {},
-        get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
-        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
+        get: async () => ({ exists: true, data: () => ({ plan: "Basic" }) }),
+        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: "Basic" }) }); return () => {}; }
       })
     })
   };
@@ -106,8 +106,8 @@ if (typeof window.firebase === 'undefined') {
       doc: () => ({
         set: async () => {},
         update: async () => {},
-        get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
-        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
+        get: async () => ({ exists: true, data: () => ({ plan: "Basic" }) }),
+        onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: "Basic" }) }); return () => {}; }
       })
     })
   };
@@ -121,8 +121,8 @@ if (typeof window.firebase === 'undefined') {
         doc: () => ({
           set: async () => {},
           update: async () => {},
-          get: async () => ({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }),
-          onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: 'Beta Unlimited', beta_access: true }) }); return () => {}; }
+          get: async () => ({ exists: true, data: () => ({ plan: "Basic" }) }),
+          onSnapshot: (cb) => { cb({ exists: true, data: () => ({ plan: "Basic" }) }); return () => {}; }
         })
       })
     };

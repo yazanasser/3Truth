@@ -2,18 +2,9 @@
    No preloader. Smooth scroll. Maximum visual impact. */
 
 document.addEventListener('DOMContentLoaded', () => {
-  function injectBetaLogoBadge() {
-    document.querySelectorAll('a[href="/"]').forEach((logoLink) => {
-      if (!logoLink.querySelector('img[src*="Logo.png"]') || logoLink.querySelector('.beta-logo-badge')) return;
-      const badge = document.createElement('span');
-      badge.className = 'beta-logo-badge';
-      badge.title = 'Beta version: all detectors are free and unlimited while subscriptions are locked.';
-      badge.textContent = 'BETA';
-      logoLink.appendChild(badge);
-    });
-  }
+  
 
-  injectBetaLogoBadge();
+  
 
   if (typeof gsap !== 'undefined') {
     const plugins = [window.ScrollTrigger, window.TextPlugin, window.MotionPathPlugin].filter(Boolean);
@@ -177,43 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================================
-  // 7. 3D TILT HOVER ON CARDS
+  // 7. 3D TILT HOVER ON CARDS (REMOVED)
   // ========================================
-  document.querySelectorAll('.spotlight-card, .holo-panel, .glass-card, .parallax-card').forEach(card => {
-    card.style.transformStyle = 'preserve-3d';
-    let rect;
-    card.addEventListener('mouseenter', () => {
-      rect = card.getBoundingClientRect();
-    });
-    card.addEventListener('mousemove', e => {
-      if (!rect) rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * -8;
-      const rotateY = ((x - centerX) / centerX) * 8;
-
-      gsap.to(card, {
-        rotationX: rotateX,
-        rotationY: rotateY,
-        transformPerspective: 1000,
-        ease: "power2.out",
-        duration: 0.4
-      });
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
-    });
-
-    card.addEventListener('mouseleave', () => {
-      rect = null;
-      gsap.to(card, {
-        rotationX: 0, rotationY: 0,
-        ease: "elastic.out(1, 0.4)",
-        duration: 1.2
-      });
-    });
-  });
 
   // ========================================
   // 8. SCROLL PROGRESS BAR
@@ -663,17 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 23. AUTH-AWARE NAVBAR BUTTONS & DYNAMIC PLAN BADGES
   // ========================================
   if (typeof firebase !== 'undefined' && firebase.auth) {
-    function normalizePlanTier(value) {
-      return 'beta';
-    }
-
-    function addPlanBadgeContent(badge, plan) {
-      const dot = document.createElement('span');
-      dot.className = 'inline-block w-2 h-2 rounded-full mr-2 bg-[#2FEECC] animate-pulse';
-      const label = 'BETA UNLIMITED';
-      badge.append(dot, document.createTextNode(label));
-    }
-
     firebase.auth().onAuthStateChanged((user) => {
       // Desktop login button
       const desktopLoginBtn = document.getElementById('nav-login-btn');
@@ -689,26 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             firebase.auth().signOut().then(() => window.location.reload());
           });
-
-          // Fetch and render plan badge on Desktop
-          firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
-            const data = doc.data();
-            const plan = normalizePlanTier(data && data.plan);
-            
-            // Remove any existing badge first
-            const existingBadge = document.getElementById('nav-live-plan-badge');
-            if (existingBadge) existingBadge.remove();
-
-            // Style matching plan tier
-            let badgeClasses = 'h-10 px-6 flex items-center justify-center font-black uppercase tracking-wider border text-sm bg-[#2FEECC]/10 border-[#2FEECC]/40 text-[#2FEECC] shadow-[0_0_15px_rgba(47,238,204,0.2)] whitespace-nowrap flex-shrink-0';
-
-            const badge = document.createElement('span');
-            badge.id = 'nav-live-plan-badge';
-            badge.className = badgeClasses;
-            addPlanBadgeContent(badge, plan);
-            
-            desktopLoginBtn.parentNode.insertBefore(badge, desktopLoginBtn);
-          }).catch(err => console.warn('Error fetching subscription status:', err));
         }
 
         if (sidebarLoginLink) {
@@ -718,26 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             firebase.auth().signOut().then(() => window.location.reload());
           });
-
-          // Fetch and render plan badge on Sidebar
-          firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
-            const data = doc.data();
-            const plan = normalizePlanTier(data && data.plan);
-            
-            // Remove any existing badge first
-            const existingSidebarBadge = document.getElementById('sidebar-live-plan-badge');
-            if (existingSidebarBadge) existingSidebarBadge.remove();
-
-            let badgeClasses = 'px-6 py-3 text-sm font-black uppercase tracking-wider rounded-none border w-full text-center bg-[#2FEECC]/10 border-[#2FEECC]/40 text-[#2FEECC] shadow-[0_0_15px_rgba(47,238,204,0.2)]';
-
-            const badge = document.createElement('div');
-            badge.id = 'sidebar-live-plan-badge';
-            badge.className = badgeClasses;
-            badge.style.marginBottom = '1.5rem';
-            addPlanBadgeContent(badge, plan);
-            
-            sidebarLoginLink.parentNode.insertBefore(badge, sidebarLoginLink);
-          }).catch(err => console.warn('Error fetching subscription status:', err));
         }
       }
     });

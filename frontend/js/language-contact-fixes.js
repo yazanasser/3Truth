@@ -235,7 +235,7 @@
     '> Complete isolation. Zero data retention. Military-grade privacy.': '> عزل كامل. صفر احتفاظ بالبيانات. خصوصية بمستوى عسكري.',
     '> Seamlessly pivot between Text, Code, and Hex analysis in one unified intelligence dashboard.': '> تنقل بسلاسة بين تحليل النص والكود والنظام السداسي العشري في لوحة معلومات ذكية موحدة.',
     '> PHASE 01: INGESTION': '> المرحلة 01: الاستيعاب',
-    'Input target data vector. Accepts raw text, documents, or direct API streams. Capacity up to 500,000 parameters per cycle.': 'أدخل متجه البيانات المستهدفة. يقبل النص الخام أو المستندات أو تدفقات API المباشرة. سعة تصل إلى 500,000 معلمة لكل دورة.',
+    'Input target data vector. Accepts raw text, documents, or direct API streams. Capacity up to 500,000 parameters per cycle.': 'أدخل متجه البيانات المستهدفة. يقبل النص الRAW أو المستندات أو تدفقات API المباشرة. سعة تصل إلى 500,000 معلمة لكل دورة.',
     '> PHASE 02: ANALYSIS': '> المرحلة 02: التحليل',
     'Running 47 parallel heuristic models. Cross-referencing token entropy and structural repetition against known LLM architectures.': 'تشغيل 47 نموذجًا استكشافيًا متوازيًا. مطابقة انتروبيا الرموز والتكرار الهيكلي مع بنيات نماذج اللغة الكبيرة (LLM) المعروفة.',
     '> PHASE 03: EXECUTION': '> المرحلة 03: التنفيذ',

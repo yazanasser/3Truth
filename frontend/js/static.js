@@ -15,8 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Getting Started</h3>
                   <div class="space-y-3">
                     <p><strong class="text-white">1. Create an Account</strong> — Sign up at <span class="text-[var(--accent-1)]">3truth.com/signin</span> using email or Google OAuth.</p>
-                    <p><strong class="text-white">2. Beta Access</strong> — During beta, every signed-in user gets free unlimited scans across Text, Image, and Video detectors. Paid subscriptions are locked until production launch.</p>
-                    <p><strong class="text-white">3. Start Scanning</strong> — Navigate to the Detector page, select your mode (Text, Image, or Video), paste or upload your content, and hit Analyze.</p>
+                    <p><strong class="text-white">2. Start Scanning</strong> — Navigate to the Detector page, select your mode (Text, Image, or Video), paste or upload your content, and hit Analyze.</p>
                   </div>
                 </div>
 
@@ -85,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="space-y-3">
                     <p><strong class="text-white">Analysis Failed</strong> — Ensure your file is within size limits and a supported format.</p>
                     <p><strong class="text-white">Slow Processing</strong> — Video analysis may take up to 60 seconds for large files. Text and image analysis typically completes in under 5 seconds.</p>
-                    <p><strong class="text-white">Beta Access</strong> — Scan quotas are disabled during beta. If scanning is blocked, refresh the page and sign in again.</p>
                   </div>
                 </div>
               </div>

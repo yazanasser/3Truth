@@ -40,11 +40,11 @@ if (!selected) {
   process.exit(1);
 }
 
-console.log(`[ML] Starting ml_server.py with: ${selected.command} ${selected.args.join(' ')}`.trim());
+console.log(`[ML] Starting src/ml_server.py with: ${selected.command} ${selected.args.join(' ')}`.trim());
 
 const child = spawn(
   selected.command,
-  [...selected.args, 'ml_server.py'],
+  [...selected.args, 'src/ml_server.py'],
   { cwd: backendDir, stdio: 'inherit' }
 );
 

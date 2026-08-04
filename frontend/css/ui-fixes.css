@@ -194,21 +194,9 @@ button.tab-btn[aria-pressed="true"] {
 }
 
 /* Keep BETA badge visible and styled above the active pill */
-a.beta-nav-link.nav-active .beta-nav-badge,
-a.beta-nav-link[aria-current="page"] .beta-nav-badge {
-    display: inline-flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    color: #2FEECC !important;
-    background: #031f1a !important;
-    border-color: #2FEECC !important;
-    box-shadow: 0 0 14px #2FEECC !important;
-}
+a
 
 /* Allow BETA badge to overflow above the navbar */
-.beta-nav-link {
-    overflow: visible !important;
-}
 
 /* Prevent navbar from clipping the BETA badge that floats above it */
 nav,
@@ -227,7 +215,9 @@ div[class*="fixed top-0"] {
 }
 
 .detector-result-pane {
-    overflow: hidden !important;
+    min-height: clamp(680px, 78vh, 900px) !important;
+    max-height: min(82vh, 960px) !important;
+    overflow-y: auto !important;
 }
 
 #state-idle.hidden,
@@ -251,9 +241,10 @@ div[class*="fixed top-0"] {
 #state-result {
     border: 1px solid rgba(47, 238, 204, 0.24) !important;
     border-radius: 20px !important;
-    padding: 1rem !important;
-    max-height: 100% !important;
-    overflow-y: auto !important;
+    padding: clamp(1rem, 2vw, 1.5rem) !important;
+    min-height: 620px !important;
+    max-height: none !important;
+    overflow: visible !important;
     overscroll-behavior: contain !important;
     scrollbar-gutter: stable !important;
 }
@@ -546,7 +537,13 @@ div[class*="fixed top-0"] {
 }
 
 @media (max-width: 767px) {
+    .detector-result-pane {
+        min-height: 680px !important;
+        max-height: none !important;
+    }
+
     #state-result {
-        max-height: min(72vh, 720px) !important;
+        min-height: 640px !important;
+        max-height: none !important;
     }
 }

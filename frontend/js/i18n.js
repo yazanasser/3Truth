@@ -229,7 +229,7 @@
     ar: {
       languageName: 'العربية',
       languageToggle: 'English',
-      langCode: 'AR',
+      langCode: 'عربي',
       dir: 'ltr',
       ui: {
         home: 'الرئيسية',
@@ -406,7 +406,7 @@
         notFoundContent: 'نعمل حاليا على تجهيز هذا المحتوى. يرجى العودة لاحقا.',
         docs: {
           title: 'التوثيق',
-          subtitle: 'كل ما تحتاج معرفته عن AI Detector.'
+          subtitle: 'كل ما تحتاج معرفته عن الذكاء الاصطناعي Detector.'
         },
         about: {
           title: 'من نحن',
@@ -419,7 +419,7 @@
         },
         blog: {
           title: 'المدونة',
-          subtitle: 'رؤى وتحديثات من فريق AI Detector.',
+          subtitle: 'رؤى وتحديثات من فريق الذكاء الاصطناعي Detector.',
           content: 'ترقب آخر الأخبار والرؤى البحثية وتحديثات المنصة من خبرائنا في الذكاء الاصطناعي والأصالة الرقمية.'
         },
         contact: {
@@ -434,7 +434,7 @@
         terms: {
           title: 'شروط الخدمة',
           subtitle: 'قواعد استخدام الخدمة.',
-          content: 'توضح هذه الشروط القواعد المنظمة لاستخدام موقع وخدمات AI Detector. يعمل فريقنا القانوني على تحديثها لزيادة الوضوح والشفافية.'
+          content: 'توضح هذه الشروط القواعد المنظمة لاستخدام موقع وخدمات الذكاء الاصطناعي Detector. يعمل فريقنا القانوني على تحديثها لزيادة الوضوح والشفافية.'
         },
         cookies: {
           title: 'سياسة ملفات تعريف الارتباط',
@@ -477,7 +477,7 @@
     'Running deep heuristics...': 'يتم تشغيل التحليل العميق...',
     'Forensic Verdict': 'نتيجة الفحص',
     'HUMAN PROBABILITY': 'احتمال أنه بشري',
-    'AI PROBABILITY': 'احتمال أنه ذكاء اصطناعي',
+    'الذكاء الاصطناعي PROBABILITY': 'احتمال أنه ذكاء اصطناعي',
     'Neural Segment Analysis': 'تحليل المقاطع',
     'Human-Origin Content (Green Marker)': 'محتوى بشري المصدر (علامة خضراء)',
     'Synthetic-Origin Content (Blue Marker)': 'محتوى مولد آليا (علامة زرقاء)',
@@ -554,7 +554,7 @@
     'Return Home': 'العودة للرئيسية',
     'NEURAL INTERROGATION ENGINE ONLINE': 'محرك الفحص الذكي جاهز',
     'ULTIMATE DETECTION PROTOCOL': 'بروتوكول الكشف المتقدم',
-    'Beta v is open now: Text, Image, and Video detectors are free and unlimited for every signed-in user. Paid subscriptions are locked until production launch.': 'الإصدار التجريبي متاح الآن: أدوات الكشف عن النصوص والصور والفيديوهات مجانية وغير محدودة لجميع المستخدمين المسجلين. الاشتراكات المدفوعة مقفلة حتى إطلاق النسخة النهائية.',
+    'بيتا v is open now: Text, Image, and Video detectors are free and unlimited for every signed-in user. Paid subscriptions are locked until production launch.': 'الإصدار التجريبي متاح الآن: أدوات الكشف عن النصوص والصور والفيديوهات مجانية وغير محدودة لجميع المستخدمين المسجلين. الاشتراكات المدفوعة مقفلة حتى إطلاق النسخة النهائية.',
     'INITIALIZE SCANNER': 'بدء الفحص',
     'SYS.METRIC // ACCURACY': 'مؤشر النظام // الدقة',
     'SYS.METRIC // LATENCY': 'مؤشر النظام // السرعة',

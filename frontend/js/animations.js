@@ -116,23 +116,7 @@ function initMobileMenu() {
 
 function initParallaxCard(el) {
   if (!el) return;
-  el.addEventListener('mousemove', (e) => {
-    const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width / 2);
-    const dy = (e.clientY - cy) / (rect.height / 2);
-    gsap.to(el, {
-      rotateX: -dy * 10,
-      rotateY: dx * 10,
-      transformPerspective: 800,
-      ease: 'power2.out',
-      duration: 0.3
-    });
-  });
-  el.addEventListener('mouseleave', () => {
-    gsap.to(el, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'elastic.out(1,0.7)' });
-  });
+  // 3D tilt functionality has been completely removed per user request.
 }
 
 function initElasticDistortion(el) {

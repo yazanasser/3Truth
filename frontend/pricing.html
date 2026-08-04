@@ -36,7 +36,6 @@
     <a href="/" class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
       <div class="flex items-center gap-3">
         <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
-        <span class="beta-logo-badge" title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
       </div>
       <span class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By Futuregen</span>
     </a>
@@ -45,12 +44,12 @@
     <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
       <a href="/" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
       <a href="/scan" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="/plans" class="beta-nav-link text-[var(--accent-1)] transition-colors">PRICING<span class="beta-nav-badge">BETA</span></a>
+      <a href="/plans" class="text-[var(--accent-1)] transition-colors">PRICING</a>
     </div>
 
     <!-- Right Action Buttons -->
     <div class="hidden md:flex justify-end items-center w-auto gap-4">
-      <a href="/login" id="nav-login-btn" class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
+      <a href="/login" id="nav-login-btn" class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0 hover:animate-spring-hover">LOGIN</a>
     </div>
 
     <!-- Mobile Toggle -->
@@ -67,7 +66,7 @@
     <div class="flex flex-col gap-6 text-2xl font-black">
       <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
       <a href="/scan" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="/plans" class="beta-nav-link text-[var(--accent-1)] inline-block w-max">PRICING<span class="beta-nav-badge">BETA</span></a>
+      <a href="/plans" class="text-[var(--accent-1)] inline-block w-max">PRICING</a>
 
       <a href="/info?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
       <a href="/info?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
@@ -79,65 +78,134 @@
   <main class="relative z-10 pt-32 md:pt-40 pb-20 min-h-screen flex flex-col items-center">
     
     <div class="text-center mb-16 md:mb-24 px-4">
-      <h1 class="text-5xl md:text-8xl font-black mb-4 tracking-tighter text-gradient scramble-hover">
-        BETA ACCESS
+      <h1 class="text-5xl md:text-7xl font-black mb-4 tracking-tighter text-gradient scramble-hover uppercase">
+        Choose Your Plan
       </h1>
       <p class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium">
-        Everything in the beta is free right now. Text, image, and video detection are open while paid plans stay locked until production launch.
+        Flexible subscriptions to power your intelligence needs. From basic verification to enterprise-scale neural interrogation.
       </p>
     </div>
 
-    <!-- Beta Plan -->
-    <div class="w-full max-w-4xl px-4 md:px-8 mx-auto stagger-children">
+    <!-- Pricing Grid -->
+    <div class="w-full max-w-[1400px] px-4 md:px-8 mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-10 pb-20">
       
-      <div class="holo-panel beta-plan-panel rounded-[24px] p-8 md:p-12 flex flex-col relative group transform transition hover:-translate-y-2">
-        <div class="absolute top-0 right-0 bg-[#2FEECC] text-black text-xs font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest">
-          Beta Free
+      <!-- Free Plan -->
+      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
+        <div class="mb-6 relative z-10">
+          <h3 class="text-3xl font-black mb-2 text-white">Free</h3>
+          <div class="flex flex-wrap items-baseline gap-2 mt-4">
+            <span class="text-5xl font-black text-white">$0</span>
+            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest"></span>
+          </div>
+          <p class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase">10,000 words/mo</p>
         </div>
-
-        <div class="mb-8 relative z-10">
-          <p class="text-[var(--accent-1)] text-xs font-black uppercase tracking-[0.3em] mb-4">Current Access Level</p>
-          <h3 class="text-4xl md:text-5xl font-black mb-4 text-white">BASIC</h3>
-          <p class="text-gray-300 text-sm md:text-base font-medium leading-relaxed max-w-2xl">
-            Basic is the only visible plan during beta. It includes the full beta experience for text, image, and video detection so users can test the platform freely before subscriptions launch.
-          </p>
-          <div class="flex flex-wrap items-baseline gap-3 mt-8">
-            <span class="text-6xl md:text-7xl font-black text-[var(--accent-1)]">$0</span>
-            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">free during beta</span>
-          </div>
+        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>AI detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic AI probability</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic sentence highlighting</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic reports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>7-day history</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic document uploads</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Limited languages</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Ads</span></div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 relative z-10">
-          <div class="beta-feature-item">
-            <i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)]"></i>
-            <span>Unlimited beta text detection</span>
-          </div>
-          <div class="beta-feature-item">
-            <i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)]"></i>
-            <span>Unlimited beta image detection</span>
-          </div>
-          <div class="beta-feature-item">
-            <i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)]"></i>
-            <span>Unlimited beta video detection</span>
-          </div>
-          <div class="beta-feature-item">
-            <i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)]"></i>
-            <span>Reports and forensic signals included</span>
-          </div>
-          <div class="beta-feature-item">
-            <i data-lucide="lock" class="w-5 h-5 text-[var(--accent-2)]"></i>
-            <span>Paid subscriptions hidden until launch</span>
-          </div>
-          <div class="beta-feature-item">
-            <i data-lucide="shield-check" class="w-5 h-5 text-[var(--accent-3)]"></i>
-            <span>No payment required in beta</span>
-          </div>
-        </div>
-
-        <a href="/scan" class="btn-magnetic w-full text-center relative z-10">START DETECTING FREE</a>
+        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed">Current Plan</button>
       </div>
 
+      <!-- Pro Plan -->
+      <div class="holo-panel rounded-[24px] p-8 flex flex-col h-full group transition-all duration-300 border-2 border-[var(--accent-1)] bg-black/60 shadow-[0_0_30px_rgba(47,238,204,0.15)] relative scale-105 z-10 shrink-0" style="overflow: visible;">
+        <div class="absolute bg-[var(--accent-1)] text-[var(--text-100)] text-base font-black px-8 py-3 rounded-full uppercase tracking-widest z-30 whitespace-nowrap text-center shadow-[0_0_15px_rgba(47,238,204,0.5)]" style="top: 0; right: 50%; transform: translate(50%, -50%);">
+          MOST POPULAR
+        </div>
+        <div class="mb-6 relative z-10">
+          <h3 class="text-3xl font-black mb-2 text-white flex items-center gap-2">Pro</h3>
+          <div class="flex flex-wrap items-baseline gap-2 mt-4">
+            <span class="text-5xl font-black text-[var(--accent-1)]">$7.99</span>
+            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $59.99/year</p>
+          <p class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase">150,000 words/mo</p>
+        </div>
+        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-200">
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Advanced AI detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Sentence-level analysis</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI probability score</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI heatmap</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI-generated text highlighting</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Paraphrased-AI detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Detailed reports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>PDF report export</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>90-day history</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Multiple languages</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>PDF/DOCX uploads</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Limited plagiarism detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Priority processing</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Ad-free</span></div>
+        </div>
+        <button disabled class="btn-magnetic mt-auto w-full text-center relative z-10 bg-[var(--accent-1)] text-black py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed border-none">Payments coming soon</button>
+      </div>
+
+      <!-- Pro+ Plan -->
+      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
+        <div class="mb-6 relative z-10">
+          <h3 class="text-3xl font-black mb-2 text-white">Pro+</h3>
+          <div class="flex flex-wrap items-baseline gap-2 mt-4">
+            <span class="text-5xl font-black text-white">$14.99</span>
+            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $119.99/year</p>
+          <p class="text-[var(--accent-3)] font-bold text-sm mt-4 tracking-widest uppercase">500,000 words/mo</p>
+        </div>
+        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
+          <p class="text-xs font-bold text-white/50 uppercase tracking-widest pb-2">Everything in Pro, plus:</p>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Full plagiarism detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Source matching</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced plagiarism reports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced AI analysis</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced paraphrase detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Unlimited history</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Document comparison</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Writing-quality analysis</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Readability analysis</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced exports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Shareable reports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Higher processing priority</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Ad-free</span></div>
+        </div>
+        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-3)] text-[var(--accent-3)] opacity-75 cursor-not-allowed">Payments coming soon</button>
+      </div>
+
+      <!-- Team Plan -->
+      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
+        <div class="mb-6 relative z-10">
+          <h3 class="text-3xl font-black mb-2 text-white">Team</h3>
+          <div class="flex flex-wrap items-baseline gap-2 mt-4">
+            <span class="text-5xl font-black text-white">$29.99</span>
+            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $239.99/year</p>
+          <p class="text-[var(--accent-2)] font-bold text-sm mt-4 tracking-widest uppercase">2,000,000 words/mo</p>
+        </div>
+        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>5 team members</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Shared word allowance</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Team dashboard</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Bulk scanning</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Bulk document uploads</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Advanced AI detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Full plagiarism detection</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Advanced reports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Team analytics</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>PDF/CSV exports</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>API access</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Priority support</span></div>
+          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Ad-free</span></div>
+          <div class="mt-4 pt-4 border-t border-white/10 text-xs font-bold text-[var(--accent-2)] uppercase tracking-widest">+ Additional member: $5/mo</div>
+        </div>
+        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-2)] text-[var(--accent-2)] opacity-75 cursor-not-allowed">Payments coming soon</button>
+      </div>
     </div>
+
   </main>
   
   <footer class="site-footer"></footer>
@@ -161,8 +229,7 @@
       { y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: "back.out(1.2)", delay: 0.5 }
     );
 
-    // 2. 3D Tilt Hover on Pricing Cards
-    document.querySelectorAll('.holo-panel').forEach(card => initParallaxCard(card));
+    // 2. 3D Tilt Hover on Pricing Cards (REMOVED)
 
     // 3. Magnetic Buttons
     document.querySelectorAll('.btn-magnetic, .btn-glass').forEach(btn => {
@@ -194,5 +261,8 @@
   <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kinet@2.2.1/dist/kinet.min.js"></script>
+    <script src="js/kinet-init.js"></script>
+    <script src="js/advanced-kinetics.js"></script>
 </body>
 </html>

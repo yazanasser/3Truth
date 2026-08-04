@@ -19,6 +19,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
   <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+  
+  <!-- File Extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    // Set worker src for pdf.js
+    if (window['pdfjs-dist/build/pdf']) {
+      window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -54,8 +65,6 @@
       class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
       <div class="flex items-center gap-3">
         <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
-        <span class="beta-logo-badge"
-          title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
       </div>
       <span
         class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By
@@ -66,8 +75,7 @@
     <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
                     <a href="index.html" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
                     <a href="detector.html" aria-current="page" class="text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="pricing.html" class="beta-nav-link text-white hover:text-[var(--accent-1)] transition-colors">PRICING<span
-          class="beta-nav-badge">BETA</span></a>
+      <a href="pricing.html" class="beta-nav-link text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
     </div>
 
     <!-- Right Action Buttons -->
@@ -153,13 +161,7 @@
                   </div>
                 </div>
 
-                <div class="text-mode-visual" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
+
 
                 <div class="media-mode-chips">
                   <span>STYLE</span>
@@ -196,12 +198,7 @@
                   </div>
                 </div>
 
-                <div id="media-mode-visual" class="media-mode-visual image-map" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
+
 
                 <div id="media-mode-chips" class="media-mode-chips">
                   <span>EXIF</span>

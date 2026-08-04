@@ -17,6 +17,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
   <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
 
   <link rel="stylesheet" href="css/main.css?v=6.1">
 
@@ -149,12 +150,6 @@
 </head>
 
 <body class="bg-[var(--bg-100)] text-white" style="font-family: var(--font-primary);">
-
-  <!-- GSAP Showcase Elements -->
-  <div id="preloader">
-    <div class="preloader-counter text-[var(--accent-1)]">SYS_INIT</div>
-  </div>
-
   <div id="scroll-progress"
     style="width:100%; height:2px; background:var(--accent-2); position:fixed; top:0; z-index:9999; transform-origin:left;">
   </div>
@@ -168,8 +163,6 @@
   <div class="grid-overlay"></div>
 
 
-
-
   <!-- Navigation -->
   <div
     class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
@@ -178,8 +171,6 @@
       class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
       <div class="flex items-center gap-3">
         <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
-        <span class="beta-logo-badge"
-          title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
       </div>
       <span
         class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By
@@ -192,7 +183,6 @@
       <a href="detector.html" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
       <span style="position:relative;display:inline-flex;align-items:center;">
         <a href="pricing.html" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
-        <span class="beta-nav-badge" style="top:-1.05rem;right:-1.35rem;">BETA</span>
       </span>
     </div>
 
@@ -213,8 +203,7 @@
       <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
       <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
       <a href="pricing.html"
-        class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<span
-          class="beta-nav-badge">BETA</span></a>
+        class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<a>
 
       <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
       <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
@@ -237,10 +226,6 @@
         class="hero-title text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase">
         <span class="scramble-hover inline-block">ULTIMATE DETECTION PROTOCOL</span>
       </h1>
-      <p class="text-white/80 max-w-2xl mx-auto mb-10 hero-elem text-sm md:text-base font-medium">
-        Beta v is open now: Text, Image, and Video detectors are free and unlimited for every signed-in user. Paid
-        subscriptions are locked until production launch.
-      </p>
 
 
     </section>
@@ -272,24 +257,24 @@
     <!-- Stats Section -->
     <section class="py-16 md:py-24 px-4 md:px-8 w-full max-w-5xl mx-auto mb-12 md:mb-16 scroll-reveal">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-16">
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-1)] bg-black/80" data-speed="0.9">
-          <div class="text-[var(--accent-1)] text-xs mb-2 tracking-widest">SYS.METRIC // ACCURACY</div>
-          <h3 class="text-4xl font-black text-white mb-2"><span class="counter-anim" data-target="99.9">0</span>%</h3>
-          <div class="w-full h-1 bg-white/10 mt-4">
+        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-1)] bg-black/80" data-speed="0.9" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
+          <div class="text-[var(--accent-1)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // ACCURACY</div>
+          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="99.9">0</span>%</h3>
+          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
             <div class="h-full bg-[var(--accent-1)] w-[99%] shadow-[0_0_10px_var(--accent-1)]"></div>
           </div>
         </div>
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-3)] bg-black/80" data-speed="1.1">
-          <div class="text-[var(--accent-3)] text-xs mb-2 tracking-widest">SYS.METRIC // LATENCY</div>
-          <h3 class="text-4xl font-black text-white mb-2"><span class="counter-anim" data-target="0.3">0</span>s</h3>
-          <div class="w-full h-1 bg-white/10 mt-4">
+        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-3)] bg-black/80" data-speed="1.1" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
+          <div class="text-[var(--accent-3)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // LATENCY</div>
+          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="0.3">0</span>s</h3>
+          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
             <div class="h-full bg-[var(--accent-3)] w-[10%] shadow-[0_0_10px_var(--accent-3)]"></div>
           </div>
         </div>
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-2)] bg-black/80" data-speed="0.8">
-          <div class="text-[var(--accent-2)] text-xs mb-2 tracking-widest">SYS.METRIC // SCANS</div>
-          <h3 class="text-4xl font-black text-white mb-2"><span class="counter-anim" data-target="24">0</span>M+</h3>
-          <div class="w-full h-1 bg-white/10 mt-4">
+        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-2)] bg-black/80" data-speed="0.8" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
+          <div class="text-[var(--accent-2)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // SCANS</div>
+          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="24">0</span>M+</h3>
+          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
             <div class="h-full bg-[var(--accent-2)] w-[100%] shadow-[0_0_10px_var(--accent-2)]"></div>
           </div>
         </div>
@@ -310,25 +295,25 @@
           </p>
           <ul class="space-y-4">
             <li
-              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors">
-              <i data-lucide="fingerprint" class="text-[var(--accent-1)]"></i>
-              [1] Lexical Fingerprinting
+              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
+              <i data-lucide="fingerprint" class="text-[var(--accent-1)]" style="transform: translateZ(20px);"></i>
+              <span style="transform: translateZ(10px);">[1] Lexical Fingerprinting</span>
             </li>
             <li
-              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors">
-              <i data-lucide="network" class="text-[var(--accent-3)]"></i>
-              [2] Structural Perplexity Mapping
+              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
+              <i data-lucide="network" class="text-[var(--accent-3)]" style="transform: translateZ(20px);"></i>
+              <span style="transform: translateZ(10px);">[2] Structural Perplexity Mapping</span>
             </li>
             <li
-              class="flex items-center gap-4 text-[var(--accent-2)] font-bold text-lg border border-[var(--accent-2)] p-4 bg-[var(--accent-2)]/10 hover:bg-[var(--accent-2)]/20 transition-colors shadow-[0_0_15px_rgba(255,0,60,0.3)]">
-              <i data-lucide="crosshair" class="text-[var(--accent-2)]"></i>
-              [3] Synthetic Anomaly Detection
+              class="flex items-center gap-4 text-[var(--accent-2)] font-bold text-lg border border-[var(--accent-2)] p-4 bg-[var(--accent-2)]/10 hover:bg-[var(--accent-2)]/20 transition-colors shadow-[0_0_15px_rgba(255,0,60,0.3)]" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
+              <i data-lucide="crosshair" class="text-[var(--accent-2)]" style="transform: translateZ(20px);"></i>
+              <span style="transform: translateZ(10px);">[3] Synthetic Anomaly Detection</span>
             </li>
           </ul>
         </div>
         <div class="w-full lg:w-1/2 relative" id="code-card-container">
-          <div class="absolute inset-0 bg-[var(--accent-2)] blur-[100px] opacity-20" id="code-glow"></div>
-          <div class="holo-panel p-6 relative z-10" id="code-card">
+          <div class="absolute inset-4 bg-[var(--accent-2)] blur-[60px] opacity-10" id="code-glow"></div>
+          <div class="holo-panel p-6 relative z-10" id="code-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
             <div class="flex items-center justify-between border-b border-[var(--accent-2)]/30 pb-2 mb-4">
               <span class="text-xs text-[var(--accent-2)] tracking-widest">TERMINAL // HEURISTIC_CORE.SYS</span>
               <div class="flex gap-2">
@@ -372,34 +357,34 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 stagger-children">
         <div
-          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group hover:border-[var(--accent-1)] transition-colors">
-          <i data-lucide="cpu" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white">QUANTUM-LEVEL PARSING</h3>
-          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm">> Dissects semantic structures at the
+          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group hover:border-[var(--accent-1)] transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
+          <i data-lucide="cpu" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
+          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">QUANTUM-LEVEL PARSING</h3>
+          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm" style="transform: translateZ(10px);">> Dissects semantic structures at the
             token level, finding the probabilistic gaps machines mathematically depend on.</p>
         </div>
 
         <div
-          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-3)]/30 hover:border-[var(--accent-3)] transition-colors bg-gradient-to-tr from-black to-[var(--accent-3)]/5">
-          <i data-lucide="zap" class="w-12 h-12 text-[var(--accent-3)] mb-4 relative z-10"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white">LIGHTSPEED</h3>
-          <p class="text-[var(--accent-3)] opacity-70 relative z-10 text-sm">> Engineered for absolute speed. Processing
+          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-3)]/30 hover:border-[var(--accent-3)] transition-colors bg-gradient-to-tr from-black to-[var(--accent-3)]/5" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
+          <i data-lucide="zap" class="w-12 h-12 text-[var(--accent-3)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
+          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">LIGHTSPEED</h3>
+          <p class="text-[var(--accent-3)] opacity-70 relative z-10 text-sm" style="transform: translateZ(10px);">> Engineered for absolute speed. Processing
             10,000 tokens in &lt;200ms.</p>
         </div>
 
         <div
-          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-2)]/30 hover:border-[var(--accent-2)] transition-colors bg-gradient-to-br from-black to-[var(--accent-2)]/5">
-          <i data-lucide="shield-check" class="w-12 h-12 text-[var(--accent-2)] mb-4 relative z-10"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white">BLACK BOX SECURE</h3>
-          <p class="text-[var(--accent-2)] opacity-70 relative z-10 text-sm">> Complete isolation. Zero data retention.
+          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-2)]/30 hover:border-[var(--accent-2)] transition-colors bg-gradient-to-br from-black to-[var(--accent-2)]/5" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
+          <i data-lucide="shield-check" class="w-12 h-12 text-[var(--accent-2)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
+          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">BLACK BOX SECURE</h3>
+          <p class="text-[var(--accent-2)] opacity-70 relative z-10 text-sm" style="transform: translateZ(10px);">> Complete isolation. Zero data retention.
             Military-grade privacy.</p>
         </div>
 
         <div
-          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group bg-gradient-to-t from-[var(--accent-1)]/10 to-transparent hover:border-[var(--accent-1)] transition-colors">
-          <i data-lucide="scan" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white">OMNI-CHANNEL FORENSICS</h3>
-          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm">> Seamlessly pivot between Text,
+          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group bg-gradient-to-t from-[var(--accent-1)]/10 to-transparent hover:border-[var(--accent-1)] transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
+          <i data-lucide="scan" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
+          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">OMNI-CHANNEL FORENSICS</h3>
+          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm" style="transform: translateZ(10px);">> Seamlessly pivot between Text,
             Code, and Hex analysis in one unified intelligence dashboard.</p>
         </div>
       </div>

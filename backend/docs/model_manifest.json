@@ -1,0 +1,71 @@
+{
+  "arabic_text": {
+    "arabert": {
+      "source": "sabaridsnfuji/arabic-ai-text-detector",
+      "base_model": "aubmindlab/bert-base-arabertv2",
+      "license": "apache-2.0",
+      "ai_label_index": 1,
+      "provisioned": true
+    },
+    "classical_cpu": {
+      "source": "data/train.jsonl",
+      "output_path": "models/arabic_text/classical.joblib",
+      "model_type": "calibrated character and word TF-IDF logistic classifier",
+      "coverage": "Arabic academic abstracts and informal reviews from ALLaM, Jais, Llama, and OpenAI",
+      "held_out_accuracy": 0.9397781299524565,
+      "held_out_f1": 0.9378068739770867,
+      "held_out_roc_auc": 0.9770256253123736,
+      "provisioned": true,
+      "usage": "research-only because the source dataset cards do not specify a license"
+    },
+    "marbert": {
+      "base_model": "UBC-NLP/MARBERT",
+      "output_path": "models/arabic_text/marbert",
+      "provisioned": false,
+      "reason": "Requires project-specific AI-authorship fine-tuning."
+    },
+    "camelbert": {
+      "base_model": "CAMeL-Lab/bert-base-arabic-camelbert-mix",
+      "output_path": "models/arabic_text/camelbert",
+      "provisioned": false,
+      "reason": "Requires project-specific AI-authorship fine-tuning."
+    },
+    "xlmr": {
+      "base_model": "FacebookAI/xlm-roberta-base",
+      "output_path": "models/arabic_text/xlmr",
+      "provisioned": false,
+      "reason": "Requires project-specific code-switching and Arabizi AI-authorship fine-tuning."
+    }
+  },
+  "image": {
+    "general_vit": {
+      "source": "capcheck/ai-image-detection",
+      "license": "apache-2.0",
+      "ai_label_index": 1,
+      "provisioned": true
+    },
+    "diffusion_vit": {
+      "source": "ash12321/sdxl-detector-vit",
+      "license": "apache-2.0",
+      "ai_label_index": 1,
+      "provisioned": true
+    },
+    "gan_face_vit": {
+      "source": "Vishwajitm01/face-ai-detector-91auc",
+      "ai_label_index": 0,
+      "provisioned": true
+    }
+  },
+  "speech": {
+    "asr": {
+      "source": "Systran/faster-whisper-small",
+      "compute_type": "int8",
+      "provisioned": true
+    },
+    "audio_deepfake": {
+      "source": "MelodyMachine/Deepfake-audio-detection-V2",
+      "ai_label_index": 0,
+      "provisioned": true
+    }
+  }
+}

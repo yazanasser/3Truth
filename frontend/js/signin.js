@@ -266,8 +266,7 @@ window._initSigninModal = function(modalRoot) {
           const user = userCredential.user;
           if (user) {
             await firebase.firestore().collection("users").doc(user.uid).set({
-              plan: "Beta Unlimited",
-              beta_access: true
+              plan: "Basic"
             }, { merge: true });
           }
 
@@ -287,8 +286,7 @@ window._initSigninModal = function(modalRoot) {
 
               await firebase.firestore().collection("users").doc(user.uid).set({
                 email: userEmail,
-                plan: "Beta Unlimited",
-                beta_access: true,
+                plan: "Basic",
                 scans_used: 0,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
               }, { merge: true });

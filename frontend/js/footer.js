@@ -42,7 +42,7 @@ function initFooter() {
         <div class="col-span-1">
           <a href="/" class="inline-flex items-center gap-3 mb-4 group" style="text-decoration:none;">
             <img src="assets/Logo.png" alt="Logo" class="h-8 w-auto object-contain group-hover:scale-110 transition-transform">
-            <span class="beta-logo-badge" title="Beta version: all detectors are free and unlimited while subscriptions are locked.">BETA</span>
+            
           </a>
           <p class="text-sm text-gray-500 mb-6 font-medium">
             ${t('footer.description', null, i18n && i18n.isArabic() ? 'كشف ذكاء اصطناعي بمستوى المؤسسات. نحدد بصمات النماذج اللغوية بدقة عالية.' : 'Enterprise-grade artificial intelligence detection. Identifying the fingerprints of LLMs with unescapable accuracy.')}
