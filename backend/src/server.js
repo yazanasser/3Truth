@@ -1183,20 +1183,7 @@ function calculateHeuristicsScore(text) {
     );
     baseScore = Math.max(baseScore, modernFingerprintFloor);
 
-    // Direct signature boost
-    if (superAiHits >= 1 && wc < 150) {
-        baseScore = Math.max(baseScore, 0.88);
-    }
-    if (weightedHits >= 3 && wc < 80) {
-        baseScore = Math.max(baseScore, 0.85);
-    }
-
-    // Hard overrides for narrative clichés
-    if (clicheHits >= 2) {
-        baseScore = Math.max(baseScore, 0.90);
-    } else if (clicheHits === 1 && contractionRate === 0.0) {
-        baseScore = Math.max(baseScore, 0.78);
-    }
+    // Removed artificial boosting
 
     const fkMod = computeFleschKincaid(text);
     const entMod = computeCharacterEntropy(text);
@@ -1247,7 +1234,7 @@ function computeCharacterEntropy(text) {
 function classifyText(text) {
     if (!text.trim()) {
         return {
-            prediction: 'Human', ai_probability: 0, confidence: '100%', word_count: 0,
+            prediction: 'HUMAN', ai_probability: 0, confidence: '100%', word_count: 0,
             humanizer_detected: false,
             humanizer_signals: 'empty input',
             features: { model_used: 'AI Detector Core v6 (Local)' }
@@ -1335,7 +1322,7 @@ function classifyText(text) {
     // Cap and floor
     prob = Math.max(0.02, Math.min(prob, confidenceCap));
 
-    const prediction = prob >= 0.5 ? 'AI-Generated' : 'Human';
+    const prediction = prob >= 0.5 ? 'AI' : 'HUMAN';
     const confidencePct = Math.max(prob, 1 - prob) * 100;
 
     const humanizer_detected = humanizedAiSuspected || sigs.humanizer.score >= 0.25 ||
@@ -1708,7 +1695,7 @@ async function classifyImage(filePath, fileSize, mimeType, originalName = '') {
 
     score = Math.max(0.01, Math.min(0.99, score));
 
-    const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Photo';
+    const prediction = score >= 0.5 ? 'AI' : 'HUMAN';
     const confidence = `${(Math.max(score, 1 - score) * 100).toFixed(1)}%`;
 
     // Extract provenance code block
@@ -1857,7 +1844,7 @@ async function classifyVideo(filePath, fileSize, originalName = '') {
     if (isAiFilename) decisionPath = 'AI-like video filename signature';
 
     score = Math.max(0.01, Math.min(0.99, score));
-    const prediction = score >= 0.5 ? 'AI-Generated' : 'Real Video';
+    const prediction = score >= 0.5 ? 'AI' : 'HUMAN';
     const confidence = `${(Math.max(score, 1 - score) * 100).toFixed(1)}%`;
 
     // Extract provenance code block
@@ -1928,11 +1915,14 @@ async function pythonServiceAvailable() {
     }
 }
 
-async function tryProxyToPython(endpoint, bodyData, file = null, fileFieldName = 'file') {
+async function tryProxyToPython(req, endpoint, bodyData, file = null, fileFieldName = 'file') {
     if (!(await pythonServiceAvailable())) return null;
     const pythonUrl = `${pythonServiceUrl}${endpoint}`;
     try {
         let headers = {};
+        if (req && req.headers && req.headers.authorization) {
+            headers['Authorization'] = req.headers.authorization;
+        }
         let body;
 
         if (file) {
@@ -1957,10 +1947,10 @@ async function tryProxyToPython(endpoint, bodyData, file = null, fileFieldName =
         }
 
         const proxyTimeoutMs = bodyData?.type === 'image'
-            ? Number.parseInt(process.env.PYTHON_IMAGE_TIMEOUT_MS || '90000', 10)
+            ? Number.parseInt(process.env.PYTHON_IMAGE_TIMEOUT_MS || '300000', 10)
             : bodyData?.type === 'video'
-                ? Number.parseInt(process.env.PYTHON_VIDEO_TIMEOUT_MS || '120000', 10)
-                : Number.parseInt(process.env.PYTHON_TEXT_TIMEOUT_MS || '45000', 10);
+                ? Number.parseInt(process.env.PYTHON_VIDEO_TIMEOUT_MS || '600000', 10)
+                : Number.parseInt(process.env.PYTHON_TEXT_TIMEOUT_MS || '120000', 10);
         const response = await fetch(pythonUrl, {
             method: 'POST',
             headers: headers,
@@ -2057,7 +2047,7 @@ app.post('/detect/text', async (req, res) => {
     const { text, language = 'auto' } = req.body;
     if (!text) return res.status(400).json({ error: 'No text provided' });
     try {
-        const pyResult = await tryProxyToPython('/detect/text', { text, language });
+        const pyResult = await tryProxyToPython(req, '/detect/text', { text, language });
         if (pyResult) {
             return res.json(pyResult);
         }
@@ -2079,7 +2069,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
             cleanupUploadedFile(req.file);
             if (!text.trim()) return res.status(400).json({ error: 'No text provided' });
             const language = req.body.language || 'auto';
-            const pyResult = await tryProxyToPython('/api/analyze', { type, content: text, language });
+            const pyResult = await tryProxyToPython(req, '/api/analyze', { type, content: text, language });
             if (pyResult) {
                 return res.json(pyResult);
             }
@@ -2092,7 +2082,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
             const localResult = await classifyImage(file.path, file.size, file.mimetype || 'image/jpeg', file.originalname);
             
             // 2. Try Python Deep Learning models
-            const pyResult = await tryProxyToPython('/api/analyze', { type }, file, 'file');
+            const pyResult = await tryProxyToPython(req, '/api/analyze', { type }, file, 'file');
             
             cleanupUploadedFile(file);
 
@@ -2112,7 +2102,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
             const localResult = await classifyVideo(file.path, file.size, file.originalname);
             
             // 2. Try Python Deep Learning models
-            const pyResult = await tryProxyToPython('/api/analyze', { type }, file, 'file');
+            const pyResult = await tryProxyToPython(req, '/api/analyze', { type }, file, 'file');
             
             cleanupUploadedFile(file);
 
@@ -2136,7 +2126,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
 app.post('/detect/image', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
     try {
-        const pyResult = await tryProxyToPython('/api/analyze', { type: 'image' }, req.file, 'file');
+        const pyResult = await tryProxyToPython(req, '/api/analyze', { type: 'image' }, req.file, 'file');
         if (pyResult) {
             cleanupUploadedFile(req.file);
             return res.json(pyResult);
@@ -2153,7 +2143,7 @@ app.post('/detect/image', upload.single('image'), async (req, res) => {
 app.post('/detect/video', upload.single('video'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No video provided' });
     try {
-        const pyResult = await tryProxyToPython('/api/analyze', { type: 'video' }, req.file, 'file');
+        const pyResult = await tryProxyToPython(req, '/api/analyze', { type: 'video' }, req.file, 'file');
         if (pyResult) {
             cleanupUploadedFile(req.file);
             return res.json(pyResult);

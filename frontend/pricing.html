@@ -1,268 +1,737 @@
-<!DOCTYPE html>
-<html lang="en" style="scroll-behavior: smooth;">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pricing | 3truth</title>
-  <link rel="icon" href="assets/favicon.svg">
-  
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tailwind.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
-  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
-  
-  <link rel="stylesheet" href="css/main.css?v=6.1">
-    <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1">
-</head>
-<body class="bg-[#030305] text-white">
+<!doctype html>
+<html lang="en" style="scroll-behavior: smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pricing | 3truth</title>
+    <link rel="icon" href="assets/favicon.svg" />
 
-  <!-- Reactbits Backgrounds -->
-  <div class="aurora-container">
-    <div class="aurora-blob cyan"></div>
-    <div class="aurora-blob purple"></div>
-    <div class="aurora-blob pink"></div>
-  </div>
-  <div class="grid-overlay"></div>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
 
+    <link rel="stylesheet" href="css/main.css?v=6.1" />
+    <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1" />
+  </head>
+  <body class="bg-[#030305] text-white">
+    <!-- Reactbits Backgrounds -->
+    <div class="aurora-container">
+      <div class="aurora-blob cyan"></div>
+      <div class="aurora-blob purple"></div>
+      <div class="aurora-blob pink"></div>
+    </div>
+    <div class="grid-overlay"></div>
 
+    <!-- Navigation -->
+    <div
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+    >
+      <!-- Left Logo -->
+      <a
+        href="/"
+        class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <img
+            src="assets/Logo.png"
+            alt="Logo"
+            class="h-10 md:h-12 w-auto object-contain"
+          />
+        </div>
+        <span
+          class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70"
+          >By Futuregen</span
+        >
+      </a>
 
-  <!-- Navigation -->
-  <div class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
-    <!-- Left Logo -->
-    <a href="/" class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
+      <!-- Centered Navigating Buttons -->
+      <div
+        class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1"
+      >
+        <a
+          href="/"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >HOME</a
+        >
+        <a
+          href="/scan"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >DETECTOR</a
+        >
+        <a href="/plans" class="text-[var(--accent-1)] transition-colors"
+          >PRICING</a
+        >
       </div>
-      <span class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By Futuregen</span>
-    </a>
-    
-    <!-- Centered Navigating Buttons -->
-    <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-      <a href="/" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
-      <a href="/scan" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="/plans" class="text-[var(--accent-1)] transition-colors">PRICING</a>
+
+      <!-- Right Action Buttons -->
+      <div class="hidden md:flex justify-end items-center w-auto gap-4">
+        <a
+          href="/login"
+          id="nav-login-btn"
+          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0 hover:animate-spring-hover"
+          >LOGIN</a
+        >
+      </div>
+
+      <!-- Mobile Toggle -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="menu" class="w-8 h-8"></i>
+      </button>
     </div>
 
-    <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-auto gap-4">
-      <a href="/login" id="nav-login-btn" class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0 hover:animate-spring-hover">LOGIN</a>
+    <!-- Sidebar (Mobile Menu) -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+    >
+      <button
+        id="mobile-menu-close"
+        class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+      <div class="flex flex-col gap-6 text-2xl font-black">
+        <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
+        <a href="/scan" class="text-white hover:text-[var(--accent-1)]"
+          >DETECTOR</a
+        >
+        <a href="/plans" class="text-[var(--accent-1)] inline-block w-max"
+          >PRICING</a
+        >
+
+        <a
+          href="/info?page=docs"
+          class="text-white hover:text-[var(--accent-1)]"
+          >DOCUMENTATION</a
+        >
+        <a
+          href="/info?page=about"
+          class="text-white hover:text-[var(--accent-1)] mt-4"
+          >ABOUT US</a
+        >
+        <a href="/support" class="text-white hover:text-[var(--accent-1)]"
+          >CONTACT</a
+        >
+        <a
+          href="/login"
+          id="sidebar-login-link"
+          class="text-[var(--accent-2)] mt-8"
+          >LOGIN</a
+        >
+      </div>
     </div>
 
-    <!-- Mobile Toggle -->
-    <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="menu" class="w-8 h-8"></i>
-    </button>
-  </div>
-  
-  <!-- Sidebar (Mobile Menu) -->
-  <div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-    <button id="mobile-menu-close" class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="x" class="w-8 h-8"></i>
-    </button>
-    <div class="flex flex-col gap-6 text-2xl font-black">
-      <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
-      <a href="/scan" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="/plans" class="text-[var(--accent-1)] inline-block w-max">PRICING</a>
+    <main
+      class="relative z-10 pt-32 md:pt-40 pb-20 min-h-screen flex flex-col items-center"
+    >
+      <div class="text-center mb-16 md:mb-24 px-4">
+        <h1
+          class="text-5xl md:text-7xl font-black mb-4 tracking-tighter text-gradient scramble-hover uppercase"
+        >
+          Choose Your Plan
+        </h1>
+        <p
+          class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium"
+        >
+          Flexible subscriptions to power your intelligence needs. From basic
+          verification to enterprise-scale neural interrogation.
+        </p>
+      </div>
 
-      <a href="/info?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
-      <a href="/info?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
-      <a href="/support" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
-      <a href="/login" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
-    </div>
-  </div>
-
-  <main class="relative z-10 pt-32 md:pt-40 pb-20 min-h-screen flex flex-col items-center">
-    
-    <div class="text-center mb-16 md:mb-24 px-4">
-      <h1 class="text-5xl md:text-7xl font-black mb-4 tracking-tighter text-gradient scramble-hover uppercase">
-        Choose Your Plan
-      </h1>
-      <p class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium">
-        Flexible subscriptions to power your intelligence needs. From basic verification to enterprise-scale neural interrogation.
-      </p>
-    </div>
-
-    <!-- Pricing Grid -->
-    <div class="w-full max-w-[1400px] px-4 md:px-8 mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-10 pb-20">
-      
-      <!-- Free Plan -->
-      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
-        <div class="mb-6 relative z-10">
-          <h3 class="text-3xl font-black mb-2 text-white">Free</h3>
-          <div class="flex flex-wrap items-baseline gap-2 mt-4">
-            <span class="text-5xl font-black text-white">$0</span>
-            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest"></span>
+      <!-- Pricing Grid -->
+      <div
+        class="w-full max-w-[1400px] px-4 md:px-8 mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-10 pb-20"
+      >
+        <!-- Free Plan -->
+        <div
+          class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0"
+        >
+          <div class="mb-6 relative z-10">
+            <h3 class="text-3xl font-black mb-2 text-white">Free</h3>
+            <div class="flex flex-wrap items-baseline gap-2 mt-4">
+              <span class="text-5xl font-black text-white">$0</span>
+              <span
+                class="text-gray-400 font-bold uppercase text-xs tracking-widest"
+              ></span>
+            </div>
+            <p
+              class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase"
+            >
+              10,000 words/mo
+            </p>
           </div>
-          <p class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase">10,000 words/mo</p>
-        </div>
-        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>AI detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic AI probability</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic sentence highlighting</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic reports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>7-day history</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Basic document uploads</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Limited languages</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i><span>Ads</span></div>
-        </div>
-        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed">Current Plan</button>
-      </div>
-
-      <!-- Pro Plan -->
-      <div class="holo-panel rounded-[24px] p-8 flex flex-col h-full group transition-all duration-300 border-2 border-[var(--accent-1)] bg-black/60 shadow-[0_0_30px_rgba(47,238,204,0.15)] relative scale-105 z-10 shrink-0" style="overflow: visible;">
-        <div class="absolute bg-[var(--accent-1)] text-[var(--text-100)] text-base font-black px-8 py-3 rounded-full uppercase tracking-widest z-30 whitespace-nowrap text-center shadow-[0_0_15px_rgba(47,238,204,0.5)]" style="top: 0; right: 50%; transform: translate(50%, -50%);">
-          MOST POPULAR
-        </div>
-        <div class="mb-6 relative z-10">
-          <h3 class="text-3xl font-black mb-2 text-white flex items-center gap-2">Pro</h3>
-          <div class="flex flex-wrap items-baseline gap-2 mt-4">
-            <span class="text-5xl font-black text-[var(--accent-1)]">$7.99</span>
-            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+          <div
+            class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300"
+          >
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>AI detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Basic AI probability</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Basic sentence highlighting</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Basic reports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>7-day history</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Basic document uploads</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Limited languages</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i data-lucide="check" class="w-5 h-5 text-white/50 shrink-0"></i
+              ><span>Ads</span>
+            </div>
           </div>
-          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $59.99/year</p>
-          <p class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase">150,000 words/mo</p>
+          <button
+            disabled
+            class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed"
+          >
+            Current Plan
+          </button>
         </div>
-        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-200">
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Advanced AI detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Sentence-level analysis</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI probability score</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI heatmap</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>AI-generated text highlighting</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Paraphrased-AI detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Detailed reports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>PDF report export</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>90-day history</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Multiple languages</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>PDF/DOCX uploads</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Limited plagiarism detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Priority processing</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-1)] shrink-0"></i><span>Ad-free</span></div>
-        </div>
-        <button disabled class="btn-magnetic mt-auto w-full text-center relative z-10 bg-[var(--accent-1)] text-black py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed border-none">Payments coming soon</button>
-      </div>
 
-      <!-- Pro+ Plan -->
-      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
-        <div class="mb-6 relative z-10">
-          <h3 class="text-3xl font-black mb-2 text-white">Pro+</h3>
-          <div class="flex flex-wrap items-baseline gap-2 mt-4">
-            <span class="text-5xl font-black text-white">$14.99</span>
-            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+        <!-- Pro Plan -->
+        <div
+          class="holo-panel rounded-[24px] p-8 flex flex-col h-full group transition-all duration-300 border-2 border-[var(--accent-1)] bg-black/60 shadow-[0_0_30px_rgba(47,238,204,0.15)] relative scale-105 z-10 shrink-0"
+          style="overflow: visible"
+        >
+          <div
+            class="absolute bg-[var(--accent-1)] text-[var(--text-100)] text-base font-black px-8 py-3 rounded-full uppercase tracking-widest z-30 whitespace-nowrap text-center shadow-[0_0_15px_rgba(47,238,204,0.5)]"
+            style="top: 0; right: 50%; transform: translate(50%, -50%)"
+          >
+            MOST POPULAR
           </div>
-          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $119.99/year</p>
-          <p class="text-[var(--accent-3)] font-bold text-sm mt-4 tracking-widest uppercase">500,000 words/mo</p>
-        </div>
-        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
-          <p class="text-xs font-bold text-white/50 uppercase tracking-widest pb-2">Everything in Pro, plus:</p>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Full plagiarism detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Source matching</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced plagiarism reports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced AI analysis</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced paraphrase detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Unlimited history</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Document comparison</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Writing-quality analysis</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Readability analysis</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Advanced exports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Shareable reports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Higher processing priority</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-3)] shrink-0"></i><span>Ad-free</span></div>
-        </div>
-        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-3)] text-[var(--accent-3)] opacity-75 cursor-not-allowed">Payments coming soon</button>
-      </div>
-
-      <!-- Team Plan -->
-      <div class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0">
-        <div class="mb-6 relative z-10">
-          <h3 class="text-3xl font-black mb-2 text-white">Team</h3>
-          <div class="flex flex-wrap items-baseline gap-2 mt-4">
-            <span class="text-5xl font-black text-white">$29.99</span>
-            <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">/ month</span>
+          <div class="mb-6 relative z-10">
+            <h3
+              class="text-3xl font-black mb-2 text-white flex items-center gap-2"
+            >
+              Pro
+            </h3>
+            <div class="flex flex-wrap items-baseline gap-2 mt-4">
+              <span class="text-5xl font-black text-[var(--accent-1)]"
+                >$7.99</span
+              >
+              <span
+                class="text-gray-400 font-bold uppercase text-xs tracking-widest"
+                >/ month</span
+              >
+            </div>
+            <p
+              class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold"
+            >
+              Or $59.99/year
+            </p>
+            <p
+              class="text-[var(--accent-1)] font-bold text-sm mt-4 tracking-widest uppercase"
+            >
+              150,000 words/mo
+            </p>
           </div>
-          <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Or $239.99/year</p>
-          <p class="text-[var(--accent-2)] font-bold text-sm mt-4 tracking-widest uppercase">2,000,000 words/mo</p>
+          <div
+            class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-200"
+          >
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Advanced AI detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Sentence-level analysis</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>AI probability score</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>AI heatmap</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>AI-generated text highlighting</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Paraphrased-AI detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Detailed reports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>PDF report export</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>90-day history</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Multiple languages</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>PDF/DOCX uploads</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Limited plagiarism detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Priority processing</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-1)] shrink-0"
+              ></i
+              ><span>Ad-free</span>
+            </div>
+          </div>
+          <button
+            disabled
+            class="btn-magnetic mt-auto w-full text-center relative z-10 bg-[var(--accent-1)] text-black py-3 uppercase font-bold text-xs tracking-wider opacity-75 cursor-not-allowed border-none"
+          >
+            Payments coming soon
+          </button>
         </div>
-        <div class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300">
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>5 team members</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Shared word allowance</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Team dashboard</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Bulk scanning</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Bulk document uploads</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Advanced AI detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Full plagiarism detection</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Advanced reports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Team analytics</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>PDF/CSV exports</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>API access</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Priority support</span></div>
-          <div class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-[var(--accent-2)] shrink-0"></i><span>Ad-free</span></div>
-          <div class="mt-4 pt-4 border-t border-white/10 text-xs font-bold text-[var(--accent-2)] uppercase tracking-widest">+ Additional member: $5/mo</div>
+
+        <!-- Pro+ Plan -->
+        <div
+          class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0"
+        >
+          <div class="mb-6 relative z-10">
+            <h3 class="text-3xl font-black mb-2 text-white">Pro+</h3>
+            <div class="flex flex-wrap items-baseline gap-2 mt-4">
+              <span class="text-5xl font-black text-white">$14.99</span>
+              <span
+                class="text-gray-400 font-bold uppercase text-xs tracking-widest"
+                >/ month</span
+              >
+            </div>
+            <p
+              class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold"
+            >
+              Or $119.99/year
+            </p>
+            <p
+              class="text-[var(--accent-3)] font-bold text-sm mt-4 tracking-widest uppercase"
+            >
+              500,000 words/mo
+            </p>
+          </div>
+          <div
+            class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300"
+          >
+            <p
+              class="text-xs font-bold text-white/50 uppercase tracking-widest pb-2"
+            >
+              Everything in Pro, plus:
+            </p>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Full plagiarism detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Source matching</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Advanced plagiarism reports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Advanced AI analysis</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Advanced paraphrase detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Unlimited history</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Document comparison</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Writing-quality analysis</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Readability analysis</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Advanced exports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Shareable reports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Higher processing priority</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-3)] shrink-0"
+              ></i
+              ><span>Ad-free</span>
+            </div>
+          </div>
+          <button
+            disabled
+            class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-3)] text-[var(--accent-3)] opacity-75 cursor-not-allowed"
+          >
+            Payments coming soon
+          </button>
         </div>
-        <button disabled class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-2)] text-[var(--accent-2)] opacity-75 cursor-not-allowed">Payments coming soon</button>
+
+        <!-- Team Plan -->
+        <div
+          data-tilt
+          data-tilt-max="5"
+          data-tilt-speed="400"
+          data-tilt-perspective="1000"
+          class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0 transform-gpu preserve-3d"
+        >
+          <div class="mb-6 relative z-10">
+            <h3 class="text-3xl font-black mb-2 text-white">Team</h3>
+            <div class="flex flex-wrap items-baseline gap-2 mt-4">
+              <span class="text-5xl font-black text-white">$29.99</span>
+              <span
+                class="text-gray-400 font-bold uppercase text-xs tracking-widest"
+                >/ month</span
+              >
+            </div>
+            <p
+              class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold"
+            >
+              Or $239.99/year
+            </p>
+            <p
+              class="text-[var(--accent-2)] font-bold text-sm mt-4 tracking-widest uppercase"
+            >
+              2,000,000 words/mo
+            </p>
+          </div>
+          <div
+            class="flex-1 mb-8 relative z-10 space-y-3 text-sm font-medium text-gray-300"
+          >
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>5 team members</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Shared word allowance</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Team dashboard</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Bulk scanning</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Bulk document uploads</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Advanced AI detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Full plagiarism detection</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Advanced reports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Team analytics</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>PDF/CSV exports</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>API access</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Priority support</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <i
+                data-lucide="check"
+                class="w-5 h-5 text-[var(--accent-2)] shrink-0"
+              ></i
+              ><span>Ad-free</span>
+            </div>
+            <div
+              class="mt-4 pt-4 border-t border-white/10 text-xs font-bold text-[var(--accent-2)] uppercase tracking-widest"
+            >
+              + Additional member: $5/mo
+            </div>
+          </div>
+          <button
+            disabled
+            class="btn-glass mt-auto w-full text-center relative z-10 py-3 uppercase font-bold text-xs tracking-wider border-[var(--accent-2)] text-[var(--accent-2)] opacity-75 cursor-not-allowed"
+          >
+            Payments coming soon
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
 
-  </main>
-  
-  <footer class="site-footer"></footer>
+    <footer class="site-footer"></footer>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/i18n.js?v=1"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/footer.js?v=3"></script>
-  <script src="js/animations.js"></script>
-  <script src="js/cinematic.js?v=6.0"></script>
-  <script>
-    lucide.createIcons();
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/footer.js?v=3"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/cinematic.js?v=6.0"></script>
+    <script>
+      lucide.createIcons();
 
-    // --- 10 NEW ADVANCED ANIMATIONS FOR PRICING PAGE ---
+      // --- 10 NEW ADVANCED ANIMATIONS FOR PRICING PAGE ---
 
-    // 1. Staggered Pricing Cards Entry
-    gsap.fromTo('.holo-panel',
-      { y: 100, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: "back.out(1.2)", delay: 0.5 }
-    );
+      // 1. Staggered Pricing Cards Entry
+      gsap.fromTo(
+        ".holo-panel",
+        { y: 100, opacity: 0, scale: 0.9 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: "back.out(1.2)",
+          delay: 0.5,
+        },
+      );
 
-    // 2. 3D Tilt Hover on Pricing Cards (REMOVED)
+      // 2. 3D Tilt Hover on Pricing Cards (REMOVED)
 
-    // 3. Magnetic Buttons
-    document.querySelectorAll('.btn-magnetic, .btn-glass').forEach(btn => {
-      btn.addEventListener('mousemove', e => {
-        const rect = btn.getBoundingClientRect();
-        gsap.to(btn, { x: (e.clientX - rect.left - rect.width / 2) * 0.2, y: (e.clientY - rect.top - rect.height / 2) * 0.2, duration: 0.4 });
+      // 3. Magnetic Buttons
+      document.querySelectorAll(".btn-magnetic, .btn-glass").forEach((btn) => {
+        btn.addEventListener("mousemove", (e) => {
+          const rect = btn.getBoundingClientRect();
+          gsap.to(btn, {
+            x: (e.clientX - rect.left - rect.width / 2) * 0.2,
+            y: (e.clientY - rect.top - rect.height / 2) * 0.2,
+            duration: 0.4,
+          });
+        });
+        btn.addEventListener("mouseleave", () =>
+          gsap.to(btn, {
+            x: 0,
+            y: 0,
+            duration: 0.8,
+            ease: "elastic.out(1, 0.3)",
+          }),
+        );
       });
-      btn.addEventListener('mouseleave', () => gsap.to(btn, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.3)" }));
-    });
 
-    // 4. Icon Bounce on Feature Hover
-    document.querySelectorAll('.flex.items-start.gap-3').forEach(feature => {
-      feature.addEventListener('mouseenter', () => gsap.to(feature.querySelector('svg'), { scale: 1.3, color: 'var(--accent-1)', duration: 0.3 }));
-      feature.addEventListener('mouseleave', () => gsap.to(feature.querySelector('svg'), { scale: 1, color: 'rgba(255,255,255,0.72)', duration: 0.3 }));
-    });
+      // 4. Icon Bounce on Feature Hover
+      document
+        .querySelectorAll(".flex.items-start.gap-3")
+        .forEach((feature) => {
+          feature.addEventListener("mouseenter", () =>
+            gsap.to(feature.querySelector("svg"), {
+              scale: 1.3,
+              color: "var(--accent-1)",
+              duration: 0.3,
+            }),
+          );
+          feature.addEventListener("mouseleave", () =>
+            gsap.to(feature.querySelector("svg"), {
+              scale: 1,
+              color: "rgba(255,255,255,0.72)",
+              duration: 0.3,
+            }),
+          );
+        });
 
-    // 5. Price Text Hover Glow
-    document.querySelectorAll('.text-5xl').forEach(price => {
-      price.parentElement.parentElement.addEventListener('mouseenter', () => {
-        gsap.to(price, { textShadow: "0px 0px 20px rgba(255,255,255,0.8)", duration: 0.3 });
+      // 5. Price Text Hover Glow
+      document.querySelectorAll(".text-5xl").forEach((price) => {
+        price.parentElement.parentElement.addEventListener("mouseenter", () => {
+          gsap.to(price, {
+            textShadow: "0px 0px 20px rgba(255,255,255,0.8)",
+            duration: 0.3,
+          });
+        });
+        price.parentElement.parentElement.addEventListener("mouseleave", () => {
+          gsap.to(price, {
+            textShadow: "0px 0px 0px rgba(255,255,255,0)",
+            duration: 0.5,
+          });
+        });
       });
-      price.parentElement.parentElement.addEventListener('mouseleave', () => {
-        gsap.to(price, { textShadow: "0px 0px 0px rgba(255,255,255,0)", duration: 0.5 });
-      });
-    });
-
-  </script>
+    </script>
     <script src="js/signin.js?v=20260623-modal"></script>
-  <script src="js/nav-state.js?v=20260623-modal"></script>
+    <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
     <script src="https://cdn.jsdelivr.net/npm/kinet@2.2.1/dist/kinet.min.js"></script>
     <script src="js/kinet-init.js"></script>
     <script src="js/advanced-kinetics.js"></script>
-</body>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"
+      integrity="sha512-wC/cunGGDjXSl9OHsu09p+sEaQZgty-fr-0KBE8k5u34zJ025q5Xf/l+w7M+R/l0eD/4wZq2j3cO9aPZp2C82g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </body>
 </html>

@@ -1,449 +1,781 @@
-<!DOCTYPE html>
-<html lang="en" style="scroll-behavior: smooth;">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detector | 3truth</title>
-  <link rel="icon" href="assets/favicon.svg">
+<!doctype html>
+<html lang="en" style="scroll-behavior: smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detector | 3truth</title>
+    <link rel="icon" href="assets/favicon.svg" />
 
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Fonts & Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
-  <!-- Tailwind -->
-  <link rel="stylesheet" href="css/tailwind.css">
+    <!-- Tailwind -->
+    <link rel="stylesheet" href="css/tailwind.css" />
 
-  <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
-  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
-  
-  <!-- File Extraction -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script>
-    // Set worker src for pdf.js
-    if (window['pdfjs-dist/build/pdf']) {
-      window.pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- File Extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+      // Set worker src for pdf.js
+      if (window["pdfjs-dist/build/pdf"]) {
+        window.pdfjsLib = window["pdfjs-dist/build/pdf"];
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 
-  <!-- HTML2PDF CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- EXIF Parser (browser build) — enables server-grade image metadata forensics client-side -->
-  <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
+    <!-- HTML2PDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-  <!-- Main CSS -->
-  <link rel="stylesheet" href="css/main.css?v=6.1">
-  <link rel="stylesheet" href="css/ui-fixes.css?v=20260614-detector6">
-</head>
-<body class="bg-[#030305] text-white">
+    <!-- EXIF Parser (browser build) — enables server-grade image metadata forensics client-side -->
+    <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
 
-  <!-- Reactbits Style Aurora Background -->
-  <div class="aurora-container">
-    <div class="aurora-blob cyan"></div>
-    <div class="aurora-blob purple"></div>
-    <div class="aurora-blob pink"></div>
-  </div>
-  <div class="grid-overlay"></div>
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/main.css?v=6.1" />
+    <link rel="stylesheet" href="css/ui-fixes.css?v=20260614-detector6" />
+  </head>
+  <body class="bg-[#030305] text-white">
+    <!-- Reactbits Style Aurora Background -->
+    <div class="aurora-container">
+      <div class="aurora-blob cyan"></div>
+      <div class="aurora-blob purple"></div>
+      <div class="aurora-blob pink"></div>
+    </div>
+    <div class="grid-overlay"></div>
 
+    <!-- Navigation -->
+    <div
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+    >
+      <!-- Left Logo -->
+      <a
+        href="index.html"
+        class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <img
+            src="assets/Logo.png"
+            alt="Logo"
+            class="h-10 md:h-12 w-auto object-contain"
+          />
+        </div>
+        <span
+          class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70"
+          >By Futuregen</span
+        >
+      </a>
 
-  <!-- Navigation -->
-  <div
-    class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
-    <!-- Left Logo -->
-    <a href="index.html"
-      class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
+      <!-- Centered Navigating Buttons -->
+      <div
+        class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1"
+      >
+        <a
+          href="index.html"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >HOME</a
+        >
+        <a
+          href="detector.html"
+          aria-current="page"
+          class="text-[var(--accent-1)] transition-colors"
+          >DETECTOR</a
+        >
+        <a
+          href="pricing.html"
+          class="beta-nav-link text-white hover:text-[var(--accent-1)] transition-colors"
+          >PRICING</a
+        >
       </div>
-      <span
-        class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By
-        Futuregen</span>
-    </a>
 
-    <!-- Centered Navigating Buttons -->
-    <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-                    <a href="index.html" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
-                    <a href="detector.html" aria-current="page" class="text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="pricing.html" class="beta-nav-link text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
-    </div>
+      <!-- Right Action Buttons -->
+      <div class="hidden md:flex justify-end items-center w-auto gap-4">
+        <a
+          href="signin.html"
+          id="nav-login-btn"
+          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0"
+          >LOGIN</a
+        >
+      </div>
 
-    <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-auto gap-4">
-      <a href="signin.html" id="nav-login-btn"
-        class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
-    </div>
-
-    <!-- Mobile Toggle -->
-    <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="menu" class="w-8 h-8"></i>
-    </button>
-  </div>
-
-  <!-- Sidebar (Mobile Menu) -->
-  <div id="mobile-menu"
-    class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-    <button id="mobile-menu-close" class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="x" class="w-8 h-8"></i>
-    </button>
-    <div class="flex flex-col gap-6 text-2xl font-black">
-      <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
-      <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="pricing.html" class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<span
-          class="beta-nav-badge">BETA</span></a>
-
-      <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
-      <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
-      <a href="contact.html" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
-      <a href="signin.html" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
-    </div>
-  </div>
-
-  <main class="detector-main relative z-10 px-4 pb-16">
-
-    <!-- Header -->
-    <div class="text-center mb-8 md:mb-10 px-4">
-      <h1 class="text-3xl md:text-6xl font-black mb-4 md:mb-6 tracking-tighter hero-title text-gradient scramble-hover whitespace-nowrap">
-        THE APEX DETECTOR
-      </h1>
-      <p class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium hero-sub leading-relaxed scramble-hover">
-        Unescapable intelligence. Drop your content below and let the neural engine dissect the truth.
-      </p>
-    </div>
-
-    <!-- Tabs -->
-    <div id="tabs" class="flex flex-wrap justify-center gap-5 md:gap-8 mb-8 md:mb-10 w-full max-w-4xl mx-auto">
-      <button data-tab="text" class="tab-btn active flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[var(--accent-1)] text-[var(--accent-1)] bg-[var(--accent-1)]/10 hover:bg-[var(--accent-1)]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_var(--accent-1)] transition-all font-black tracking-widest text-base transform">
-        <i data-lucide="file-text" class="w-5 h-5"></i> TEXT
-      </button>
-      <button data-tab="image" class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#b829ff] text-[#b829ff] bg-[#b829ff]/10 hover:bg-[#b829ff]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#b829ff] transition-all font-black tracking-widest text-base transform">
-        <i data-lucide="image" class="w-5 h-5"></i> IMAGE
-      </button>
-      <button data-tab="video" class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#ff2a85] text-[#ff2a85] bg-[#ff2a85]/10 hover:bg-[#ff2a85]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#ff2a85] transition-all font-black tracking-widest text-base transform">
-        <i data-lucide="video" class="w-5 h-5"></i> VIDEO
+      <!-- Mobile Toggle -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="menu" class="w-8 h-8"></i>
       </button>
     </div>
 
-    <!-- Detector Interface -->
-    <div class="w-[95%] max-w-[1400px] mx-auto relative mb-32 group">
-      <div class="detector-card-aura absolute -inset-4 rounded-full z-0 pointer-events-none"></div>
-      <div class="w-full p-1 rounded-[24px] relative z-10 transition-all duration-700 hover:scale-[1.01] border border-white/5 hover:border-[var(--accent-1)]/30 shadow-2xl" id="main-detector-card">
-        <div class="detector-workspace bg-[#050505]/80 backdrop-blur-3xl rounded-[22px] w-full flex flex-col md:flex-row overflow-hidden relative">
+    <!-- Sidebar (Mobile Menu) -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+    >
+      <button
+        id="mobile-menu-close"
+        class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+      <div class="flex flex-col gap-6 text-2xl font-black">
+        <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
+        <a href="detector.html" class="text-white hover:text-[var(--accent-1)]"
+          >DETECTOR</a
+        >
+        <a
+          href="pricing.html"
+          class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max"
+          >PRICING<span class="beta-nav-badge">BETA</span></a
+        >
 
-          <!-- Scanner Effect -->
-          <div id="scanner-bar" class="absolute top-0 left-0 w-full h-[2px] bg-[var(--accent-1)] shadow-[0_0_30px_var(--accent-1)] z-50 hidden"></div>
+        <a
+          href="static.html?page=docs"
+          class="text-white hover:text-[var(--accent-1)]"
+          >DOCUMENTATION</a
+        >
+        <a
+          href="static.html?page=about"
+          class="text-white hover:text-[var(--accent-1)] mt-4"
+          >ABOUT US</a
+        >
+        <a href="contact.html" class="text-white hover:text-[var(--accent-1)]"
+          >CONTACT</a
+        >
+        <a
+          href="signin.html"
+          id="sidebar-login-link"
+          class="text-[var(--accent-2)] mt-8"
+          >LOGIN</a
+        >
+      </div>
+    </div>
 
-          <!-- Input Area -->
-          <div class="detector-input-pane w-full md:w-1/2 p-6 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col relative">
-            <h2 class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase" id="input-label">Input Source</h2>
+    <main class="detector-main relative z-10 px-4 pb-16">
+      <!-- Header -->
+      <div class="text-center mb-8 md:mb-10 px-4">
+        <h1
+          class="text-3xl md:text-6xl font-black mb-4 md:mb-6 tracking-tighter hero-title text-gradient scramble-hover whitespace-nowrap"
+        >
+          THE APEX DETECTOR
+        </h1>
+        <p
+          class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium hero-sub leading-relaxed scramble-hover"
+        >
+          Unescapable intelligence. Drop your content below and let the neural
+          engine dissect the truth.
+        </p>
+      </div>
 
-            <!-- Text Input -->
-            <div id="tab-content-text" class="flex-grow flex flex-col">
-              <div id="text-mode-profile" class="media-mode-profile text-mode-profile pointer-events-none w-full mb-6">
-                <div class="media-mode-header">
-                  <div class="media-mode-icon-shell">
-                    <i data-lucide="file-search" class="w-7 h-7"></i>
-                  </div>
-                  <div class="text-left">
-                    <p class="media-mode-badge">TEXT FORENSIC MODE</p>
-                    <h3 class="media-mode-title">Stylometry & Language Rhythm</h3>
-                    <p class="media-mode-description">Paste human, AI, humanized AI, academic, business, Arabic, or mixed-language text for structure and writing-pattern analysis.</p>
-                  </div>
-                </div>
+      <!-- Tabs -->
+      <div
+        id="tabs"
+        class="flex flex-wrap justify-center gap-5 md:gap-8 mb-8 md:mb-10 w-full max-w-4xl mx-auto"
+      >
+        <button
+          data-tab="text"
+          class="tab-btn active flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[var(--accent-1)] text-[var(--accent-1)] bg-[var(--accent-1)]/10 hover:bg-[var(--accent-1)]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_var(--accent-1)] transition-all font-black tracking-widest text-base transform"
+        >
+          <i data-lucide="file-text" class="w-5 h-5"></i> TEXT
+        </button>
+        <button
+          data-tab="image"
+          class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#b829ff] text-[#b829ff] bg-[#b829ff]/10 hover:bg-[#b829ff]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#b829ff] transition-all font-black tracking-widest text-base transform"
+        >
+          <i data-lucide="image" class="w-5 h-5"></i> IMAGE
+        </button>
+        <button
+          data-tab="video"
+          class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#ff2a85] text-[#ff2a85] bg-[#ff2a85]/10 hover:bg-[#ff2a85]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#ff2a85] transition-all font-black tracking-widest text-base transform"
+        >
+          <i data-lucide="video" class="w-5 h-5"></i> VIDEO
+        </button>
+      </div>
 
+      <!-- Detector Interface -->
+      <div class="w-[95%] max-w-[1400px] mx-auto relative mb-32 group">
+        <div
+          class="detector-card-aura absolute -inset-4 rounded-full z-0 pointer-events-none"
+        ></div>
+        <div
+          class="w-full p-1 rounded-[24px] relative z-10 transition-all duration-700 hover:scale-[1.01] border border-white/5 hover:border-[var(--accent-1)]/30 shadow-2xl"
+          id="main-detector-card"
+        >
+          <div
+            class="detector-workspace bg-[#050505]/80 backdrop-blur-3xl rounded-[22px] w-full flex flex-col md:flex-row overflow-hidden relative"
+          >
+            <!-- Scanner Effect -->
+            <div
+              id="scanner-bar"
+              class="absolute top-0 left-0 w-full h-[2px] bg-[var(--accent-1)] shadow-[0_0_30px_var(--accent-1)] z-50 hidden"
+            ></div>
 
+            <!-- Input Area -->
+            <div
+              class="detector-input-pane w-full md:w-1/2 p-6 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col relative"
+            >
+              <h2
+                class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase"
+                id="input-label"
+              >
+                Input Source
+              </h2>
 
-                <div class="media-mode-chips">
-                  <span>STYLE</span>
-                  <span>BURSTINESS</span>
-                  <span>PHRASES</span>
-                  <span>ARABIC</span>
-                </div>
-              </div>
-
-              <textarea id="text-input" class="w-full flex-grow bg-transparent text-xl md:text-2xl text-white placeholder-gray-600 focus:outline-none resize-none font-medium leading-relaxed p-4 border border-[var(--accent-1)]/20 rounded-xl" placeholder="Paste your text here for analysis..."></textarea>
-              <div class="flex justify-between items-center mt-4">
-                <span id="char-count" class="text-xs font-black text-gray-600">0 / 25000 chars</span>
-                <div class="flex gap-2">
-                  <button id="clear-btn" class="text-xs font-black text-gray-500 hover:text-white transition hidden">CLEAR</button>
-                  <button id="load-sample-btn" class="text-xs font-black text-[var(--accent-1)] hover:text-white transition">LOAD SAMPLE</button>
-                </div>
-              </div>
-              <div id="text-analyze-anchor" class="analyze-anchor"></div>
-            </div>
-
-            <!-- File Input (Image/Video) -->
-            <div id="tab-content-file" class="media-upload-zone flex-grow flex flex-col items-center justify-center hidden border-2 border-dashed border-white/10 rounded-xl hover:border-[var(--accent-1)]/50 transition-colors cursor-pointer group relative overflow-hidden p-6">
-              <input type="file" id="file-input" class="hidden" accept="image/*,video/*">
-
-              <div id="media-mode-profile" class="media-mode-profile media-mode-image pointer-events-none w-full mb-8">
-                <div class="media-mode-header">
-                  <div id="media-mode-icon-shell" class="media-mode-icon-shell">
-                    <i id="media-mode-icon" data-lucide="image" class="w-7 h-7"></i>
-                  </div>
-                  <div class="text-left">
-                    <p id="media-mode-badge" class="media-mode-badge">IMAGE FORENSIC MODE</p>
-                    <h3 id="media-mode-title" class="media-mode-title">Pixel & Metadata Inspection</h3>
-                    <p id="media-mode-description" class="media-mode-description">Upload a photo, render, scan, screenshot, RAW file, or edited image for camera provenance and pixel artifact analysis.</p>
-                  </div>
-                </div>
-
-
-
-                <div id="media-mode-chips" class="media-mode-chips">
-                  <span>EXIF</span>
-                  <span>PIXELS</span>
-                  <span>COMPRESSION</span>
-                </div>
-              </div>
-
-              <!-- Default State -->
-              <div id="file-upload-default" class="flex flex-col items-center justify-center text-center pointer-events-none w-full">
-                <i id="file-upload-icon" data-lucide="image-up" class="w-12 h-12 text-gray-600 group-hover:text-[var(--accent-1)] mb-4 transition-colors"></i>
-                <p class="font-bold text-gray-400 group-hover:text-white transition-colors text-center" id="file-name-display">Click or drag & drop to select file</p>
-                <p class="text-xs text-gray-600 mt-2" id="file-support-text">JPG, PNG, WEBP, HEIC, RAW, screenshots, edited photos</p>
-              </div>
-
-              <!-- Preview State -->
-              <div id="file-upload-preview" class="hidden w-full flex flex-col items-center justify-center relative">
-                <!-- Preview Canvas or Image or Video will be rendered here dynamically -->
-              </div>
-            </div>
-            <div id="file-analyze-anchor" class="analyze-anchor"></div>
-
-            <button id="analyze-btn" class="btn-magnetic w-full group">
-              <span id="analyze-btn-label">INITIALIZE SCAN</span>
-            </button>
-          </div>
-
-          <!-- Results Area -->
-          <div class="detector-result-pane w-full md:w-1/2 p-6 md:p-8 bg-transparent border-l border-[var(--accent-1)]/10 flex flex-col relative overflow-y-auto custom-scrollbar max-h-[75vh] md:max-h-[800px]">
-
-            <!-- Idle State -->
-            <div id="state-idle" class="text-center my-auto">
-              <div class="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-6">
-                <i id="idle-state-icon" data-lucide="cpu" class="w-10 h-10 text-gray-600"></i>
-              </div>
-              <h3 id="idle-state-title" class="text-2xl font-black text-gray-400 mb-2">AWAITING INPUT</h3>
-              <p id="idle-state-subtitle" class="text-sm text-gray-600">The neural engine is standing by.</p>
-            </div>
-
-            <!-- Loading State -->
-            <div id="state-loading" class="text-center my-auto hidden animate-pulse">
-              <div class="w-24 h-24 rounded-full border-2 border-[var(--accent-1)] border-t-transparent animate-spin mx-auto mb-6 shadow-[0_0_30px_var(--accent-1)]"></div>
-              <h3 id="loading-title" class="text-2xl font-black text-[var(--accent-1)] mb-2 glitch-text">ANALYZING</h3>
-              <p class="text-sm text-[var(--accent-1)]/70" id="loading-sub">Running deep heuristics...</p>
-              <div id="loading-terminal-logs" class="custom-scrollbar"></div>
-            </div>
-
-            <!-- Result State -->
-            <div id="state-result" class="w-full hidden">
-              <div class="text-center mb-8">
-                <h3 class="text-xs font-black tracking-[0.3em] text-[var(--accent-1)] mb-2 uppercase drop-shadow-[0_0_5px_var(--accent-1)]">Forensic Verdict</h3>
-                <div id="result-verdict" class="text-5xl font-black mb-2 uppercase text-gradient-alt">HUMAN</div>
-                <div id="result-confidence" class="inline-block px-4 py-1 rounded-full bg-[var(--accent-1)]/10 border border-[var(--accent-1)]/30 text-xs font-black text-[var(--accent-1)] shadow-[0_0_15px_rgba(0,229,255,0.2)]">98.4% CONFIDENCE</div>
-              </div>
-
-              <div class="space-y-6 mb-8">
-                <div>
-                  <div class="flex justify-between text-xs font-black mb-2">
-                    <span class="text-[var(--text-200)] tracking-[0.1em]">HUMAN PROBABILITY</span>
-                    <span id="score-human" class="text-white text-glow">98.4%</span>
-                  </div>
-                  <div class="holo-progress-container">
-                    <div id="bar-human" class="holo-progress-bar bg-[#00E5FF] w-[98.4%] shadow-[0_0_15px_#00E5FF]"></div>
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-xs font-black mb-2">
-                    <span class="text-[var(--text-200)] tracking-[0.1em]">AI PROBABILITY</span>
-                    <span id="score-ai" class="text-white text-glow">1.6%</span>
-                  </div>
-                  <div class="holo-progress-container">
-                    <div id="bar-ai" class="holo-progress-bar bg-[#D500F9] w-[1.6%] shadow-[0_0_15px_#D500F9]"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Text Segmentation Breakdown -->
-              <div id="text-breakdown-section" class="mt-8 pt-6 border-t border-white/10 hidden">
-                <h4 class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center">Neural Segment Analysis</h4>
-
-                <div class="grid grid-cols-1 gap-6">
-                  <!-- Human Section (Green Marker) -->
-                  <div class="border border-emerald-500/20 bg-emerald-500/5 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-colors">
-                    <div class="flex items-center gap-3 mb-4">
-                      <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                        <i data-lucide="user" class="w-4 h-4"></i>
-                      </span>
-                      <span class="text-xs font-black tracking-wider text-emerald-400 uppercase">Human-Origin Content (Green Marker)</span>
+              <!-- Text Input -->
+              <div id="tab-content-text" class="flex-grow flex flex-col">
+                <div
+                  id="text-mode-profile"
+                  class="media-mode-profile text-mode-profile pointer-events-none w-full mb-6"
+                >
+                  <div class="media-mode-header">
+                    <div class="media-mode-icon-shell">
+                      <i data-lucide="file-search" class="w-7 h-7"></i>
                     </div>
-                    <div id="breakdown-human-text" class="text-sm text-gray-300 leading-relaxed max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                      <!-- Populated dynamically -->
+                    <div class="text-left">
+                      <p class="media-mode-badge">TEXT FORENSIC MODE</p>
+                      <h3 class="media-mode-title">
+                        Stylometry & Language Rhythm
+                      </h3>
+                      <p class="media-mode-description">
+                        Paste human, AI, humanized AI, academic, business,
+                        Arabic, or mixed-language text for structure and
+                        writing-pattern analysis.
+                      </p>
                     </div>
                   </div>
 
-                  <!-- AI Section (Blue Marker) -->
-                  <div class="border border-blue-500/20 bg-blue-500/5 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/40 transition-colors">
-                    <div class="flex items-center gap-3 mb-4">
-                      <span class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                        <i data-lucide="cpu" class="w-4 h-4"></i>
-                      </span>
-                      <span class="text-xs font-black tracking-wider text-blue-400 uppercase">Synthetic-Origin Content (Blue Marker)</span>
-                    </div>
-                    <div id="breakdown-ai-text" class="text-sm text-gray-300 leading-relaxed max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                      <!-- Populated dynamically -->
-                    </div>
+                  <div class="media-mode-chips">
+                    <span>STYLE</span>
+                    <span>BURSTINESS</span>
+                    <span>PHRASES</span>
+                    <span>ARABIC</span>
                   </div>
                 </div>
-              </div>
 
-              <!-- File Metadata Analysis Breakdown -->
-              <div id="file-metadata-section" class="mt-8 pt-6 border-t border-white/10 hidden">
-                <h4 class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center">File Analysis Metadata</h4>
-                <div id="file-metadata-content" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border border-[var(--accent-1)]/20 bg-[var(--accent-1)]/5 rounded-2xl p-6">
-                  <!-- Populated dynamically -->
+                <textarea
+                  id="text-input"
+                  class="w-full flex-grow bg-transparent text-xl md:text-2xl text-white placeholder-gray-600 focus:outline-none resize-none font-medium leading-relaxed p-4 border border-[var(--accent-1)]/20 rounded-xl"
+                  placeholder="Paste your text here for analysis..."
+                ></textarea>
+                <div class="flex justify-between items-center mt-4">
+                  <span id="char-count" class="text-xs font-black text-gray-600"
+                    >0 / 25000 chars</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      id="clear-btn"
+                      class="text-xs font-black text-gray-500 hover:text-white transition hidden"
+                    >
+                      CLEAR
+                    </button>
+                    <button
+                      id="text-file-btn"
+                      class="text-xs font-black text-[var(--accent-1)] hover:text-white transition"
+                    >
+                      UPLOAD FILE
+                    </button>
+                    <input
+                      type="file"
+                      id="text-file-input"
+                      class="hidden"
+                      accept=".txt,.pdf,.doc,.docx,.rtf,.json,.md"
+                    />
+                  </div>
                 </div>
+                <div id="text-analyze-anchor" class="analyze-anchor"></div>
               </div>
 
-              <!-- Neural Provenance Code Inspector -->
-              <div id="provenance-code-section" class="mt-8 pt-6 border-t border-white/10 hidden w-full">
-                <h4 class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center">Neural Provenance Code Inspector</h4>
-                <div class="border border-[#b829ff]/30 bg-[#050508] rounded-2xl p-6 relative overflow-hidden group shadow-[0_0_30px_rgba(184,41,255,0.05)]">
-                  <!-- Glow accents -->
-                  <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#b829ff]/10 rounded-full blur-3xl pointer-events-none"></div>
+              <!-- File Input (Image/Video) -->
+              <div
+                id="tab-content-file"
+                class="media-upload-zone flex-grow flex flex-col items-center justify-center hidden border-2 border-dashed border-white/10 rounded-xl hover:border-[var(--accent-1)]/50 transition-colors cursor-pointer group relative overflow-hidden p-6"
+              >
+                <input
+                  type="file"
+                  id="file-input"
+                  class="hidden"
+                  accept="image/*,video/*"
+                />
 
-                  <!-- Terminal Header -->
-                  <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4 font-mono text-xs text-gray-500">
-                    <div class="flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-                      <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-                      <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-                      <span class="ml-2 text-[#b829ff] font-bold">PROVENANCE_SHELL_v1.0.4_STABLE</span>
+                <div
+                  id="media-mode-profile"
+                  class="media-mode-profile media-mode-image pointer-events-none w-full mb-8"
+                >
+                  <div class="media-mode-header">
+                    <div
+                      id="media-mode-icon-shell"
+                      class="media-mode-icon-shell"
+                    >
+                      <i
+                        id="media-mode-icon"
+                        data-lucide="image"
+                        class="w-7 h-7"
+                      ></i>
                     </div>
-                    <span class="text-gray-600">ENCODING: UTF-8</span>
+                    <div class="text-left">
+                      <p id="media-mode-badge" class="media-mode-badge">
+                        IMAGE FORENSIC MODE
+                      </p>
+                      <h3 id="media-mode-title" class="media-mode-title">
+                        Pixel & Metadata Inspection
+                      </h3>
+                      <p
+                        id="media-mode-description"
+                        class="media-mode-description"
+                      >
+                        Upload a photo, render, scan, screenshot, RAW file, or
+                        edited image for camera provenance and pixel artifact
+                        analysis.
+                      </p>
+                    </div>
                   </div>
 
-                  <!-- Terminal Body -->
-                  <pre class="font-mono text-xs leading-relaxed max-h-[300px] overflow-y-auto pr-2 custom-scrollbar text-[#a5f3fc] whitespace-pre-wrap break-all" id="provenance-code-content"></pre>
+                  <div id="media-mode-chips" class="media-mode-chips">
+                    <span>EXIF</span>
+                    <span>PIXELS</span>
+                    <span>COMPRESSION</span>
+                  </div>
+                </div>
+
+                <!-- Default State -->
+                <div
+                  id="file-upload-default"
+                  class="flex flex-col items-center justify-center text-center pointer-events-none w-full"
+                >
+                  <i
+                    id="file-upload-icon"
+                    data-lucide="image-up"
+                    class="w-12 h-12 text-gray-600 group-hover:text-[var(--accent-1)] mb-4 transition-colors"
+                  ></i>
+                  <p
+                    class="font-bold text-gray-400 group-hover:text-white transition-colors text-center"
+                    id="file-name-display"
+                  >
+                    Click or drag & drop to select file
+                  </p>
+                  <p class="text-xs text-gray-600 mt-2" id="file-support-text">
+                    JPG, PNG, WEBP, HEIC, RAW, screenshots, edited photos
+                  </p>
+                </div>
+
+                <!-- Preview State -->
+                <div
+                  id="file-upload-preview"
+                  class="hidden w-full flex flex-col items-center justify-center relative"
+                >
+                  <!-- Preview Canvas or Image or Video will be rendered here dynamically -->
                 </div>
               </div>
+              <div id="file-analyze-anchor" class="analyze-anchor"></div>
 
-              <!-- Action Buttons -->
-              <div class="flex gap-4 mt-8 w-full">
-                <button id="copy-btn" class="w-full btn-glass flex items-center justify-center gap-2 py-4">
-                  <i data-lucide="copy" class="w-4 h-4"></i> COPY REPORT
-                </button>
-                <button id="pdf-btn" class="hidden w-full btn-glass flex items-center justify-center gap-2 py-4">
-                  <i data-lucide="file-down" class="w-4 h-4"></i> CONVERT TO PDF
-                </button>
-              </div>
+              <button id="analyze-btn" class="btn-magnetic w-full group">
+                <span id="analyze-btn-label">INITIALIZE SCAN</span>
+              </button>
             </div>
 
+            <!-- Results Area -->
+            <div
+              class="detector-result-pane w-full md:w-1/2 p-6 md:p-8 bg-transparent border-l border-[var(--accent-1)]/10 flex flex-col relative overflow-y-auto custom-scrollbar max-h-[75vh] md:max-h-[800px]"
+            >
+              <!-- Idle State -->
+              <div id="state-idle" class="text-center my-auto">
+                <div
+                  class="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-6"
+                >
+                  <i
+                    id="idle-state-icon"
+                    data-lucide="cpu"
+                    class="w-10 h-10 text-gray-600"
+                  ></i>
+                </div>
+                <h3
+                  id="idle-state-title"
+                  class="text-2xl font-black text-gray-400 mb-2"
+                >
+                  AWAITING INPUT
+                </h3>
+                <p id="idle-state-subtitle" class="text-sm text-gray-600">
+                  The neural engine is standing by.
+                </p>
+              </div>
+
+              <!-- Loading State -->
+              <div
+                id="state-loading"
+                class="text-center my-auto hidden animate-pulse"
+              >
+                <div
+                  class="w-24 h-24 rounded-full border-2 border-[var(--accent-1)] border-t-transparent animate-spin mx-auto mb-6 shadow-[0_0_30px_var(--accent-1)]"
+                ></div>
+                <h3
+                  id="loading-title"
+                  class="text-2xl font-black text-[var(--accent-1)] mb-2 glitch-text"
+                >
+                  ANALYZING
+                </h3>
+                <p class="text-sm text-[var(--accent-1)]/70" id="loading-sub">
+                  Running deep heuristics...
+                </p>
+                <div id="loading-terminal-logs" class="custom-scrollbar"></div>
+              </div>
+
+              <!-- Result State -->
+              <div id="state-result" class="w-full hidden">
+                <div class="text-center mb-8">
+                  <h3
+                    class="text-xs font-black tracking-[0.3em] text-[var(--accent-1)] mb-2 uppercase drop-shadow-[0_0_5px_var(--accent-1)]"
+                  >
+                    Forensic Verdict
+                  </h3>
+                  <div
+                    id="result-verdict"
+                    class="text-5xl font-black mb-2 uppercase text-gradient-alt"
+                  >
+                    HUMAN
+                  </div>
+                  <div
+                    id="result-confidence"
+                    class="inline-block px-4 py-1 rounded-full bg-[var(--accent-1)]/10 border border-[var(--accent-1)]/30 text-xs font-black text-[var(--accent-1)] shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                  >
+                    98.4% CONFIDENCE
+                  </div>
+                </div>
+
+                <div class="space-y-6 mb-8">
+                  <div>
+                    <div class="flex justify-between text-xs font-black mb-2">
+                      <span class="text-[var(--text-200)] tracking-[0.1em]"
+                        >HUMAN PROBABILITY</span
+                      >
+                      <span id="score-human" class="text-white text-glow"
+                        >98.4%</span
+                      >
+                    </div>
+                    <div class="holo-progress-container">
+                      <div
+                        id="bar-human"
+                        class="holo-progress-bar bg-[#00E5FF] w-[98.4%] shadow-[0_0_15px_#00E5FF]"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-xs font-black mb-2">
+                      <span class="text-[var(--text-200)] tracking-[0.1em]"
+                        >AI PROBABILITY</span
+                      >
+                      <span id="score-ai" class="text-white text-glow"
+                        >1.6%</span
+                      >
+                    </div>
+                    <div class="holo-progress-container">
+                      <div
+                        id="bar-ai"
+                        class="holo-progress-bar bg-[#D500F9] w-[1.6%] shadow-[0_0_15px_#D500F9]"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Text Segmentation Breakdown -->
+                <div
+                  id="text-breakdown-section"
+                  class="mt-8 pt-6 border-t border-white/10 hidden"
+                >
+                  <h4
+                    class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center"
+                  >
+                    Neural Segment Analysis
+                  </h4>
+
+                  <div class="grid grid-cols-1 gap-6">
+                    <!-- Human Section (Green Marker) -->
+                    <div
+                      class="border border-emerald-500/20 bg-emerald-500/5 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-colors"
+                    >
+                      <div class="flex items-center gap-3 mb-4">
+                        <span
+                          class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"
+                        >
+                          <i data-lucide="user" class="w-4 h-4"></i>
+                        </span>
+                        <span
+                          class="text-xs font-black tracking-wider text-emerald-400 uppercase"
+                          >Human-Origin Content (Green Marker)</span
+                        >
+                      </div>
+                      <div
+                        id="breakdown-human-text"
+                        class="text-sm text-gray-300 leading-relaxed max-h-[160px] overflow-y-auto pr-2 custom-scrollbar"
+                      >
+                        <!-- Populated dynamically -->
+                      </div>
+                    </div>
+
+                    <!-- AI Section (Blue Marker) -->
+                    <div
+                      class="border border-blue-500/20 bg-blue-500/5 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/40 transition-colors"
+                    >
+                      <div class="flex items-center gap-3 mb-4">
+                        <span
+                          class="p-2 rounded-lg bg-blue-500/10 text-blue-400"
+                        >
+                          <i data-lucide="cpu" class="w-4 h-4"></i>
+                        </span>
+                        <span
+                          class="text-xs font-black tracking-wider text-blue-400 uppercase"
+                          >Synthetic-Origin Content (Blue Marker)</span
+                        >
+                      </div>
+                      <div
+                        id="breakdown-ai-text"
+                        class="text-sm text-gray-300 leading-relaxed max-h-[160px] overflow-y-auto pr-2 custom-scrollbar"
+                      >
+                        <!-- Populated dynamically -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- File Metadata Analysis Breakdown -->
+                <div
+                  id="file-metadata-section"
+                  class="mt-8 pt-6 border-t border-white/10 hidden"
+                >
+                  <h4
+                    class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center"
+                  >
+                    File Analysis Metadata
+                  </h4>
+                  <div
+                    id="file-metadata-content"
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border border-[var(--accent-1)]/20 bg-[var(--accent-1)]/5 rounded-2xl p-6"
+                  >
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <!-- Neural Provenance Code Inspector -->
+                <div
+                  id="provenance-code-section"
+                  class="mt-8 pt-6 border-t border-white/10 hidden w-full"
+                >
+                  <h4
+                    class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center"
+                  >
+                    Neural Provenance Code Inspector
+                  </h4>
+                  <div
+                    class="border border-[#b829ff]/30 bg-[#050508] rounded-2xl p-6 relative overflow-hidden group shadow-[0_0_30px_rgba(184,41,255,0.05)]"
+                  >
+                    <!-- Glow accents -->
+                    <div
+                      class="absolute -top-10 -right-10 w-40 h-40 bg-[#b829ff]/10 rounded-full blur-3xl pointer-events-none"
+                    ></div>
+
+                    <!-- Terminal Header -->
+                    <div
+                      class="flex items-center justify-between border-b border-white/10 pb-4 mb-4 font-mono text-xs text-gray-500"
+                    >
+                      <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                        <span
+                          class="w-3 h-3 rounded-full bg-yellow-500/80"
+                        ></span>
+                        <span
+                          class="w-3 h-3 rounded-full bg-green-500/80"
+                        ></span>
+                        <span class="ml-2 text-[#b829ff] font-bold"
+                          >PROVENANCE_SHELL_v1.0.4_STABLE</span
+                        >
+                      </div>
+                      <span class="text-gray-600">ENCODING: UTF-8</span>
+                    </div>
+
+                    <!-- Terminal Body -->
+                    <pre
+                      class="font-mono text-xs leading-relaxed max-h-[300px] overflow-y-auto pr-2 custom-scrollbar text-[#a5f3fc] whitespace-pre-wrap break-all"
+                      id="provenance-code-content"
+                    ></pre>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 mt-8 w-full">
+                  <button
+                    id="copy-btn"
+                    class="w-full btn-glass flex items-center justify-center gap-2 py-4"
+                  >
+                    <i data-lucide="copy" class="w-4 h-4"></i> COPY REPORT
+                  </button>
+                  <button
+                    id="pdf-btn"
+                    class="hidden w-full btn-glass flex items-center justify-center gap-2 py-4"
+                  >
+                    <i data-lucide="file-down" class="w-4 h-4"></i> CONVERT TO
+                    PDF
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Error Message -->
+        <div
+          id="error-message"
+          class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-bold hidden flex items-center justify-center gap-2 text-sm"
+        >
+          <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+          <span id="error-text"></span>
+        </div>
       </div>
+    </main>
 
-      <!-- Error Message -->
-      <div id="error-message" class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-bold hidden flex items-center justify-center gap-2 text-sm">
-        <i data-lucide="alert-triangle" class="w-4 h-4"></i> <span id="error-text"></span>
-      </div>
-    </div>
-  </main>
+    <footer class="site-footer"></footer>
 
-  <footer class="site-footer"></footer>
-
-  <script src="js/i18n.js?v=1"></script>
-  <script src="js/footer.js?v=3"></script>
-  <script>
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-
-    // Premium Spotlight Effect (Overridden by cinematic.js, but kept for standalone compatibility)
-    document.querySelectorAll('.holo-panel').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
-      });
-    });
-  </script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/animations.js"></script>
-  <script src="js/cinematic.js?v=9.0"></script>
-  <script src="js/detector.js?v=2"></script>
-  <script>
-    // --- 10 NEW ADVANCED ANIMATIONS FOR DETECTOR PAGE ---
-
-    // 1. Navbar Dropdown Animation
-    const navBar = document.querySelector('.fixed.top-0');
-    if (navBar) gsap.from(navBar, { y: -100, opacity: 0, duration: 1.2, ease: "elastic.out(1, 0.5)", delay: 0.1 });
-
-    // 2. Hero Stagger Reveal
-    gsap.fromTo(['.hero-title', '.hero-sub'],
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: "power4.out", delay: 0.2 }
-    );
-
-    // 3. Tab Buttons Stagger Reveal
-    gsap.fromTo('.tab-btn',
-      { scale: 0.8, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.5)", delay: 0.5 }
-    );
-
-    // 4. Main Detector Card 3D Entry
-    gsap.fromTo('#main-detector-card',
-      { rotationX: -20, opacity: 0, scale: 0.9, y: 100 },
-      { rotationX: 0, opacity: 1, scale: 1, y: 0, duration: 1.2, ease: "power3.out", transformPerspective: 1000, delay: 0.6 }
-    );
-
-    // 5. Magnetic Buttons
-    document.querySelectorAll('.btn-magnetic, .btn-glass, .tab-btn').forEach(btn => {
-      btn.addEventListener('mousemove', e => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        gsap.to(btn, { x: x * 0.2, y: y * 0.2, duration: 0.4, ease: "power2.out" });
-      });
-      btn.addEventListener('mouseleave', () => {
-        gsap.to(btn, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.3)" });
-      });
-    });
-
-    // 6. Aurora Parallax Mouse Tracker (Handled globally by cinematic.js)
-
-    // 7. Icon Bounce on Tab Hover
-    document.querySelectorAll('.tab-btn').forEach(tab => {
-      const icon = tab.querySelector('svg');
-      if (icon) {
-        tab.addEventListener('mouseenter', () => gsap.to(icon, { y: -5, duration: 0.3, ease: "back.out(2)" }));
-        tab.addEventListener('mouseleave', () => gsap.to(icon, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" }));
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/footer.js?v=3"></script>
+    <script>
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
       }
-    });
 
-    // 8. 3D Tilt Hover on File Upload Box
-    initParallaxCard(document.getElementById('tab-content-file'));
+      // Premium Spotlight Effect (Overridden by cinematic.js, but kept for standalone compatibility)
+      document.querySelectorAll(".holo-panel").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty("--mouse-x", `${x}px`);
+          card.style.setProperty("--mouse-y", `${y}px`);
+        });
+      });
+    </script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/cinematic.js?v=9.0"></script>
+    <script src="js/detector.js?v=4"></script>
+    <script>
+      // --- 10 NEW ADVANCED ANIMATIONS FOR DETECTOR PAGE ---
 
-    // 9. Elastic Distortion on Primary Button Click
+      // 1. Navbar Dropdown Animation
+      const navBar = document.querySelector(".fixed.top-0");
+      if (navBar)
+        gsap.from(navBar, {
+          y: -100,
+          opacity: 0,
+          duration: 1.2,
+          ease: "elastic.out(1, 0.5)",
+          delay: 0.1,
+        });
 
+      // 2. Hero Stagger Reveal
+      gsap.fromTo(
+        [".hero-title", ".hero-sub"],
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: "power4.out",
+          delay: 0.2,
+        },
+      );
 
-  </script>
+      // 3. Tab Buttons Stagger Reveal
+      gsap.fromTo(
+        ".tab-btn",
+        { scale: 0.8, opacity: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "back.out(1.5)",
+          delay: 0.5,
+        },
+      );
+
+      // 4. Main Detector Card 3D Entry
+      gsap.fromTo(
+        "#main-detector-card",
+        { rotationX: -20, opacity: 0, scale: 0.9, y: 100 },
+        {
+          rotationX: 0,
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 1.2,
+          ease: "power3.out",
+          transformPerspective: 1000,
+          delay: 0.6,
+        },
+      );
+
+      // 5. Magnetic Buttons
+      document
+        .querySelectorAll(".btn-magnetic, .btn-glass, .tab-btn")
+        .forEach((btn) => {
+          btn.addEventListener("mousemove", (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            gsap.to(btn, {
+              x: x * 0.2,
+              y: y * 0.2,
+              duration: 0.4,
+              ease: "power2.out",
+            });
+          });
+          btn.addEventListener("mouseleave", () => {
+            gsap.to(btn, {
+              x: 0,
+              y: 0,
+              duration: 0.8,
+              ease: "elastic.out(1, 0.3)",
+            });
+          });
+        });
+
+      // 6. Aurora Parallax Mouse Tracker (Handled globally by cinematic.js)
+
+      // 7. Icon Bounce on Tab Hover
+      document.querySelectorAll(".tab-btn").forEach((tab) => {
+        const icon = tab.querySelector("svg");
+        if (icon) {
+          tab.addEventListener("mouseenter", () =>
+            gsap.to(icon, { y: -5, duration: 0.3, ease: "back.out(2)" }),
+          );
+          tab.addEventListener("mouseleave", () =>
+            gsap.to(icon, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" }),
+          );
+        }
+      });
+
+      // 8. 3D Tilt Hover on File Upload Box
+      initParallaxCard(document.getElementById("tab-content-file"));
+
+      // 9. Elastic Distortion on Primary Button Click
+    </script>
     <script src="js/signin.js?v=20260623-modal"></script>
     <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
-</body>
+  </body>
 </html>

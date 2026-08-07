@@ -1,178 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Information - 3truth</title>
-  <link rel="icon" href="assets/favicon.svg">
-  
-  <link rel="stylesheet" href="css/tailwind.css">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sora: ['Sora', 'sans-serif'],
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Information - 3truth</title>
+    <link rel="icon" href="assets/favicon.svg" />
+
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sora: ["Sora", "sans-serif"],
+            },
+            colors: {
+              cyan: {
+                400: "#2FEECC",
+                500: "#2FEECC",
+              },
+            },
           },
-          colors: {
-            cyan: {
-              400: '#2FEECC',
-              500: '#2FEECC',
-            }
-          }
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .bg-grid-white {
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.04)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
         }
       }
-    }
-  </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .bg-grid-white {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.04)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/main.css?v=6.1" />
+    <style>
+      body {
+        font-family: "Sora", sans-serif;
+        background-color: #031f1a;
+        color: #ffffff;
       }
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/main.css?v=6.1">
-  <style>
-    body {
-      font-family: 'Sora', sans-serif;
-      background-color: #031f1a;
-      color: #FFFFFF;
-    }
-    
-    .glow-border {
-      position: relative;
-    }
-    .glow-border::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.05), rgba(255,255,255,0.1));
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-  </style>
 
-  <!-- GSAP Core and Plugins -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
-  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="overflow-x-hidden">
-  
-  <!-- Film Grain Overlay -->
-  <div class="film-grain"></div>
+      .glow-border {
+        position: relative;
+      }
+      .glow-border::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.1)
+        );
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+    </style>
 
-  <!-- Background removed to ensure dark theme stays dark -->
+    <!-- GSAP Core and Plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="overflow-x-hidden">
+    <!-- Film Grain Overlay -->
+    <div class="film-grain"></div>
 
-  <!-- Navigation -->
-  <div class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
-    <!-- Left Logo -->
-    <a href="/" class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
+    <!-- Background removed to ensure dark theme stays dark -->
+
+    <!-- Navigation -->
+    <div
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+    >
+      <!-- Left Logo -->
+      <a
+        href="/"
+        class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <img
+            src="assets/Logo.png"
+            alt="Logo"
+            class="h-10 md:h-12 w-auto object-contain"
+          />
+        </div>
+        <span
+          class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70"
+          >By Futuregen</span
+        >
+      </a>
+
+      <!-- Centered Navigating Buttons -->
+      <div
+        class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1"
+      >
+        <a
+          href="/"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >HOME</a
+        >
+        <a
+          href="/scan"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >DETECTOR</a
+        >
+        <a
+          href="/plans"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >PRICING</a
+        >
       </div>
-      <span class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By Futuregen</span>
-    </a>
-    
-    <!-- Centered Navigating Buttons -->
-    <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-      <a href="/" class="text-white hover:text-[var(--accent-1)] transition-colors">HOME</a>
-      <a href="/scan" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <a href="/plans" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
-    </div>
 
-    <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-auto gap-4">
-      <a href="/login" id="nav-login-btn" class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
-    </div>
-
-    <!-- Mobile Toggle -->
-    <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="menu" class="w-8 h-8"></i>
-    </button>
-  </div>
-  
-  <!-- Sidebar (Mobile Menu) -->
-  <div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-    <button id="mobile-menu-close" class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="x" class="w-8 h-8"></i>
-    </button>
-    <div class="flex flex-col gap-6 text-2xl font-black">
-      <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
-      <a href="/scan" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="/plans" class="text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING</a>
-
-      <a href="/info?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
-      <a href="/info?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
-      <a href="/support" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
-      <a href="/login" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="relative z-10 min-h-screen flex flex-col items-center justify-start p-6 pt-32 pb-20">
-    <div class="w-full max-w-6xl text-center space-y-10">
-      
-      <!-- Label -->
-      <div id="page-label" class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mx-auto opacity-0 translate-y-4 transition-all duration-1000 ease-out">
-        <i data-lucide="info" class="w-4 h-4 text-cyan-400" id="label-icon"></i>
-        <span class="text-[12px] md:text-[14px] font-black tracking-[0.3em] uppercase text-gray-400" id="label-text">
-          Information
-        </span>
+      <!-- Right Action Buttons -->
+      <div class="hidden md:flex justify-end items-center w-auto gap-4">
+        <a
+          href="/login"
+          id="nav-login-btn"
+          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0"
+          >LOGIN</a
+        >
       </div>
-      
-      <!-- Title -->
-      <h1 class="text-5xl md:text-7xl font-black tracking-tighter" id="page-title">
-        <!-- Text animated via JS -->
-      </h1>
-      
-      <!-- Subtitle -->
-      <p class="text-xl md:text-2xl text-gray-400 font-bold max-w-2xl mx-auto uppercase tracking-widest leading-relaxed opacity-0" id="page-subtitle">
-        <!-- Text animated via JS -->
-      </p>
-      
-      <!-- Content Card -->
-      <div class="glow-border bg-[#031f1a]/80 backdrop-blur-md max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out" id="page-content-container">
-        <div class="text-gray-300 leading-relaxed text-base md:text-lg font-light space-y-6" id="page-content">
+
+      <!-- Mobile Toggle -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="menu" class="w-8 h-8"></i>
+      </button>
+    </div>
+
+    <!-- Sidebar (Mobile Menu) -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+    >
+      <button
+        id="mobile-menu-close"
+        class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+      <div class="flex flex-col gap-6 text-2xl font-black">
+        <a href="/" class="text-white hover:text-[var(--accent-1)]">HOME</a>
+        <a href="/scan" class="text-white hover:text-[var(--accent-1)]"
+          >DETECTOR</a
+        >
+        <a
+          href="/plans"
+          class="text-white hover:text-[var(--accent-1)] inline-block w-max"
+          >PRICING</a
+        >
+
+        <a
+          href="/info?page=docs"
+          class="text-white hover:text-[var(--accent-1)]"
+          >DOCUMENTATION</a
+        >
+        <a
+          href="/info?page=about"
+          class="text-white hover:text-[var(--accent-1)] mt-4"
+          >ABOUT US</a
+        >
+        <a href="/support" class="text-white hover:text-[var(--accent-1)]"
+          >CONTACT</a
+        >
+        <a
+          href="/login"
+          id="sidebar-login-link"
+          class="text-[var(--accent-2)] mt-8"
+          >LOGIN</a
+        >
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div
+      class="relative z-10 min-h-screen flex flex-col items-center justify-start p-6 pt-32 pb-20"
+    >
+      <div class="w-full max-w-6xl text-center space-y-10">
+        <!-- Label -->
+        <div
+          id="page-label"
+          class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mx-auto opacity-0 translate-y-4 transition-all duration-1000 ease-out"
+        >
+          <i
+            data-lucide="info"
+            class="w-4 h-4 text-cyan-400"
+            id="label-icon"
+          ></i>
+          <span
+            class="text-[12px] md:text-[14px] font-black tracking-[0.3em] uppercase text-gray-400"
+            id="label-text"
+          >
+            Information
+          </span>
+        </div>
+
+        <!-- Title -->
+        <h1
+          class="text-5xl md:text-7xl font-black tracking-tighter"
+          id="page-title"
+        >
           <!-- Text animated via JS -->
+        </h1>
+
+        <!-- Subtitle -->
+        <p
+          class="text-xl md:text-2xl text-gray-400 font-bold max-w-2xl mx-auto uppercase tracking-widest leading-relaxed opacity-0"
+          id="page-subtitle"
+        >
+          <!-- Text animated via JS -->
+        </p>
+
+        <!-- Content Card -->
+        <div
+          class="glow-border bg-[#031f1a]/80 backdrop-blur-md max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out"
+          id="page-content-container"
+        >
+          <div
+            class="text-gray-300 leading-relaxed text-base md:text-lg font-light space-y-6"
+            id="page-content"
+          >
+            <!-- Text animated via JS -->
+          </div>
+        </div>
+
+        <!-- Return Button -->
+        <div
+          class="pt-12 opacity-0 translate-y-4 transition-all duration-1000 delay-500 ease-out"
+          id="page-return"
+        >
+          <a
+            href="/"
+            class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors font-bold uppercase tracking-widest text-sm text-gray-300 hover:text-white group"
+          >
+            <i
+              data-lucide="arrow-left"
+              class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+            ></i>
+            Return Home
+          </a>
         </div>
       </div>
-      
-      <!-- Return Button -->
-      <div class="pt-12 opacity-0 translate-y-4 transition-all duration-1000 delay-500 ease-out" id="page-return">
-        <a href="/" class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors font-bold uppercase tracking-widest text-sm text-gray-300 hover:text-white group">
-          <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
-          Return Home
-        </a>
-      </div>
     </div>
-  </div>
 
-  <footer class="site-footer"></footer>
+    <footer class="site-footer"></footer>
 
-  <!-- Firebase Auth & Firestore -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Auth & Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-  <!-- External Scripts -->
-  <script src="js/i18n.js?v=1"></script>
-  <script src="js/animations.js"></script>
+    <!-- External Scripts -->
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/animations.js"></script>
     <script src="js/cinematic.js?v=6.0"></script>
-  <script src="js/footer.js?v=3"></script>
-  <script src="js/static.js"></script>
-  <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
-
-</body>
+    <script src="js/footer.js?v=3"></script>
+    <script src="js/static.js"></script>
+    <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
+  </body>
 </html>

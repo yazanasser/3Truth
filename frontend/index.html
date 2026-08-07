@@ -1,236 +1,306 @@
-<!DOCTYPE html>
-<html lang="en" style="scroll-behavior: smooth;">
+<!doctype html>
+<html lang="en" style="scroll-behavior: smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3truth | Global Intelligence</title>
+    <link rel="icon" href="assets/favicon.svg" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3truth | Global Intelligence</title>
-  <link rel="icon" href="assets/favicon.svg">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;600;800;900&display=swap"
-    rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tailwind.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
-  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <link rel="stylesheet" href="css/main.css?v=6.1" />
 
-  <link rel="stylesheet" href="css/main.css?v=6.1">
+    <style>
+      /* Custom CSS Particles */
+      .panel-particles {
+        mask-image: radial-gradient(white, black);
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
+      }
 
-  <style>
-    /* Custom CSS Particles */
-    .panel-particles {
-      mask-image: radial-gradient(white, black);
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-    }
+      .particle-wrap {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        perspective: 400px;
+        transform-style: preserve-3d;
+      }
 
-    .particle-wrap {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      perspective: 400px;
-      transform-style: preserve-3d;
-    }
-
-    .particle {
-      position: absolute;
-      width: 5px;
-      height: 5px;
-      background: var(--accent-1);
-      border-radius: 50%;
-      box-shadow: 0 0 16px var(--accent-1), 0 0 32px rgba(0, 229, 255, 0.35);
-      animation: float 10s infinite linear;
-      opacity: 0;
-    }
-
-    .particle-wrap:nth-child(1) .particle {
-      left: 10%;
-      top: 20%;
-      animation-duration: 8s;
-      animation-delay: 0s;
-    }
-
-    .particle-wrap:nth-child(2) .particle {
-      left: 80%;
-      top: 40%;
-      animation-duration: 12s;
-      animation-delay: -2s;
-      background: var(--accent-2);
-      box-shadow: 0 0 10px var(--accent-2);
-    }
-
-    .particle-wrap:nth-child(3) .particle {
-      left: 40%;
-      top: 80%;
-      animation-duration: 9s;
-      animation-delay: -5s;
-    }
-
-    .particle-wrap:nth-child(4) .particle {
-      left: 70%;
-      top: 10%;
-      animation-duration: 15s;
-      animation-delay: -7s;
-    }
-
-    .particle-wrap:nth-child(5) .particle {
-      left: 30%;
-      top: 50%;
-      animation-duration: 11s;
-      animation-delay: -1s;
-      background: var(--accent-3);
-      box-shadow: 0 0 10px var(--accent-3);
-    }
-
-    .particle-wrap:nth-child(6) .particle {
-      left: 90%;
-      top: 70%;
-      animation-duration: 14s;
-      animation-delay: -4s;
-    }
-
-    .particle-wrap:nth-child(7) .particle {
-      left: 20%;
-      top: 90%;
-      animation-duration: 10s;
-      animation-delay: -8s;
-    }
-
-    .particle-wrap:nth-child(8) .particle {
-      left: 50%;
-      top: 30%;
-      animation-duration: 13s;
-      animation-delay: -3s;
-    }
-
-    .particle-wrap:nth-child(9) .particle {
-      left: 85%;
-      top: 85%;
-      animation-duration: 16s;
-      animation-delay: -9s;
-      background: var(--accent-2);
-      box-shadow: 0 0 10px var(--accent-2);
-    }
-
-    .particle-wrap:nth-child(10) .particle {
-      left: 15%;
-      top: 15%;
-      animation-duration: 11s;
-      animation-delay: -6s;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(100px) scale(0);
+      .particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background: var(--accent-1);
+        border-radius: 50%;
+        box-shadow:
+          0 0 16px var(--accent-1),
+          0 0 32px rgba(0, 229, 255, 0.35);
+        animation: float 10s infinite linear;
         opacity: 0;
       }
 
-      20% {
-        opacity: 1;
+      .particle-wrap:nth-child(1) .particle {
+        left: 10%;
+        top: 20%;
+        animation-duration: 8s;
+        animation-delay: 0s;
       }
 
-      80% {
-        opacity: 1;
+      .particle-wrap:nth-child(2) .particle {
+        left: 80%;
+        top: 40%;
+        animation-duration: 12s;
+        animation-delay: -2s;
+        background: var(--accent-2);
+        box-shadow: 0 0 10px var(--accent-2);
       }
 
-      100% {
-        transform: translateY(-100px) scale(1);
-        opacity: 0;
+      .particle-wrap:nth-child(3) .particle {
+        left: 40%;
+        top: 80%;
+        animation-duration: 9s;
+        animation-delay: -5s;
       }
-    }
-  </style>
 
-  <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1">
-</head>
+      .particle-wrap:nth-child(4) .particle {
+        left: 70%;
+        top: 10%;
+        animation-duration: 15s;
+        animation-delay: -7s;
+      }
 
-<body class="bg-[var(--bg-100)] text-white" style="font-family: var(--font-primary);">
-  <div id="scroll-progress"
-    style="width:100%; height:2px; background:var(--accent-2); position:fixed; top:0; z-index:9999; transform-origin:left;">
-  </div>
+      .particle-wrap:nth-child(5) .particle {
+        left: 30%;
+        top: 50%;
+        animation-duration: 11s;
+        animation-delay: -1s;
+        background: var(--accent-3);
+        box-shadow: 0 0 10px var(--accent-3);
+      }
 
-  <!-- Backgrounds -->
-  <div class="aurora-container">
-    <div class="aurora-blob cyan"></div>
-    <div class="aurora-blob purple"></div>
-    <div class="aurora-blob pink"></div>
-  </div>
-  <div class="grid-overlay"></div>
+      .particle-wrap:nth-child(6) .particle {
+        left: 90%;
+        top: 70%;
+        animation-duration: 14s;
+        animation-delay: -4s;
+      }
 
+      .particle-wrap:nth-child(7) .particle {
+        left: 20%;
+        top: 90%;
+        animation-duration: 10s;
+        animation-delay: -8s;
+      }
 
-  <!-- Navigation -->
-  <div
-    class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center">
-    <!-- Left Logo -->
-    <a href="index.html"
-      class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <img src="assets/Logo.png" alt="Logo" class="h-10 md:h-12 w-auto object-contain">
-      </div>
-      <span
-        class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70">By
-        Futuregen</span>
-    </a>
+      .particle-wrap:nth-child(8) .particle {
+        left: 50%;
+        top: 30%;
+        animation-duration: 13s;
+        animation-delay: -3s;
+      }
 
-    <!-- Centered Navigating Buttons -->
-    <div class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1">
-      <a href="index.html" aria-current="page" class="text-[var(--accent-1)] transition-colors">HOME</a>
-      <a href="detector.html" class="text-white hover:text-[var(--accent-1)] transition-colors">DETECTOR</a>
-      <span style="position:relative;display:inline-flex;align-items:center;">
-        <a href="pricing.html" class="text-white hover:text-[var(--accent-1)] transition-colors">PRICING</a>
-      </span>
+      .particle-wrap:nth-child(9) .particle {
+        left: 85%;
+        top: 85%;
+        animation-duration: 16s;
+        animation-delay: -9s;
+        background: var(--accent-2);
+        box-shadow: 0 0 10px var(--accent-2);
+      }
+
+      .particle-wrap:nth-child(10) .particle {
+        left: 15%;
+        top: 15%;
+        animation-duration: 11s;
+        animation-delay: -6s;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(100px) scale(0);
+          opacity: 0;
+        }
+
+        20% {
+          opacity: 1;
+        }
+
+        80% {
+          opacity: 1;
+        }
+
+        100% {
+          transform: translateY(-100px) scale(1);
+          opacity: 0;
+        }
+      }
+    </style>
+
+    <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1" />
+  </head>
+
+  <body
+    class="bg-[var(--bg-100)] text-white"
+    style="font-family: var(--font-primary)"
+  >
+    <div
+      id="scroll-progress"
+      style="
+        width: 100%;
+        height: 2px;
+        background: var(--accent-2);
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        transform-origin: left;
+      "
+    ></div>
+
+    <!-- Backgrounds -->
+    <div class="aurora-container">
+      <div class="aurora-blob cyan"></div>
+      <div class="aurora-blob purple"></div>
+      <div class="aurora-blob pink"></div>
     </div>
+    <div class="grid-overlay"></div>
 
-    <!-- Right Action Buttons -->
-    <div class="hidden md:flex justify-end items-center w-auto gap-4">
-      <a href="signin.html" id="nav-login-btn"
-        class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0">LOGIN</a>
-    </div>
-  </div>
+    <!-- Navigation -->
+    <div
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+    >
+      <!-- Left Logo -->
+      <a
+        href="index.html"
+        class="flex flex-col items-start justify-center hover:opacity-80 transition-opacity w-auto flex-shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <img
+            src="assets/Logo.png"
+            alt="Logo"
+            class="h-10 md:h-12 w-auto object-contain"
+          />
+        </div>
+        <span
+          class="text-[10px] md:text-[12px] text-[var(--accent-1)] font-bold tracking-[0.2em] mt-1 uppercase opacity-70"
+          >By Futuregen</span
+        >
+      </a>
 
-  <!-- Sidebar (Mobile Menu) -->
-  <div id="mobile-menu"
-    class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-    <button id="mobile-menu-close" class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]">
-      <i data-lucide="x" class="w-8 h-8"></i>
-    </button>
-    <div class="flex flex-col gap-6 text-2xl font-black">
-      <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
-      <a href="detector.html" class="text-white hover:text-[var(--accent-1)]">DETECTOR</a>
-      <a href="pricing.html"
-        class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max">PRICING<a>
-
-      <a href="static.html?page=docs" class="text-white hover:text-[var(--accent-1)]">DOCUMENTATION</a>
-      <a href="static.html?page=about" class="text-white hover:text-[var(--accent-1)] mt-4">ABOUT US</a>
-      <a href="contact.html" class="text-white hover:text-[var(--accent-1)]">CONTACT</a>
-      <a href="signin.html" id="sidebar-login-link" class="text-[var(--accent-2)] mt-8">LOGIN</a>
-    </div>
-  </div>
-
-  <main class="relative z-10 font-mono mt-20">
-    <!-- Hero Section -->
-    <section
-      class="min-h-[90vh] flex flex-col items-center justify-center pt-32 pb-24 md:pt-40 md:pb-32 px-4 md:px-8 text-center gap-8 mb-16 md:mb-24">
+      <!-- Centered Navigating Buttons -->
       <div
-        class="inline-flex items-center gap-4 px-6 py-3 border border-[var(--accent-2)] text-xs sm:text-sm md:text-base font-black tracking-widest text-[var(--accent-2)] mb-10 hero-elem bg-[var(--accent-2)]/10 shadow-[0_0_20px_var(--accent-2)]">
-        <i data-lucide="alert-triangle" class="w-5 h-5 animate-pulse"></i>
-        NEURAL INTERROGATION ENGINE ONLINE
+        class="hidden md:flex justify-center items-center gap-8 font-black tracking-wider text-sm flex-1"
+      >
+        <a
+          href="index.html"
+          aria-current="page"
+          class="text-[var(--accent-1)] transition-colors"
+          >HOME</a
+        >
+        <a
+          href="detector.html"
+          class="text-white hover:text-[var(--accent-1)] transition-colors"
+          >DETECTOR</a
+        >
+        <span
+          style="position: relative; display: inline-flex; align-items: center"
+        >
+          <a
+            href="pricing.html"
+            class="text-white hover:text-[var(--accent-1)] transition-colors"
+            >PRICING</a
+          >
+        </span>
       </div>
 
-      <h1
-        class="hero-title text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase">
-        <span class="scramble-hover inline-block">ULTIMATE DETECTION PROTOCOL</span>
-      </h1>
+      <!-- Right Action Buttons -->
+      <div class="hidden md:flex justify-end items-center w-auto gap-4">
+        <a
+          href="signin.html"
+          id="nav-login-btn"
+          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0"
+          >LOGIN</a
+        >
+      </div>
+    </div>
 
+    <!-- Sidebar (Mobile Menu) -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+    >
+      <button
+        id="mobile-menu-close"
+        class="absolute top-6 right-6 text-white hover:text-[var(--accent-1)]"
+      >
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+      <div class="flex flex-col gap-6 text-2xl font-black">
+        <a href="index.html" class="text-[var(--accent-1)]">HOME</a>
+        <a href="detector.html" class="text-white hover:text-[var(--accent-1)]"
+          >DETECTOR</a
+        >
+        <a
+          href="pricing.html"
+          class="beta-nav-link text-white hover:text-[var(--accent-1)] inline-block w-max"
+          >PRICING</a
+        >
 
-    </section>
+        <a
+          href="static.html?page=docs"
+          class="text-white hover:text-[var(--accent-1)]"
+          >DOCUMENTATION</a
+        >
+        <a
+          href="static.html?page=about"
+          class="text-white hover:text-[var(--accent-1)] mt-4"
+          >ABOUT US</a
+        >
+        <a href="contact.html" class="text-white hover:text-[var(--accent-1)]"
+          >CONTACT</a
+        >
+        <a
+          href="signin.html"
+          id="sidebar-login-link"
+          class="text-[var(--accent-2)] mt-8"
+          >LOGIN</a
+        >
+      </div>
+    </div>
 
-    <!-- <div class="marquee-container mb-32 md:mb-48 mt-6 md:mt-10">
+    <main class="relative z-10 font-mono mt-20">
+      <!-- Hero Section -->
+      <section
+        class="min-h-[90vh] flex flex-col items-center justify-center pt-32 pb-24 md:pt-40 md:pb-32 px-4 md:px-8 text-center gap-8 mb-16 md:mb-24"
+      >
+        <div
+          class="inline-flex items-center gap-4 px-6 py-3 border border-[var(--accent-2)] text-xs sm:text-sm md:text-base font-black tracking-widest text-[var(--accent-2)] mb-10 hero-elem bg-[var(--accent-2)]/10 shadow-[0_0_20px_var(--accent-2)]"
+        >
+          <i data-lucide="alert-triangle" class="w-5 h-5 animate-pulse"></i>
+          NEURAL INTERROGATION ENGINE ONLINE
+        </div>
+
+        <h1
+          class="hero-title text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase"
+        >
+          <span class="scramble-hover inline-block"
+            >ULTIMATE DETECTION PROTOCOL</span
+          >
+        </h1>
+      </section>
+
+      <!-- <div class="marquee-container mb-32 md:mb-48 mt-6 md:mt-10">
       <div class="marquee-content">
         <div class="marquee-item"><i data-lucide="crosshair"></i> FORENSIC TRACKING ACTIVE</div>
         <div class="marquee-item"><i data-lucide="cpu"></i> NEURAL NETWORK SYNCHRONIZED</div>
@@ -243,390 +313,718 @@
       </div>
     </div> -->
 
-    <!-- Glowing Divider Line -->
-    <div
-      style="width: 100%; margin: 4rem 0 6rem 0; display: flex; align-items: center; justify-content: center; position: relative;">
+      <!-- Glowing Divider Line -->
       <div
-        style="height: 1px; width: 100%; background: linear-gradient(90deg, transparent, var(--accent-1), transparent); opacity: 0.8;">
+        style="
+          width: 100%;
+          margin: 4rem 0 6rem 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        "
+      >
+        <div
+          style="
+            height: 1px;
+            width: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              var(--accent-1),
+              transparent
+            );
+            opacity: 0.8;
+          "
+        ></div>
+        <div
+          style="
+            position: absolute;
+            width: 60%;
+            height: 3px;
+            background-color: var(--accent-1);
+            box-shadow: 0 0 40px 5px var(--accent-1);
+            border-radius: 9999px;
+          "
+        ></div>
       </div>
-      <div
-        style="position: absolute; width: 60%; height: 3px; background-color: var(--accent-1); box-shadow: 0 0 40px 5px var(--accent-1); border-radius: 9999px;">
-      </div>
-    </div>
 
-    <!-- Stats Section -->
-    <section class="py-16 md:py-24 px-4 md:px-8 w-full max-w-5xl mx-auto mb-12 md:mb-16 scroll-reveal">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-16">
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-1)] bg-black/80" data-speed="0.9" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
-          <div class="text-[var(--accent-1)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // ACCURACY</div>
-          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="99.9">0</span>%</h3>
-          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
-            <div class="h-full bg-[var(--accent-1)] w-[99%] shadow-[0_0_10px_var(--accent-1)]"></div>
+      <!-- Stats Section -->
+      <section
+        class="py-16 md:py-24 px-4 md:px-8 w-full max-w-5xl mx-auto mb-12 md:mb-16 scroll-reveal"
+      >
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-16"
+        >
+          <div
+            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-1)] bg-black/80"
+            data-speed="0.9"
+            data-tilt
+            data-tilt-max="15"
+            data-tilt-speed="400"
+            data-tilt-glare
+            data-tilt-max-glare="0.2"
+            style="transform-style: preserve-3d; transform: perspective(1000px)"
+          >
+            <div
+              class="text-[var(--accent-1)] text-xs mb-2 tracking-widest"
+              style="transform: translateZ(20px)"
+            >
+              SYS.METRIC // ACCURACY
+            </div>
+            <h3
+              class="text-4xl font-black text-white mb-2"
+              style="transform: translateZ(30px)"
+            >
+              <span class="counter-anim" data-target="99.9">0</span>%
+            </h3>
+            <div
+              class="w-full h-1 bg-white/10 mt-4"
+              style="transform: translateZ(10px)"
+            >
+              <div
+                class="h-full bg-[var(--accent-1)] w-[99%] shadow-[0_0_10px_var(--accent-1)]"
+              ></div>
+            </div>
+          </div>
+          <div
+            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-3)] bg-black/80"
+            data-speed="1.1"
+            data-tilt
+            data-tilt-max="15"
+            data-tilt-speed="400"
+            data-tilt-glare
+            data-tilt-max-glare="0.2"
+            style="transform-style: preserve-3d; transform: perspective(1000px)"
+          >
+            <div
+              class="text-[var(--accent-3)] text-xs mb-2 tracking-widest"
+              style="transform: translateZ(20px)"
+            >
+              SYS.METRIC // LATENCY
+            </div>
+            <h3
+              class="text-4xl font-black text-white mb-2"
+              style="transform: translateZ(30px)"
+            >
+              <span class="counter-anim" data-target="0.3">0</span>s
+            </h3>
+            <div
+              class="w-full h-1 bg-white/10 mt-4"
+              style="transform: translateZ(10px)"
+            >
+              <div
+                class="h-full bg-[var(--accent-3)] w-[10%] shadow-[0_0_10px_var(--accent-3)]"
+              ></div>
+            </div>
+          </div>
+          <div
+            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-2)] bg-black/80"
+            data-speed="0.8"
+            data-tilt
+            data-tilt-max="15"
+            data-tilt-speed="400"
+            data-tilt-glare
+            data-tilt-max-glare="0.2"
+            style="transform-style: preserve-3d; transform: perspective(1000px)"
+          >
+            <div
+              class="text-[var(--accent-2)] text-xs mb-2 tracking-widest"
+              style="transform: translateZ(20px)"
+            >
+              SYS.METRIC // SCANS
+            </div>
+            <h3
+              class="text-4xl font-black text-white mb-2"
+              style="transform: translateZ(30px)"
+            >
+              <span class="counter-anim" data-target="24">0</span>M+
+            </h3>
+            <div
+              class="w-full h-1 bg-white/10 mt-4"
+              style="transform: translateZ(10px)"
+            >
+              <div
+                class="h-full bg-[var(--accent-2)] w-[100%] shadow-[0_0_10px_var(--accent-2)]"
+              ></div>
+            </div>
           </div>
         </div>
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-3)] bg-black/80" data-speed="1.1" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
-          <div class="text-[var(--accent-3)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // LATENCY</div>
-          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="0.3">0</span>s</h3>
-          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
-            <div class="h-full bg-[var(--accent-3)] w-[10%] shadow-[0_0_10px_var(--accent-3)]"></div>
-          </div>
-        </div>
-        <div class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-2)] bg-black/80" data-speed="0.8" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2" style="transform-style: preserve-3d; transform: perspective(1000px);">
-          <div class="text-[var(--accent-2)] text-xs mb-2 tracking-widest" style="transform: translateZ(20px);">SYS.METRIC // SCANS</div>
-          <h3 class="text-4xl font-black text-white mb-2" style="transform: translateZ(30px);"><span class="counter-anim" data-target="24">0</span>M+</h3>
-          <div class="w-full h-1 bg-white/10 mt-4" style="transform: translateZ(10px);">
-            <div class="h-full bg-[var(--accent-2)] w-[100%] shadow-[0_0_10px_var(--accent-2)]"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Deep Dive Architecture -->
-    <section class="pt-8 pb-24 md:pt-12 md:pb-32 px-4 md:px-8 w-full max-w-5xl mx-auto scroll-reveal mb-12 md:mb-16">
-      <div class="flex flex-col lg:flex-row gap-16 md:gap-24 items-center">
-        <div class="w-full md:w-1/2">
-          <h2 class="text-3xl md:text-4xl font-outfit font-black mb-6 leading-tight uppercase text-white"><span
-              class="scramble-hover inline-block">DEEP NEURAL</span> <br><span
-              class="text-[var(--accent-2)] text-glow scramble-hover inline-block">INTERROGATION.</span></h2>
-          <p class="text-[var(--accent-1)] opacity-80 text-base mb-8 leading-relaxed">
-            > EXECUTING HEURISTIC ANALYSIS... <br>
-            Standard parsers fail against modern humanizers. We don't read words. We calculate the multi-dimensional
-            semantic vector distance between tokens. If a machine generated it, the math will betray it.
-          </p>
-          <ul class="space-y-4">
-            <li
-              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
-              <i data-lucide="fingerprint" class="text-[var(--accent-1)]" style="transform: translateZ(20px);"></i>
-              <span style="transform: translateZ(10px);">[1] Lexical Fingerprinting</span>
-            </li>
-            <li
-              class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
-              <i data-lucide="network" class="text-[var(--accent-3)]" style="transform: translateZ(20px);"></i>
-              <span style="transform: translateZ(10px);">[2] Structural Perplexity Mapping</span>
-            </li>
-            <li
-              class="flex items-center gap-4 text-[var(--accent-2)] font-bold text-lg border border-[var(--accent-2)] p-4 bg-[var(--accent-2)]/10 hover:bg-[var(--accent-2)]/20 transition-colors shadow-[0_0_15px_rgba(255,0,60,0.3)]" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
-              <i data-lucide="crosshair" class="text-[var(--accent-2)]" style="transform: translateZ(20px);"></i>
-              <span style="transform: translateZ(10px);">[3] Synthetic Anomaly Detection</span>
-            </li>
-          </ul>
-        </div>
-        <div class="w-full lg:w-1/2 relative" id="code-card-container">
-          <div class="absolute inset-4 bg-[var(--accent-2)] blur-[60px] opacity-10" id="code-glow"></div>
-          <div class="holo-panel p-6 relative z-10" id="code-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1" style="transform-style: preserve-3d;">
-            <div class="flex items-center justify-between border-b border-[var(--accent-2)]/30 pb-2 mb-4">
-              <span class="text-xs text-[var(--accent-2)] tracking-widest">TERMINAL // HEURISTIC_CORE.SYS</span>
-              <div class="flex gap-2">
-                <div class="w-3 h-3 border border-[var(--accent-2)] bg-[var(--accent-2)]/20"></div>
-                <div class="w-3 h-3 border border-[var(--accent-2)] bg-[var(--accent-2)]"></div>
+      <!-- Deep Dive Architecture -->
+      <section
+        class="pt-8 pb-24 md:pt-12 md:pb-32 px-4 md:px-8 w-full max-w-5xl mx-auto scroll-reveal mb-12 md:mb-16"
+      >
+        <div class="flex flex-col lg:flex-row gap-16 md:gap-24 items-center">
+          <div class="w-full md:w-1/2">
+            <h2
+              class="text-3xl md:text-4xl font-outfit font-black mb-6 leading-tight uppercase text-white"
+            >
+              <span class="scramble-hover inline-block">DEEP NEURAL</span>
+              <br /><span
+                class="text-[var(--accent-2)] text-glow scramble-hover inline-block"
+                >INTERROGATION.</span
+              >
+            </h2>
+            <p
+              class="text-[var(--accent-1)] opacity-80 text-base mb-8 leading-relaxed"
+            >
+              > EXECUTING HEURISTIC ANALYSIS... <br />
+              Standard parsers fail against modern humanizers. We don't read
+              words. We calculate the multi-dimensional semantic vector distance
+              between tokens. If a machine generated it, the math will betray
+              it.
+            </p>
+            <ul class="space-y-4">
+              <li
+                class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors"
+                data-tilt
+                data-tilt-max="10"
+                data-tilt-speed="400"
+                data-tilt-glare
+                data-tilt-max-glare="0.1"
+                style="transform-style: preserve-3d"
+              >
+                <i
+                  data-lucide="fingerprint"
+                  class="text-[var(--accent-1)]"
+                  style="transform: translateZ(20px)"
+                ></i>
+                <span style="transform: translateZ(10px)"
+                  >[1] Lexical Fingerprinting</span
+                >
+              </li>
+              <li
+                class="flex items-center gap-4 text-white font-bold text-lg border border-white/10 p-4 bg-black/50 hover:bg-white/5 transition-colors"
+                data-tilt
+                data-tilt-max="10"
+                data-tilt-speed="400"
+                data-tilt-glare
+                data-tilt-max-glare="0.1"
+                style="transform-style: preserve-3d"
+              >
+                <i
+                  data-lucide="network"
+                  class="text-[var(--accent-3)]"
+                  style="transform: translateZ(20px)"
+                ></i>
+                <span style="transform: translateZ(10px)"
+                  >[2] Structural Perplexity Mapping</span
+                >
+              </li>
+              <li
+                class="flex items-center gap-4 text-[var(--accent-2)] font-bold text-lg border border-[var(--accent-2)] p-4 bg-[var(--accent-2)]/10 hover:bg-[var(--accent-2)]/20 transition-colors shadow-[0_0_15px_rgba(255,0,60,0.3)]"
+                data-tilt
+                data-tilt-max="10"
+                data-tilt-speed="400"
+                data-tilt-glare
+                data-tilt-max-glare="0.1"
+                style="transform-style: preserve-3d"
+              >
+                <i
+                  data-lucide="crosshair"
+                  class="text-[var(--accent-2)]"
+                  style="transform: translateZ(20px)"
+                ></i>
+                <span style="transform: translateZ(10px)"
+                  >[3] Synthetic Anomaly Detection</span
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="w-full lg:w-1/2 relative" id="code-card-container">
+            <div
+              class="absolute inset-4 bg-[var(--accent-2)] blur-[60px] opacity-10"
+              id="code-glow"
+            ></div>
+            <div
+              class="holo-panel p-6 relative z-10"
+              id="code-card"
+              data-tilt
+              data-tilt-max="10"
+              data-tilt-speed="400"
+              data-tilt-glare
+              data-tilt-max-glare="0.1"
+              style="transform-style: preserve-3d"
+            >
+              <div
+                class="flex items-center justify-between border-b border-[var(--accent-2)]/30 pb-2 mb-4"
+              >
+                <span class="text-xs text-[var(--accent-2)] tracking-widest"
+                  >TERMINAL // HEURISTIC_CORE.SYS</span
+                >
+                <div class="flex gap-2">
+                  <div
+                    class="w-3 h-3 border border-[var(--accent-2)] bg-[var(--accent-2)]/20"
+                  ></div>
+                  <div
+                    class="w-3 h-3 border border-[var(--accent-2)] bg-[var(--accent-2)]"
+                  ></div>
+                </div>
+              </div>
+              <div
+                class="font-mono text-sm text-[var(--accent-1)] leading-relaxed"
+              >
+                > init scan_protocol --depth=max<br />
+                <span class="text-white opacity-60"
+                  >> analyzing vector space...</span
+                ><br />
+                <span class="text-white opacity-60"
+                  >> calculating perplexity matrix...</span
+                ><br />
+                <br />
+                <span class="text-[var(--accent-3)]">let</span>
+                <span class="text-white">entropy</span> =
+                computeEntropy(targetData);<br />
+                <span class="text-[var(--accent-3)]">let</span>
+                <span class="text-white">burst</span> =
+                analyzeBurstiness(targetData);<br />
+                <br />
+                <span class="text-[var(--accent-3)]">if</span> (entropy <
+                <span class="text-yellow-400">0.34</span> && burst <
+                <span class="text-yellow-400">0.18</span>) {<br />
+                &nbsp;&nbsp;<span class="text-white"
+                  >executeThreatResponse(</span
+                ><span class="text-[var(--accent-2)]">"SYNTHETIC_ORIGIN"</span
+                ><span class="text-white">);</span><br />
+                } <span class="text-[var(--accent-3)]">else</span> {<br />
+                &nbsp;&nbsp;<span class="text-white">return </span
+                ><span class="text-[var(--accent-1)]">"ORGANIC_ORIGIN"</span
+                >;<br />
+                }<br />
+                <br />
+                <span class="text-[var(--accent-2)] animate-pulse font-bold"
+                  >> THREAT DETECTED. SYNTHETIC ORIGIN CONFIRMED.</span
+                >
               </div>
             </div>
-            <div class="font-mono text-sm text-[var(--accent-1)] leading-relaxed">
-              > init scan_protocol --depth=max<br>
-              <span class="text-white opacity-60">> analyzing vector space...</span><br>
-              <span class="text-white opacity-60">> calculating perplexity matrix...</span><br>
-              <br>
-              <span class="text-[var(--accent-3)]">let</span> <span class="text-white">entropy</span> =
-              computeEntropy(targetData);<br>
-              <span class="text-[var(--accent-3)]">let</span> <span class="text-white">burst</span> =
-              analyzeBurstiness(targetData);<br>
-              <br>
-              <span class="text-[var(--accent-3)]">if</span> (entropy < <span class="text-yellow-400">0.34</span> &&
-                burst < <span class="text-yellow-400">0.18</span>) {<br>
-                  &nbsp;&nbsp;<span class="text-white">executeThreatResponse(</span><span
-                    class="text-[var(--accent-2)]">"SYNTHETIC_ORIGIN"</span><span class="text-white">);</span><br>
-                  } <span class="text-[var(--accent-3)]">else</span> {<br>
-                  &nbsp;&nbsp;<span class="text-white">return </span><span
-                    class="text-[var(--accent-1)]">"ORGANIC_ORIGIN"</span>;<br>
-                  }<br>
-                  <br>
-                  <span class="text-[var(--accent-2)] animate-pulse font-bold">> THREAT DETECTED. SYNTHETIC ORIGIN
-                    CONFIRMED.</span>
-            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Bento Grid Features -->
-    <section class="pt-6 pb-16 md:pt-8 md:pb-24 px-4 md:px-8 w-full max-w-5xl mx-auto scroll-reveal mb-12 md:mb-16">
-      <div class="mb-12 border-l-4 border-[var(--accent-1)] pl-6 py-2">
-        <h2 class="text-2xl md:text-3xl font-outfit font-black text-[var(--accent-1)] uppercase scramble-hover">>>
-          SYSTEM CAPABILITIES</h2>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 stagger-children">
-        <div
-          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group hover:border-[var(--accent-1)] transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
-          <i data-lucide="cpu" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">QUANTUM-LEVEL PARSING</h3>
-          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm" style="transform: translateZ(10px);">> Dissects semantic structures at the
-            token level, finding the probabilistic gaps machines mathematically depend on.</p>
+      <!-- Bento Grid Features -->
+      <section
+        class="pt-6 pb-16 md:pt-8 md:pb-24 px-4 md:px-8 w-full max-w-5xl mx-auto scroll-reveal mb-12 md:mb-16"
+      >
+        <div class="mb-12 border-l-4 border-[var(--accent-1)] pl-6 py-2">
+          <h2
+            class="text-2xl md:text-3xl font-outfit font-black text-[var(--accent-1)] uppercase scramble-hover"
+          >
+            >> SYSTEM CAPABILITIES
+          </h2>
         </div>
 
         <div
-          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-3)]/30 hover:border-[var(--accent-3)] transition-colors bg-gradient-to-tr from-black to-[var(--accent-3)]/5" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
-          <i data-lucide="zap" class="w-12 h-12 text-[var(--accent-3)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">LIGHTSPEED</h3>
-          <p class="text-[var(--accent-3)] opacity-70 relative z-10 text-sm" style="transform: translateZ(10px);">> Engineered for absolute speed. Processing
-            10,000 tokens in &lt;200ms.</p>
-        </div>
-
-        <div
-          class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-2)]/30 hover:border-[var(--accent-2)] transition-colors bg-gradient-to-br from-black to-[var(--accent-2)]/5" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
-          <i data-lucide="shield-check" class="w-12 h-12 text-[var(--accent-2)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">BLACK BOX SECURE</h3>
-          <p class="text-[var(--accent-2)] opacity-70 relative z-10 text-sm" style="transform: translateZ(10px);">> Complete isolation. Zero data retention.
-            Military-grade privacy.</p>
-        </div>
-
-        <div
-          class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group bg-gradient-to-t from-[var(--accent-1)]/10 to-transparent hover:border-[var(--accent-1)] transition-colors" data-tilt data-tilt-max="10" data-tilt-speed="400" style="transform-style: preserve-3d;">
-          <i data-lucide="scan" class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10" style="transform: translateZ(30px);"></i>
-          <h3 class="text-3xl font-outfit font-black mb-2 relative z-10 text-white" style="transform: translateZ(20px);">OMNI-CHANNEL FORENSICS</h3>
-          <p class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm" style="transform: translateZ(10px);">> Seamlessly pivot between Text,
-            Code, and Hex analysis in one unified intelligence dashboard.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- GSAP Horizontal Scroll Section -->
-    <section class="horizontal-section border-y border-[var(--accent-1)]/30" id="horizontal-trigger">
-      <div class="horizontal-track" id="horizontal-track">
-        <div class="horizontal-panel relative" style="background: var(--bg-200);">
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 stagger-children"
+        >
+          <div
+            class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group hover:border-[var(--accent-1)] transition-colors"
+            data-tilt
+            data-tilt-max="10"
+            data-tilt-speed="400"
+            style="transform-style: preserve-3d"
+          >
+            <i
+              data-lucide="cpu"
+              class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10"
+              style="transform: translateZ(30px)"
+            ></i>
+            <h3
+              class="text-3xl font-outfit font-black mb-2 relative z-10 text-white"
+              style="transform: translateZ(20px)"
+            >
+              QUANTUM-LEVEL PARSING
+            </h3>
+            <p
+              class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm"
+              style="transform: translateZ(10px)"
+            >
+              > Dissects semantic structures at the token level, finding the
+              probabilistic gaps machines mathematically depend on.
+            </p>
+          </div>
 
           <div
-            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
+            class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-3)]/30 hover:border-[var(--accent-3)] transition-colors bg-gradient-to-tr from-black to-[var(--accent-3)]/5"
+            data-tilt
+            data-tilt-max="10"
+            data-tilt-speed="400"
+            style="transform-style: preserve-3d"
+          >
+            <i
+              data-lucide="zap"
+              class="w-12 h-12 text-[var(--accent-3)] mb-4 relative z-10"
+              style="transform: translateZ(30px)"
+            ></i>
+            <h3
+              class="text-3xl font-outfit font-black mb-2 relative z-10 text-white"
+              style="transform: translateZ(20px)"
+            >
+              LIGHTSPEED
+            </h3>
+            <p
+              class="text-[var(--accent-3)] opacity-70 relative z-10 text-sm"
+              style="transform: translateZ(10px)"
+            >
+              > Engineered for absolute speed. Processing 10,000 tokens in
+              &lt;200ms.
+            </p>
           </div>
-
-          <div class="panel-inner">
-            <span
-              class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-1)] inline-block px-3 py-1" style="background-color: rgba(47, 238, 204, 0.1);">
-              PHASE 01: INGESTION</span>
-            <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase text-glow">Target Acquisition</h3>
-            <p class="text-[var(--accent-1)] opacity-80 text-xl leading-relaxed">Input target data vector. Accepts raw
-              text, documents, or direct API streams. Capacity up to 500,000 parameters per cycle.</p>
-          </div>
-          <div class="panel-number text-[var(--accent-1)] opacity-5">01</div>
-        </div>
-        <div class="horizontal-panel relative" style="background: var(--bg-300);">
 
           <div
-            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
+            class="spotlight-card p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group border border-[var(--accent-2)]/30 hover:border-[var(--accent-2)] transition-colors bg-gradient-to-br from-black to-[var(--accent-2)]/5"
+            data-tilt
+            data-tilt-max="10"
+            data-tilt-speed="400"
+            style="transform-style: preserve-3d"
+          >
+            <i
+              data-lucide="shield-check"
+              class="w-12 h-12 text-[var(--accent-2)] mb-4 relative z-10"
+              style="transform: translateZ(30px)"
+            ></i>
+            <h3
+              class="text-3xl font-outfit font-black mb-2 relative z-10 text-white"
+              style="transform: translateZ(20px)"
+            >
+              BLACK BOX SECURE
+            </h3>
+            <p
+              class="text-[var(--accent-2)] opacity-70 relative z-10 text-sm"
+              style="transform: translateZ(10px)"
+            >
+              > Complete isolation. Zero data retention. Military-grade privacy.
+            </p>
           </div>
-
-          <div class="panel-inner">
-            <span
-              class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-3)] inline-block px-3 py-1" style="background-color: rgba(223, 255, 248, 0.1);">
-              PHASE 02: ANALYSIS</span>
-            <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase"
-              style="text-shadow: 0 0 15px var(--accent-3)">Neural Dissection</h3>
-            <p class="text-[var(--accent-3)] opacity-80 text-xl leading-relaxed">Running 47 parallel heuristic models.
-              Cross-referencing token entropy and structural repetition against known LLM architectures.</p>
-          </div>
-          <div class="panel-number text-[var(--accent-3)] opacity-5">02</div>
-        </div>
-        <div class="horizontal-panel relative" style="background: var(--bg-400);">
 
           <div
-            class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen">
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
-            <div class="particle-wrap">
-              <div class="particle"></div>
-            </div>
+            class="spotlight-card col-span-1 sm:col-span-2 lg:col-span-2 p-8 md:p-12 min-h-[300px] flex flex-col justify-end relative overflow-hidden group bg-gradient-to-t from-[var(--accent-1)]/10 to-transparent hover:border-[var(--accent-1)] transition-colors"
+            data-tilt
+            data-tilt-max="10"
+            data-tilt-speed="400"
+            style="transform-style: preserve-3d"
+          >
+            <i
+              data-lucide="scan"
+              class="w-12 h-12 text-[var(--accent-1)] mb-4 relative z-10"
+              style="transform: translateZ(30px)"
+            ></i>
+            <h3
+              class="text-3xl font-outfit font-black mb-2 relative z-10 text-white"
+              style="transform: translateZ(20px)"
+            >
+              OMNI-CHANNEL FORENSICS
+            </h3>
+            <p
+              class="text-[var(--accent-1)] opacity-70 relative z-10 w-3/4 text-sm"
+              style="transform: translateZ(10px)"
+            >
+              > Seamlessly pivot between Text, Code, and Hex analysis in one
+              unified intelligence dashboard.
+            </p>
           </div>
-
-          <div class="panel-inner">
-            <span
-              class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-2)] inline-block px-3 py-1" style="background-color: rgba(168, 255, 240, 0.1);">
-              PHASE 03: EXECUTION</span>
-            <h3 class="text-white font-outfit text-6xl font-black mb-6 uppercase"
-              style="text-shadow: 0 0 15px var(--accent-2)">Terminal Verdict</h3>
-            <p class="text-[var(--accent-2)] opacity-80 text-xl leading-relaxed">Generate absolute forensic confidence
-              score. Heatmap pinpointing exact synthetic injection points down to the character.</p>
-          </div>
-          <div class="panel-number text-[var(--accent-2)] opacity-5">03</div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Call to Action -->
-    <section class="py-16 md:py-24 px-4 w-full max-w-7xl mx-auto text-center scroll-reveal relative">
-      <div
-        class="relative z-10 border border-[var(--accent-1)] p-8 md:p-12 bg-black/80 backdrop-blur-md shadow-[0_0_40px_rgba(6,182,212,0.1)]">
-        <i data-lucide="shield-alert" class="w-20 h-20 text-[var(--accent-2)] mx-auto mb-8 animate-pulse"></i>
-        <h2 class="text-6xl md:text-7xl font-outfit font-black mb-8 text-white uppercase tracking-wider text-glow">
-          START DETECTING NOW</h2>
-        <p class="text-[var(--accent-1)] font-mono text-xl mb-12">> AWAITING COMMAND. INITIATE PROTOCOL TO BEGIN
-          FORENSIC SCAN.</p>
-        <a href="detector.html"
-          class="btn-magnetic bg-[var(--accent-1)] text-black border-none hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px_var(--accent-1)] text-lg px-8 py-4">
-          <span>EXECUTE SCANNER</span>
-        </a>
-      </div>
-    </section>
+      <!-- GSAP Horizontal Scroll Section -->
+      <section
+        class="horizontal-section border-y border-[var(--accent-1)]/30"
+        id="horizontal-trigger"
+      >
+        <div class="horizontal-track" id="horizontal-track">
+          <div
+            class="horizontal-panel relative"
+            style="background: var(--bg-200)"
+          >
+            <div
+              class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen"
+            >
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+            </div>
 
-  </main>
+            <div class="panel-inner">
+              <span
+                class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-1)] inline-block px-3 py-1"
+                style="background-color: rgba(47, 238, 204, 0.1)"
+              >
+                PHASE 01: INGESTION</span
+              >
+              <h3
+                class="text-white font-outfit text-6xl font-black mb-6 uppercase text-glow"
+              >
+                Target Acquisition
+              </h3>
+              <p
+                class="text-[var(--accent-1)] opacity-80 text-xl leading-relaxed"
+              >
+                Input target data vector. Accepts raw text, documents, or direct
+                API streams. Capacity up to 500,000 parameters per cycle.
+              </p>
+            </div>
+            <div class="panel-number text-[var(--accent-1)] opacity-5">01</div>
+          </div>
+          <div
+            class="horizontal-panel relative"
+            style="background: var(--bg-300)"
+          >
+            <div
+              class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen"
+            >
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+            </div>
 
-  <footer
-    class="site-footer border-t border-[var(--accent-1)]/30 mt-20 pt-10 pb-10 text-center font-mono text-sm text-[var(--accent-1)]/50 bg-black/50">
-    <div>3TRUTH GLOBAL INTELLIGENCE Â© 2026. ALL SYSTEMS CLASSIFIED.</div>
-  </footer>
+            <div class="panel-inner">
+              <span
+                class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-3)] inline-block px-3 py-1"
+                style="background-color: rgba(223, 255, 248, 0.1)"
+              >
+                PHASE 02: ANALYSIS</span
+              >
+              <h3
+                class="text-white font-outfit text-6xl font-black mb-6 uppercase"
+                style="text-shadow: 0 0 15px var(--accent-3)"
+              >
+                Neural Dissection
+              </h3>
+              <p
+                class="text-[var(--accent-3)] opacity-80 text-xl leading-relaxed"
+              >
+                Running 47 parallel heuristic models. Cross-referencing token
+                entropy and structural repetition against known LLM
+                architectures.
+              </p>
+            </div>
+            <div class="panel-number text-[var(--accent-3)] opacity-5">02</div>
+          </div>
+          <div
+            class="horizontal-panel relative"
+            style="background: var(--bg-400)"
+          >
+            <div
+              class="panel-particles absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-80 mix-blend-screen"
+            >
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+              <div class="particle-wrap">
+                <div class="particle"></div>
+              </div>
+            </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/i18n.js?v=1"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/footer.js?v=3"></script>
-  <script src="js/animations.js"></script>
-  <script src="js/cinematic.js?v=9.0"></script>
-  <script>
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
+            <div class="panel-inner">
+              <span
+                class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-2)] inline-block px-3 py-1"
+                style="background-color: rgba(168, 255, 240, 0.1)"
+              >
+                PHASE 03: EXECUTION</span
+              >
+              <h3
+                class="text-white font-outfit text-6xl font-black mb-6 uppercase"
+                style="text-shadow: 0 0 15px var(--accent-2)"
+              >
+                Terminal Verdict
+              </h3>
+              <p
+                class="text-[var(--accent-2)] opacity-80 text-xl leading-relaxed"
+              >
+                Generate absolute forensic confidence score. Heatmap pinpointing
+                exact synthetic injection points down to the character.
+              </p>
+            </div>
+            <div class="panel-number text-[var(--accent-2)] opacity-5">03</div>
+          </div>
+        </div>
+      </section>
 
-    // Spotlight Effect overrides
-    document.querySelectorAll('.spotlight-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-      });
-    });
+      <!-- Call to Action -->
+      <section
+        class="py-16 md:py-24 px-4 w-full max-w-7xl mx-auto text-center scroll-reveal relative"
+      >
+        <div
+          class="relative z-10 border border-[var(--accent-1)] p-8 md:p-12 bg-black/80 backdrop-blur-md shadow-[0_0_40px_rgba(6,182,212,0.1)]"
+        >
+          <i
+            data-lucide="shield-alert"
+            class="w-20 h-20 text-[var(--accent-2)] mx-auto mb-8 animate-pulse"
+          ></i>
+          <h2
+            class="text-6xl md:text-7xl font-outfit font-black mb-8 text-white uppercase tracking-wider text-glow"
+          >
+            START DETECTING NOW
+          </h2>
+          <p class="text-[var(--accent-1)] font-mono text-xl mb-12">
+            > AWAITING COMMAND. INITIATE PROTOCOL TO BEGIN FORENSIC SCAN.
+          </p>
+          <a
+            href="detector.html"
+            class="btn-magnetic bg-[var(--accent-1)] text-black border-none hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px_var(--accent-1)] text-lg px-8 py-4"
+          >
+            <span>EXECUTE SCANNER</span>
+          </a>
+        </div>
+      </section>
+    </main>
 
-    // Custom GSAP logic specific to index.html
-    const path = document.getElementById('scroll-glow');
-    if (path) {
-      const length = path.getTotalLength();
-      path.style.strokeDasharray = length;
-      path.style.strokeDashoffset = length;
+    <footer
+      class="site-footer border-t border-[var(--accent-1)]/30 mt-20 pt-10 pb-10 text-center font-mono text-sm text-[var(--accent-1)]/50 bg-black/50"
+    >
+      <div>3TRUTH GLOBAL INTELLIGENCE Â© 2026. ALL SYSTEMS CLASSIFIED.</div>
+    </footer>
 
-      gsap.to(path, {
-        strokeDashoffset: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: "body",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1
-        }
-      });
-    }
-
-    // Parallax Cards
-    gsap.utils.toArray('.parallax-card').forEach(card => {
-      const speed = card.getAttribute('data-speed');
-      gsap.to(card, {
-        y: () => (1 - parseFloat(speed)) * 100,
-        ease: "none",
-        scrollTrigger: {
-          trigger: card,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true
-        }
-      });
-    });
-
-    // Custom preloader logic (if needed to override cinematic.js)
-    setTimeout(() => {
-      const preloader = document.getElementById('preloader');
-      if (preloader) {
-        gsap.to(preloader, { opacity: 0, duration: 0.5, onComplete: () => preloader.remove() });
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/footer.js?v=3"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/cinematic.js?v=9.0"></script>
+    <script>
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
       }
-    }, 1000);
-  </script>
-  <script src="js/signin.js?v=20260623-modal"></script>
-  <script src="js/nav-state.js?v=20260623-modal"></script>
-  <script src="js/aurora-fix.js?v=20260613-ui1"></script>
-  <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
-</body>
 
+      // Spotlight Effect overrides
+      document.querySelectorAll(".spotlight-card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
+          card.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
+        });
+      });
+
+      // Custom GSAP logic specific to index.html
+      const path = document.getElementById("scroll-glow");
+      if (path) {
+        const length = path.getTotalLength();
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+
+        gsap.to(path, {
+          strokeDashoffset: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: "body",
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1,
+          },
+        });
+      }
+
+      // Parallax Cards
+      gsap.utils.toArray(".parallax-card").forEach((card) => {
+        const speed = card.getAttribute("data-speed");
+        gsap.to(card, {
+          y: () => (1 - parseFloat(speed)) * 100,
+          ease: "none",
+          scrollTrigger: {
+            trigger: card,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      });
+
+      // Custom preloader logic (if needed to override cinematic.js)
+      setTimeout(() => {
+        const preloader = document.getElementById("preloader");
+        if (preloader) {
+          gsap.to(preloader, {
+            opacity: 0,
+            duration: 0.5,
+            onComplete: () => preloader.remove(),
+          });
+        }
+      }, 1000);
+    </script>
+    <script src="js/signin.js?v=20260623-modal"></script>
+    <script src="js/nav-state.js?v=20260623-modal"></script>
+    <script src="js/aurora-fix.js?v=20260613-ui1"></script>
+    <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
+  </body>
 </html>

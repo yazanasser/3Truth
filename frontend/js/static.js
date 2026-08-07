@@ -1,15 +1,15 @@
 // static.js - Handles dynamic content rendering for static information pages
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Lucide Icons
-    lucide.createIcons();
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize Lucide Icons
+  lucide.createIcons();
 
-    // Content definitions matching the original StaticPage.jsx
-    const pageContent = {
-        docs: {
-            title: 'Documentation',
-            subtitle: 'Everything you need to know about AI Detector.',
-            content: `
+  // Content definitions matching the original StaticPage.jsx
+  const pageContent = {
+    docs: {
+      title: "Documentation",
+      subtitle: "Everything you need to know about AI Detector.",
+      content: `
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Getting Started</h3>
@@ -87,12 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               </div>
-            `
-        },
-        about: {
-            title: 'About Us',
-            subtitle: 'Empowering trust in the digital age.',
-            content: `
+            `,
+    },
+    about: {
+      title: "About Us",
+      subtitle: "Empowering trust in the digital age.",
+      content: `
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Our Mission</h3>
@@ -153,22 +153,24 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               </div>
-            `
-        },
-        careers: {
-            title: 'Careers',
-            subtitle: 'Join our mission to build a more transparent web.',
-            content: 'We are always looking for talented individuals to join our team. While we are not currently listing open positions, we encourage you to check back as we continue to grow.'
-        },
-        blog: {
-            title: 'Blog',
-            subtitle: 'Insights and updates from the AI Detector team.',
-            content: 'Stay tuned for the latest news, research insights, and platform updates from our experts in artificial intelligence and digital authenticity.'
-        },
-        contact: {
-            title: 'Contact Us',
-            subtitle: 'We would love to hear from you.',
-            content: `
+            `,
+    },
+    careers: {
+      title: "Careers",
+      subtitle: "Join our mission to build a more transparent web.",
+      content:
+        "We are always looking for talented individuals to join our team. While we are not currently listing open positions, we encourage you to check back as we continue to grow.",
+    },
+    blog: {
+      title: "Blog",
+      subtitle: "Insights and updates from the AI Detector team.",
+      content:
+        "Stay tuned for the latest news, research insights, and platform updates from our experts in artificial intelligence and digital authenticity.",
+    },
+    contact: {
+      title: "Contact Us",
+      subtitle: "We would love to hear from you.",
+      content: `
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">Get In Touch</h3>
@@ -183,35 +185,39 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               </div>
-            `
-        },
-        privacy: {
-            title: 'Privacy Policy',
-            subtitle: 'How we protect your data.',
-            content: 'At AI Detector, we take your privacy seriously. We only collect the minimal amount of data necessary to provide our services. A comprehensive privacy policy outlining our data practices is being finalized.'
-        },
-        terms: {
-            title: 'Terms of Service',
-            subtitle: 'The rules of the road.',
-            content: 'These terms outline the rules and regulations for the use of AI Detector\'s website and services. Our legal team is currently updating these terms for clarity and transparency.'
-        },
-        cookies: {
-            title: 'Cookie Policy',
-            subtitle: 'Understanding our use of cookies.',
-            content: 'We use cookies to enhance your browsing experience and analyze site traffic. Detailed information about the specific cookies we use and how to manage your preferences will be available here.'
-        },
-        security: {
-            title: 'Security',
-            subtitle: 'Enterprise-grade protection.',
-            content: 'We employ industry-leading security practices to ensure your data and interactions with our platform remain safe. Detailed security documentation and compliance certificates are being prepared.'
-        }
-    };
+            `,
+    },
+    privacy: {
+      title: "Privacy Policy",
+      subtitle: "How we protect your data.",
+      content:
+        "At AI Detector, we take your privacy seriously. We only collect the minimal amount of data necessary to provide our services. A comprehensive privacy policy outlining our data practices is being finalized.",
+    },
+    terms: {
+      title: "Terms of Service",
+      subtitle: "The rules of the road.",
+      content:
+        "These terms outline the rules and regulations for the use of AI Detector's website and services. Our legal team is currently updating these terms for clarity and transparency.",
+    },
+    cookies: {
+      title: "Cookie Policy",
+      subtitle: "Understanding our use of cookies.",
+      content:
+        "We use cookies to enhance your browsing experience and analyze site traffic. Detailed information about the specific cookies we use and how to manage your preferences will be available here.",
+    },
+    security: {
+      title: "Security",
+      subtitle: "Enterprise-grade protection.",
+      content:
+        "We employ industry-leading security practices to ensure your data and interactions with our platform remain safe. Detailed security documentation and compliance certificates are being prepared.",
+    },
+  };
 
-    if (window._3truthI18n && window._3truthI18n.isArabic()) {
-        Object.assign(pageContent.docs, {
-            title: 'التوثيق',
-            subtitle: 'كل ما تحتاج معرفته عن AI Detector.',
-            content: `
+  if (window._3truthI18n && window._3truthI18n.isArabic()) {
+    Object.assign(pageContent.docs, {
+      title: "التوثيق",
+      subtitle: "كل ما تحتاج معرفته عن AI Detector.",
+      content: `
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">البدء</h3>
@@ -243,12 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   <p>يدعم النظام النصوص والصور والفيديوهات الشائعة. تجنب الملفات الكبيرة جدا أو الصيغ غير المدعومة للحصول على أفضل أداء.</p>
                 </div>
               </div>
-            `
-        });
-        Object.assign(pageContent.about, {
-            title: 'من نحن',
-            subtitle: 'نبني أساس الثقة للعصر الرقمي.',
-            content: `
+            `,
+    });
+    Object.assign(pageContent.about, {
+      title: "من نحن",
+      subtitle: "نبني أساس الثقة للعصر الرقمي.",
+      content: `
               <div class="space-y-12">
                 
                 <section>
@@ -310,12 +316,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </section>
               </div>
-            `
-        });
-        Object.assign(pageContent.contact, {
-            title: 'اتصل بنا',
-            subtitle: 'يسعدنا سماعك.',
-            content: `
+            `,
+    });
+    Object.assign(pageContent.contact, {
+      title: "اتصل بنا",
+      subtitle: "يسعدنا سماعك.",
+      content: `
               <div class="space-y-8">
                 <div>
                   <h3 class="text-xl font-bold text-[var(--accent-1)] mb-3 uppercase tracking-wider">تواصل معنا</h3>
@@ -330,93 +336,97 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               </div>
-            `
-        });
-        ['careers', 'blog', 'privacy', 'terms', 'cookies', 'security'].forEach(key => {
-            const localized = window._3truthI18n.dict.ar.staticPages[key];
-            if (localized) Object.assign(pageContent[key], localized);
-        });
+            `,
+    });
+    ["careers", "blog", "privacy", "terms", "cookies", "security"].forEach(
+      (key) => {
+        const localized = window._3truthI18n.dict.ar.staticPages[key];
+        if (localized) Object.assign(pageContent[key], localized);
+      },
+    );
+  }
+
+  // Get the page parameter from the URL (e.g., ?page=about)
+  const urlParams = new URLSearchParams(window.location.search);
+  let pathName = urlParams.get("page");
+
+  // Also support path-based routing if accessed like /about directly (server rewritten to static.html)
+  if (!pathName) {
+    const path = window.location.pathname.replace("/", "").replace(".html", "");
+    if (pageContent[path]) {
+      pathName = path;
     }
+  }
 
-    // Get the page parameter from the URL (e.g., ?page=about)
-    const urlParams = new URLSearchParams(window.location.search);
-    let pathName = urlParams.get('page');
+  const pageData = pageContent[pathName] || {
+    title: pathName
+      ? pathName.charAt(0).toUpperCase() + pathName.slice(1)
+      : "Not Found",
+    subtitle: "Page Under Construction",
+    content:
+      "We are actively working on bringing you this content. Please check back soon.",
+  };
 
-    // Also support path-based routing if accessed like /about directly (server rewritten to static.html)
-    if (!pathName) {
-        const path = window.location.pathname.replace('/', '').replace('.html', '');
-        if (pageContent[path]) {
-            pathName = path;
-        }
-    }
+  // DOM Elements
+  const titleEl = document.getElementById("page-title");
+  const subtitleEl = document.getElementById("page-subtitle");
+  const contentEl = document.getElementById("page-content");
+  const labelIconEl = document.getElementById("label-icon");
+  const labelTextEl = document.getElementById("label-text");
+  const labelContainer = document.getElementById("page-label");
+  const contentContainer = document.getElementById("page-content-container");
+  const returnBtn = document.getElementById("page-return");
 
-    const pageData = pageContent[pathName] || {
-        title: pathName ? pathName.charAt(0).toUpperCase() + pathName.slice(1) : 'Not Found',
-        subtitle: 'Page Under Construction',
-        content: 'We are actively working on bringing you this content. Please check back soon.'
-    };
+  // Update Content
+  document.title = `${pageData.title} - 3truth`;
+  titleEl.textContent = pageData.title;
+  titleEl.style.opacity = "0";
+  titleEl.style.transform = "translateY(20px)";
 
-    // DOM Elements
-    const titleEl = document.getElementById('page-title');
-    const subtitleEl = document.getElementById('page-subtitle');
-    const contentEl = document.getElementById('page-content');
-    const labelIconEl = document.getElementById('label-icon');
-    const labelTextEl = document.getElementById('label-text');
-    const labelContainer = document.getElementById('page-label');
-    const contentContainer = document.getElementById('page-content-container');
-    const returnBtn = document.getElementById('page-return');
+  subtitleEl.textContent = pageData.subtitle;
+  subtitleEl.style.opacity = "0";
 
-    // Update Content
-    document.title = `${pageData.title} - 3truth`;
-    titleEl.textContent = pageData.title;
-    titleEl.style.opacity = '0';
-    titleEl.style.transform = 'translateY(20px)';
-    
-    subtitleEl.textContent = pageData.subtitle;
-    subtitleEl.style.opacity = '0';
-    
-    contentEl.innerHTML = pageData.content;
+  contentEl.innerHTML = pageData.content;
 
-    // Set Label Icon
-    if (pageData.subtitle === 'Page Under Construction') {
-        labelIconEl.setAttribute('data-lucide', 'construction');
-        labelTextEl.textContent = 'Under Construction';
-    } else {
-        labelIconEl.setAttribute('data-lucide', 'info');
-        labelTextEl.textContent = 'Information';
-    }
-    
-    // Re-initialize icons since we changed an attribute
-    lucide.createIcons();
+  // Set Label Icon
+  if (pageData.subtitle === "Page Under Construction") {
+    labelIconEl.setAttribute("data-lucide", "construction");
+    labelTextEl.textContent = "Under Construction";
+  } else {
+    labelIconEl.setAttribute("data-lucide", "info");
+    labelTextEl.textContent = "Information";
+  }
 
-    // Start Animations Sequence
-    setTimeout(() => {
-        // Show Label
-        labelContainer.classList.remove('opacity-0', 'translate-y-4');
-        
-        // Simple fade in for Title
-        gsap.to(titleEl, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out'
-        });
+  // Re-initialize icons since we changed an attribute
+  lucide.createIcons();
 
-        // Simple fade in for Subtitle (no blur)
-        gsap.to(subtitleEl, {
-            opacity: 1,
-            duration: 1.2,
-            delay: 0.3,
-            ease: 'power2.out'
-        });
-        
-        // Content and Return button
-        contentContainer.classList.remove('opacity-0', 'translate-y-8');
-        returnBtn.classList.remove('opacity-0', 'translate-y-4');
-        
-    }, 100);
+  // Start Animations Sequence
+  setTimeout(() => {
+    // Show Label
+    labelContainer.classList.remove("opacity-0", "translate-y-4");
+
+    // Simple fade in for Title
+    gsap.to(titleEl, {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power3.out",
+    });
+
+    // Simple fade in for Subtitle (no blur)
+    gsap.to(subtitleEl, {
+      opacity: 1,
+      duration: 1.2,
+      delay: 0.3,
+      ease: "power2.out",
+    });
+
+    // Content and Return button
+    contentContainer.classList.remove("opacity-0", "translate-y-8");
+    returnBtn.classList.remove("opacity-0", "translate-y-4");
+  }, 100);
 });
 
-window.addEventListener('3truth:languagechange', () => {
-    window.location.reload();
+window.addEventListener("3truth:languagechange", () => {
+  window.location.reload();
 });

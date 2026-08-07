@@ -9,7 +9,7 @@ safetensors
 sentencepiece
 flask
 flask-cors
-numpy==1.26.4
+numpy
 opencv-contrib-python==4.10.0.84
 pillow
 scikit-learn
@@ -18,7 +18,7 @@ scipy
 PyWavelets==1.8.0
 librosa
 av==17.1.0
-mediapipe==0.10.14
+mediapipe==0.10.35
 faster-whisper==1.2.1
 ctranslate2==4.8.0
 joblib

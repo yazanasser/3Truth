@@ -1,5 +1,5 @@
 (() => {
-  const blobs = document.querySelectorAll('.aurora-blob');
+  const blobs = document.querySelectorAll(".aurora-blob");
   if (!blobs.length) return;
 
   let targetX = 0;
@@ -10,20 +10,26 @@
   let pointerActive = false;
   let pointerTimer;
 
-  window.addEventListener('mousemove', (event) => {
-    pointerActive = true;
-    targetX = (event.clientX / window.innerWidth - 0.5) * 60;
-    targetY = (event.clientY / window.innerHeight - 0.5) * 60;
-    clearTimeout(pointerTimer);
-    pointerTimer = setTimeout(() => {
-      pointerActive = false;
-    }, 900);
-  }, { passive: true });
+  window.addEventListener(
+    "mousemove",
+    (event) => {
+      pointerActive = true;
+      targetX = (event.clientX / window.innerWidth - 0.5) * 60;
+      targetY = (event.clientY / window.innerHeight - 0.5) * 60;
+      clearTimeout(pointerTimer);
+      pointerTimer = setTimeout(() => {
+        pointerActive = false;
+      }, 900);
+    },
+    { passive: true },
+  );
 
   function animateAurora() {
     driftTime += 0.01;
-    const autoX = Math.sin(driftTime * 0.8) * 34 + Math.sin(driftTime * 0.23) * 18;
-    const autoY = Math.cos(driftTime * 0.65) * 26 + Math.sin(driftTime * 0.31) * 14;
+    const autoX =
+      Math.sin(driftTime * 0.8) * 34 + Math.sin(driftTime * 0.23) * 18;
+    const autoY =
+      Math.cos(driftTime * 0.65) * 26 + Math.sin(driftTime * 0.31) * 14;
     const desiredX = pointerActive ? targetX : autoX;
     const desiredY = pointerActive ? targetY : autoY;
 

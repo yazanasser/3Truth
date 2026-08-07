@@ -1,47 +1,53 @@
 (() => {
-  const currentPage = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const currentPage = (
+    window.location.pathname.split("/").pop() || "index.html"
+  ).toLowerCase();
   const routeAliases = {
-    '': 'index.html',
-    home: 'index.html',
-    index: 'index.html',
-    detector: 'detector.html',
-    scan: 'detector.html',
-    pricing: 'pricing.html',
-    plans: 'pricing.html'
+    "": "index.html",
+    home: "index.html",
+    index: "index.html",
+    detector: "detector.html",
+    scan: "detector.html",
+    pricing: "pricing.html",
+    plans: "pricing.html",
   };
   const activePage = routeAliases[currentPage] || currentPage;
-  const primaryPages = new Set(['index.html', 'detector.html', 'pricing.html']);
+  const primaryPages = new Set(["index.html", "detector.html", "pricing.html"]);
 
   function normalizeHref(link) {
-    const rawHref = link.getAttribute('href') || '';
-    const clean = rawHref.split('#')[0].split('?')[0].toLowerCase();
+    const rawHref = link.getAttribute("href") || "";
+    const clean = rawHref.split("#")[0].split("?")[0].toLowerCase();
     // Map path-style hrefs to canonical filenames
-    if (clean === '/' || clean === 'index.html') return 'index.html';
-    if (clean === '/scan' || clean === 'scan' || clean === 'detector.html') return 'detector.html';
-    if (clean === '/plans' || clean === 'plans' || clean === 'pricing.html') return 'pricing.html';
+    if (clean === "/" || clean === "index.html") return "index.html";
+    if (clean === "/scan" || clean === "scan" || clean === "detector.html")
+      return "detector.html";
+    if (clean === "/plans" || clean === "plans" || clean === "pricing.html")
+      return "pricing.html";
     return clean;
   }
 
   function refreshActiveNavigation() {
-    document.querySelectorAll('a[href]').forEach((link) => {
+    document.querySelectorAll("a[href]").forEach((link) => {
       const href = normalizeHref(link);
       if (!primaryPages.has(href)) return;
-      if (link.querySelector('img')) return; // Skip logo link
+      if (link.querySelector("img")) return; // Skip logo link
 
       if (href === activePage) {
-        link.setAttribute('aria-current', 'page');
-        link.classList.add('nav-active');
-        link.classList.remove('text-white');
+        link.setAttribute("aria-current", "page");
+        link.classList.add("nav-active");
+        link.classList.remove("text-white");
       } else {
-        link.removeAttribute('aria-current');
-        link.classList.remove('nav-active', 'text-[var(--accent-1)]');
-        link.classList.add('text-white');
+        link.removeAttribute("aria-current");
+        link.classList.remove("nav-active", "text-[var(--accent-1)]");
+        link.classList.add("text-white");
       }
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', refreshActiveNavigation, { once: true });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", refreshActiveNavigation, {
+      once: true,
+    });
   } else {
     refreshActiveNavigation();
   }
@@ -140,48 +146,62 @@
 
   function openAuthModal(e) {
     if (e) e.preventDefault();
-    if (document.getElementById('global-auth-modal')) return;
+    if (document.getElementById("global-auth-modal")) return;
 
-    const modal = document.createElement('div');
-    modal.id = 'global-auth-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+    const modal = document.createElement("div");
+    modal.id = "global-auth-modal";
+    modal.style.cssText =
+      "position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.5rem;";
 
-    const backdrop = document.createElement('div');
-    backdrop.className = 'animate-modal-bg';
-    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(3,3,5,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);cursor:pointer;';
-    
+    const backdrop = document.createElement("div");
+    backdrop.className = "animate-modal-bg";
+    backdrop.style.cssText =
+      "position:absolute;inset:0;background:rgba(3,3,5,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);cursor:pointer;";
+
     // Add fade out animation when closing
     const closeModal = () => {
-      backdrop.style.animation = 'none';
-      modal.querySelector('#auth-card').style.animation = 'none';
-      backdrop.style.opacity = '1';
-      modal.querySelector('#auth-card').style.opacity = '1';
-      
-      backdrop.style.transition = 'opacity 0.3s ease';
-      modal.querySelector('#auth-card').style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      
+      backdrop.style.animation = "none";
+      modal.querySelector("#auth-card").style.animation = "none";
+      backdrop.style.opacity = "1";
+      modal.querySelector("#auth-card").style.opacity = "1";
+
+      backdrop.style.transition = "opacity 0.3s ease";
+      modal.querySelector("#auth-card").style.transition =
+        "opacity 0.3s ease, transform 0.3s ease";
+
       // force reflow
       backdrop.offsetHeight;
-      
-      backdrop.style.opacity = '0';
-      modal.querySelector('#auth-card').style.opacity = '0';
-      modal.querySelector('#auth-card').style.transform = 'scale(0.95)';
-      
+
+      backdrop.style.opacity = "0";
+      modal.querySelector("#auth-card").style.opacity = "0";
+      modal.querySelector("#auth-card").style.transform = "scale(0.95)";
+
       setTimeout(() => modal.remove(), 300);
     };
-    
+
     backdrop.onclick = closeModal;
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'animate-modal-bg';
-    closeBtn.style.cssText = 'position:absolute;top:2rem;right:2rem;z-index:10;padding:0.75rem;color:white;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;';
-    closeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(255,255,255,0.1)'; closeBtn.style.color = '#2FEECC'; closeBtn.style.transform = 'scale(1.1)'; };
-    closeBtn.onmouseleave = () => { closeBtn.style.background = 'rgba(255,255,255,0.05)'; closeBtn.style.color = 'white'; closeBtn.style.transform = 'scale(1)'; };
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "animate-modal-bg";
+    closeBtn.style.cssText =
+      "position:absolute;top:2rem;right:2rem;z-index:10;padding:0.75rem;color:white;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;";
+    closeBtn.innerHTML =
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    closeBtn.onmouseenter = () => {
+      closeBtn.style.background = "rgba(255,255,255,0.1)";
+      closeBtn.style.color = "#2FEECC";
+      closeBtn.style.transform = "scale(1.1)";
+    };
+    closeBtn.onmouseleave = () => {
+      closeBtn.style.background = "rgba(255,255,255,0.05)";
+      closeBtn.style.color = "white";
+      closeBtn.style.transform = "scale(1)";
+    };
     closeBtn.onclick = closeModal;
 
-    const content = document.createElement('div');
-    content.style.cssText = 'position:relative;z-index:10;width:100%;max-width:42rem;max-height:95vh;overflow-y:auto;scrollbar-width:none;';
+    const content = document.createElement("div");
+    content.style.cssText =
+      "position:relative;z-index:10;width:100%;max-width:42rem;max-height:95vh;overflow-y:auto;scrollbar-width:none;";
     content.innerHTML = AUTH_MODAL_HTML;
 
     modal.appendChild(backdrop);
@@ -190,23 +210,23 @@
     document.body.appendChild(modal);
 
     // Setup Magnetic Button Effect
-    const btn = modal.querySelector('#submit-btn');
+    const btn = modal.querySelector("#submit-btn");
     if (btn) {
-      btn.addEventListener('mousemove', (e) => {
+      btn.addEventListener("mousemove", (e) => {
         const rect = btn.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
         // magnetic pull
         btn.style.transform = `translate(${x * 0.1}px, ${y * 0.15}px)`;
       });
-      btn.addEventListener('mouseleave', () => {
+      btn.addEventListener("mouseleave", () => {
         // snap back
-        btn.style.transform = 'translate(0px, 0px)';
+        btn.style.transform = "translate(0px, 0px)";
       });
     }
 
     // Initialize signin logic on the newly injected elements
-    if (typeof window._initSigninModal === 'function') {
+    if (typeof window._initSigninModal === "function") {
       window._initSigninModal(modal);
     }
   }
@@ -215,11 +235,10 @@
   window.openAuthModal = openAuthModal;
 
   // Intercept all signin.html link clicks
-  document.addEventListener('click', (e) => {
+  document.addEventListener("click", (e) => {
     const link = e.target.closest('a[href*="signin.html"]');
     if (link) {
       openAuthModal(e);
     }
   });
-
 })();

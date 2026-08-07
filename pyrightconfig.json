@@ -1,6 +1,15 @@
 {
   "exclude": [
     "**/__pyrefly_virtual__",
-    "**/__pyrefly_virtual__/**"
+    "**/__pyrefly_virtual__/**",
+    "tests/**"
+  ],
+  "ignore": [
+    "backend/src/ml_server.py"
+  ],
+  "extraPaths": [
+    "backend/src",
+    "backend",
+    "api"
   ]
 }
