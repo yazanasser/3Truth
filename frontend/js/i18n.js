@@ -51,6 +51,9 @@
         loadingTitle: "ANALYZING",
         loadingSub: "Running deep heuristics...",
         verdictLabel: "Forensic Verdict",
+        verdictHuman: "HUMAN",
+        verdictAi: "AI GENERATED",
+        confidence: "{val} CONFIDENCE",
         humanProbability: "HUMAN PROBABILITY",
         realPhotoProbability: "REAL PHOTO PROBABILITY",
         realVideoProbability: "REAL VIDEO PROBABILITY",
@@ -129,6 +132,7 @@
         },
       },
       auth: {
+        modalTitle: "Thank you for visiting! Please sign in to continue.",
         secureAccess: "Secure Access",
         verifyEmail: "Verify your email to enter",
         emailAddress: "Email Address",
@@ -289,6 +293,9 @@
         loadingTitle: "جار التحليل",
         loadingSub: "يتم تشغيل التحليل العميق...",
         verdictLabel: "نتيجة الفحص",
+        verdictHuman: "بشري",
+        verdictAi: "مولد بالذكاء الاصطناعي",
+        confidence: "نسبة الثقة {val}",
         humanProbability: "احتمال أنه بشري",
         realPhotoProbability: "احتمال أنها صورة حقيقية",
         realVideoProbability: "احتمال أنه فيديو حقيقي",
@@ -366,6 +373,7 @@
         },
       },
       auth: {
+        modalTitle: "شكراً لزيارتك! يرجى تسجيل الدخول للمتابعة.",
         secureAccess: "وصول آمن",
         verifyEmail: "تحقق من بريدك الإلكتروني للدخول",
         emailAddress: "البريد الإلكتروني",
@@ -480,6 +488,16 @@
   };
 
   const exactAr = {
+    EXIF: "بيانات الحفظ الوصفية",
+    PIXELS: "البيكسلات",
+    COMPRESSION: "الضغط",
+    HUMAN: "بشري",
+    AI: "ذكاء اصطناعي",
+    "AI GENERATED": "مولد بالذكاء الاصطناعي",
+    MIXED: "مختلط",
+    "Forensic Signals Grid": "شبكة الإشارات الجنائية",
+    "Advanced Diagnostics": "التشخيصات المتقدمة",
+
     HOME: "الرئيسية",
     DETECTOR: "الكاشف",
     PRICING: "الأسعار",
@@ -616,7 +634,17 @@
   };
 
   const textNodeSources = new WeakMap();
-  const exactEn = {};
+  const exactEn = {
+    "بيانات الحفظ الوصفية": "EXIF",
+    البيكسلات: "PIXELS",
+    الضغط: "COMPRESSION",
+    بشري: "HUMAN",
+    "ذكاء اصطناعي": "AI",
+    "مولد بالذكاء الاصطناعي": "AI GENERATED",
+    مختلط: "MIXED",
+    "شبكة الإشارات الجنائية": "Forensic Signals Grid",
+    "التشخيصات المتقدمة": "Advanced Diagnostics",
+  };
   for (const [en, ar] of Object.entries(exactAr)) {
     exactEn[ar] = en;
   }

@@ -507,110 +507,64 @@ def _eye_aspect_ratio(landmarks, indices, width, height):
 
 
 def analyze_face_dynamics(rgb_frames):
-    import mediapipe as mp
+    try:
+        import mediapipe as mp
+    except ImportError:
+        return {}
 
     left_eye = [33, 160, 158, 133, 153, 144]
     right_eye = [362, 385, 387, 263, 373, 380]
     ears = []
     yaw_pitch = []
     detected = 0
-    with mp.solutions.face_mesh.FaceMesh(  # type: ignore
-        static_image_mode=False,
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-    ) as mesh:
-        for frame in rgb_frames:
-            result = mesh.process(frame)
-            if not result.multi_face_landmarks:
-                continue
-            detected += 1
-            landmarks = result.multi_face_landmarks[0].landmark
-            height, width = frame.shape[:2]
-            ear = (
-                _eye_aspect_ratio(landmarks, left_eye, width, height)
-                + _eye_aspect_ratio(landmarks, right_eye, width, height)
-            ) / 2.0
-            ears.append(ear)
-            image_points = np.asarray(
-                [
-                    (landmarks[1].x * width, landmarks[1].y * height),
-                    (landmarks[152].x * width, landmarks[152].y * height),
-                    (landmarks[33].x * width, landmarks[33].y * height),
-                    (landmarks[263].x * width, landmarks[263].y * height),
-                    (landmarks[61].x * width, landmarks[61].y * height),
-                    (landmarks[291].x * width, landmarks[291].y * height),
-                ],
-                dtype=np.float64,
-            )
-            model_points = np.asarray(
-                [
-                    (0.0, 0.0, 0.0),
-                    (0.0, -63.6, -12.5),
-                    (-43.3, 32.7, -26.0),
-                    (43.3, 32.7, -26.0),
-                    (-28.9, -28.9, -24.1),
-                    (28.9, -28.9, -24.1),
-                ],
-                dtype=np.float64,
-            )
-            focal = width
-            camera = np.asarray(
-                [[focal, 0, width / 2], [0, focal, height / 2], [0, 0, 1]],
-                dtype=np.float64,
-            )
-            ok, rotation, _ = cv2.solvePnP(
-                model_points,
-                image_points,
-                camera,
-                np.zeros((4, 1)),
-                flags=cv2.SOLVEPNP_ITERATIVE,
-            )
-            if ok:
-                matrix, _ = cv2.Rodrigues(rotation)
-                angles, _, _, _, _, _ = cv2.RQDecomp3x3(matrix)
-                yaw_pitch.append((angles[1], angles[0]))
+    try:
+        with mp.solutions.face_mesh.FaceMesh(  # type: ignore
+            static_image_mode=False,
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
+        ) as mesh:
+            for frame in rgb_frames:
+                result = mesh.process(frame)
+                if not result.multi_face_landmarks:
+                    continue
+                detected += 1
+                landmarks = result.multi_face_landmarks[0].landmark
+                height, width = frame.shape[:2]
+                
+                # compute ear
+                def _ear(lms, indices, w, h):
+                    pts = np.asarray([(lms[i].x * w, lms[i].y * h) for i in indices])
+                    v_a = np.linalg.norm(pts[1] - pts[5])
+                    v_b = np.linalg.norm(pts[2] - pts[4])
+                    h_dist = np.linalg.norm(pts[0] - pts[3])
+                    return float((v_a + v_b) / max(2.0 * h_dist, 1e-6))
+                
+                ear = (_ear(landmarks, left_eye, width, height) + _ear(landmarks, right_eye, width, height)) / 2.0
+                ears.append(ear)
+                
+                # simple yaw/pitch approximation
+                nose_tip = landmarks[1]
+                yaw_pitch.append((nose_tip.x, nose_tip.y))
+    except Exception as e:
+        print(f"Face dynamics analysis error: {e}")
+        return {}
 
     if detected < 3:
         return {
-            "applicable": False,
-            "face_frames": detected,
-            "reason": "A stable face was not visible in enough sampled frames.",
+            "face_detected": False,
+            "blink_rate": 0,
+            "head_motion_variance": 0.0,
+            "success": False,
         }
-    blink_count = 0
-    closed = False
-    threshold = max(0.16, float(np.median(ears)) * 0.72)
-    for value in ears:
-        if value < threshold and not closed:
-            closed = True
-        elif value >= threshold and closed:
-            blink_count += 1
-            closed = False
-    pose_jitter = (
-        float(np.mean(np.linalg.norm(np.diff(np.asarray(yaw_pitch), axis=0), axis=1)))
-        if len(yaw_pitch) >= 2
-        else 0.0
-    )
-    score = float(
-        np.clip(
-            0.35
-            + max(0.0, pose_jitter - 12.0) * 0.025
-            + (0.12 if blink_count == 0 and detected >= 8 else 0.0),
-            0,
-            1,
-        )
-    )
-    return {
-        "applicable": True,
-        "score": score,
-        "confidence": 0.48,
-        "face_frames": detected,
-        "blink_count": blink_count,
-        "median_ear": float(np.median(ears)),
-        "head_pose_jitter_degrees": pose_jitter,
-    }
 
+    return {
+        "face_detected": True,
+        "blink_rate": len([e for e in ears if e < 0.20]) / (detected / 30.0),
+        "head_motion_variance": float(np.var(yaw_pitch)),
+        "success": True,
+    }
 
 def analyze_codec(video_path):
     import av

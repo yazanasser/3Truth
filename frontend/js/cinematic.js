@@ -15,9 +15,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ========================================
-  // 1. SMOOTH SCROLL (Native)
-  // ========================================
-  document.documentElement.style.scrollBehavior = "smooth";
+  // 1. SMOOTH SCROLL (Native) - Disabled in favor of Lenis in motion.js
+  // document.documentElement.style.scrollBehavior = "smooth";
 
   // ========================================
   // 2. INJECT GLOBAL UI ELEMENTS

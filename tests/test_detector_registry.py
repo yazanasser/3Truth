@@ -72,5 +72,45 @@ class TestDetectorRegistry(unittest.TestCase):
         signals3 = self.registry.run_detectors("video", "data", {})
         self.assertEqual(len(signals3), 1)
 
+    def test_base_detector_orchestration(self):
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '../backend/src'))
+        from base_detector import BaseDetector
+
+        class DummyDetector(BaseDetector):
+            def preprocess(self, input_data, context):
+                return str(input_data).strip()
+            def extract_features(self, preprocessed_data, context):
+                return len(preprocessed_data)
+            def predict_raw(self, features, context):
+                return features / 100.0
+            def calibrate(self, raw_score, context):
+                return min(1.0, raw_score * 1.5)
+            def evaluate_signal_quality(self, features, context):
+                return 0.9
+
+        detector = DummyDetector("Dummy", "1.0", "text")
+        
+        # Test success
+        signal = detector.execute("  hello world  ")
+        self.assertEqual(signal.detector_name, "Dummy")
+        self.assertEqual(signal.score, 11 / 100.0) # len("hello world") = 11
+        self.assertEqual(signal.calibrated_probability, min(1.0, 0.11 * 1.5))
+        self.assertEqual(signal.signal_quality, 0.9)
+        self.assertFalse(signal.failed)
+        
+        # Test failure handling
+        class FailingDetector(DummyDetector):
+            def extract_features(self, data, context):
+                raise ValueError("Oops")
+                
+        fail_det = FailingDetector("Fail", "1.0", "text")
+        fail_sig = fail_det.execute("data")
+        self.assertTrue(fail_sig.failed)
+        self.assertEqual(fail_sig.score, 0.0)
+        self.assertEqual(fail_sig.prediction, None)
+        self.assertIn("Oops", fail_sig.error_message)
+
 if __name__ == '__main__':
     unittest.main()

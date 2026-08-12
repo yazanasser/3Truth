@@ -25,6 +25,9 @@ class FileValidator:
     MAX_IMAGE_SIZE_BYTES = 20 * 1024 * 1024  # 20MB
     MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024  # 100MB
     MAX_IMAGE_DIMENSIONS = 10000 * 10000  # Decompression bomb protection
+    MAX_VIDEO_DIMENSIONS = 7680 * 4320  # 8K max
+    MAX_VIDEO_DURATION_SECONDS = 3600  # 1 hour maximum
+    MAX_AUDIO_DURATION_SECONDS = 3600 * 4  # 4 hours maximum
 
     @classmethod
     def validate_magic_bytes(cls, raw_bytes: bytes, modality: str) -> bool:
@@ -52,6 +55,14 @@ class FileValidator:
     @classmethod
     def validate_image_bomb(cls, width: int, height: int) -> bool:
         return (width * height) <= cls.MAX_IMAGE_DIMENSIONS
+
+    @classmethod
+    def validate_video_bomb(cls, width: int, height: int, duration_sec: float) -> bool:
+        return (width * height) <= cls.MAX_VIDEO_DIMENSIONS and duration_sec <= cls.MAX_VIDEO_DURATION_SECONDS
+
+    @classmethod
+    def validate_audio_bomb(cls, duration_sec: float) -> bool:
+        return duration_sec <= cls.MAX_AUDIO_DURATION_SECONDS
 
 
 class SecureTempManager:

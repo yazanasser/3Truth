@@ -1,0 +1,277 @@
+/* css/motion.css — Premium Motion System v2
+   Companion styles for js/motion.js.
+   Uses will-change sparingly; GPU-accelerated transform+opacity. */
+
+/* ── Reduced Motion Fallback ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal-up,
+  .reveal-blur,
+  .reveal-scale,
+  .clip-reveal,
+  .mask-left-reveal,
+  .char-reveal,
+  .word-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+  }
+}
+
+/* ── Scroll Reveal Classes ───────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(40px);
+    will-change: transform, opacity;
+  }
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.92);
+    will-change: transform, opacity;
+  }
+  .reveal-blur {
+    opacity: 0;
+    filter: blur(12px);
+    will-change: opacity, filter;
+  }
+  .clip-reveal {
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+    will-change: clip-path;
+  }
+  .mask-left-reveal {
+    clip-path: inset(0 100% 0 0);
+    will-change: clip-path;
+  }
+}
+
+/* ── Scroll-linked Progress ──────────────────────────────── */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  z-index: 9999;
+  transform-origin: left;
+  transform: scaleX(0);
+  pointer-events: none;
+  box-shadow: 0 0 8px var(--accent-1);
+}
+
+/* ── Custom Cursor ───────────────────────────────────────── */
+#custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-1);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10001;
+  mix-blend-mode: screen;
+  box-shadow: 0 0 12px rgba(47, 238, 204, 0.5);
+  transition:
+    width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.25s ease;
+  will-change: transform;
+}
+#custom-cursor.active {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1.5px solid var(--accent-1);
+  box-shadow: 0 0 20px rgba(47, 238, 204, 0.3);
+}
+
+/* ── Spotlight ───────────────────────────────────────────── */
+#spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(
+    circle,
+    rgba(47, 238, 204, 0.05) 0%,
+    transparent 50%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  mix-blend-mode: screen;
+}
+
+/* ── Page Transition Overlay ─────────────────────────────── */
+#page-transition {
+  position: fixed;
+  inset: 0;
+  background: #031F1A;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ── Glass/Refraction ────────────────────────────────────── */
+.glass-motion {
+  backdrop-filter: blur(5px);
+  background: rgba(6, 53, 45, 0.4);
+  transition:
+    backdrop-filter 0.4s ease,
+    background 0.4s ease;
+}
+.glass-motion:hover {
+  backdrop-filter: blur(16px);
+  background: rgba(6, 53, 45, 0.65);
+}
+
+/* ── Moving Gradients (CSS-only, no JS needed) ───────────── */
+.moving-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    #031F1A,
+    #06352d,
+    #06141d,
+    rgba(47, 238, 204, 0.06)
+  );
+  background-size: 400% 400%;
+  animation: gradientFlow 20s ease infinite;
+}
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ── Hover Elevation (.hover-lift) ───────────────────────── */
+.hover-lift {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Animated Border ─────────────────────────────────────── */
+.animated-border {
+  position: relative;
+  overflow: visible;
+}
+.animated-border-inner {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    var(--accent-1),
+    transparent,
+    transparent
+  );
+  z-index: -1;
+  will-change: transform;
+}
+
+/* ── Skeleton Shimmer ────────────────────────────────────── */
+.skeleton-pulse {
+  position: relative;
+  overflow: hidden;
+  background: rgba(30, 41, 59, 0.4) !important;
+  color: transparent !important;
+}
+.skeleton-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(100, 116, 139, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ── SVG Laser Scanline ──────────────────────────────────── */
+.svg-laser-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+.svg-laser {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-1);
+  box-shadow:
+    0 0 15px 3px var(--accent-1),
+    0 0 40px 5px rgba(47, 238, 204, 0.3);
+  opacity: 0;
+}
+
+/* ── Spring Click ────────────────────────────────────────── */
+.spring-click {
+  cursor: pointer;
+  will-change: transform;
+}
+
+/* ── Evidence Card Base ──────────────────────────────────── */
+.evidence-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(6, 53, 45, 0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.3s ease;
+}
+.evidence-card:hover {
+  border-color: rgba(47, 238, 204, 0.3);
+}
+
+/* ── Data Decrypt ────────────────────────────────────────── */
+.data-decrypt {
+  font-family: "Space Mono", monospace;
+  will-change: filter;
+}
+
+/* ── SVG Draw ────────────────────────────────────────────── */
+.svg-draw path,
+.svg-draw line,
+.svg-draw polyline,
+.svg-draw circle {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Counter Animation (Space Mono) ──────────────────────── */
+.counter-anim {
+  font-family: "Space Mono", monospace;
+}

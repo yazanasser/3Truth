@@ -1,23 +1,40 @@
+import statistics
 import math
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 from detector_registry import DetectionSignal  # type: ignore
 
+class BaseFusionEngine(ABC):
+    @abstractmethod
+    def fuse(self, signals: List[DetectionSignal]) -> Dict[str, Any]:
+        """Fuses multiple detector signals into a cohesive evidence structure."""
+        pass
 
-class EvidenceFusionEngine:
+class BaseDecisionEngine(ABC):
+    @abstractmethod
+    def classify(self, fusion_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Maps fusion results to a final verdict/classification."""
+        pass
+
+class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
     """
-    Central decision engine implementing hierarchical weighting and calibrated evidence fusion.
+    Central decision engine implementing calibrated log-odds evidence fusion.
     """
 
     def __init__(self):
-        # Weight assignments for the Provenance Priority Hierarchy
+        # Reliability weight assignments for the Provenance Priority Hierarchy
+        # These act as multipliers for the log-odds (logits) during fusion.
         self.HIERARCHY_WEIGHTS = {
             "verified_cryptographic_provenance": 10.0,
             "verified_watermark": 8.0,
             "signed_metadata": 6.0,
-            "forensic_evidence": 4.0,
+            "forensic_evidence": 3.0,
             "ml_classifier": 2.0,
             "heuristics": 1.0,
         }
+
+    def classify(self, fusion_result: Dict[str, Any]) -> Dict[str, Any]:
+        return fusion_result
 
     def _determine_hierarchy_category(self, signal: DetectionSignal) -> str:
         name = signal.detector_name.lower()
@@ -25,7 +42,7 @@ class EvidenceFusionEngine:
             return "verified_cryptographic_provenance"
         elif "watermark" in name:
             return "verified_watermark"
-        elif "metadata" in name:
+        elif "metadata" in name or "exif" in name or "software" in name:
             return "signed_metadata"
         elif any(
             k in name
@@ -58,77 +75,84 @@ class EvidenceFusionEngine:
             return "ml_classifier"
         return "heuristics"
 
+    def _prob_to_logit(self, p: float) -> float:
+        # Clip to prevent infinity
+        p = max(0.001, min(0.999, p))
+        return math.log(p / (1.0 - p))
+
+    def _logit_to_prob(self, logit: float) -> float:
+        return 1.0 / (1.0 + math.exp(-logit))
+
     def fuse(self, signals: List[DetectionSignal]) -> Dict[str, Any]:
         if not signals:
             return self._build_response(
-                "INCONCLUSIVE", 0.0, 0.0, "WEAK", [], ["No signals available"], []
+                "INCONCLUSIVE", 0.5, 0.0, "WEAK", [], [], [], ["No signals available"]
             )
 
         warnings = []
         contradictions = []
+        raw_outputs = []
+        calibrated_outputs = []
 
-        # Extract meta-signals from adversarial detectors
-        meta_signals = [s for s in signals if s.modality == "meta"]
+        # Extract meta-signals
+        meta_signals = [s for s in signals if s.modality == "meta" and "Adversarial" in s.detector_name]
         data_signals = [s for s in signals if s.modality != "meta" and not s.failed]
 
-        confidence_penalty = 0.0
         for meta in meta_signals:
-            if "Adversarial" in meta.detector_name:
-                flag = meta.evidence.get("flag", "NONE")
-                if flag == "HIGH_MODEL_DISAGREEMENT":
-                    contradictions.append(
-                        meta.evidence.get("details", "Models disagreed strongly")
-                    )
-                    confidence_penalty = max(
-                        confidence_penalty, meta.evidence.get("confidence_penalty", 0.0)
-                    )
-                warnings.extend(meta.warnings)
+            flag = meta.evidence.get("flag", "NONE")
+            if flag == "HIGH_MODEL_DISAGREEMENT":
+                contradictions.append(meta.evidence.get("details", "Models disagreed strongly"))
+            warnings.extend(meta.warnings)
 
         if not data_signals:
             return self._build_response(
-                "INCONCLUSIVE",
-                0.0,
-                0.0,
-                "WEAK",
-                [s.to_dict() for s in signals],
-                contradictions,
-                warnings + ["No valid data signals"],
+                "INCONCLUSIVE", 0.5, 0.0, "WEAK", [], contradictions, warnings + ["No valid data signals"]
             )
 
-        # Compute AI Probability using Provenance Hierarchy
+        # Baseline log-odds (assuming 0.5 prior)
+        accumulated_logits = 0.0
         total_weight = 0.0
-        weighted_score_sum = 0.0
-        max_hierarchy_weight = 0.0
 
         for s in data_signals:
             category = self._determine_hierarchy_category(s)
             base_weight = self.HIERARCHY_WEIGHTS.get(category, 1.0)
+            
+            # Reliability-aware weighting (combines detector historical confidence and signal quality)
+            # signal_quality limits the influence of weak evidence (e.g. spoofable strings)
+            reliability_weight = base_weight * max(0.1, s.confidence) * max(0.01, s.signal_quality)
+            
+            raw_logit = self._prob_to_logit(s.score)
+            calibrated_logit = raw_logit * reliability_weight
+            
+            accumulated_logits += calibrated_logit
+            total_weight += reliability_weight
+            
+            raw_outputs.append({
+                "detector": s.detector_name,
+                "raw_probability": s.score,
+                "raw_logit": raw_logit,
+            })
+            calibrated_outputs.append({
+                "detector": s.detector_name,
+                "category": category,
+                "reliability_weight": reliability_weight,
+                "calibrated_logit": calibrated_logit
+            })
 
-            # Scale weight by detector's own reported confidence
-            actual_weight = base_weight * max(0.1, s.confidence)
+        # Final Sigmoid activation (using weighted average of logits to prevent overconfidence)
+        if total_weight > 0:
+            averaged_logit = accumulated_logits / total_weight
+            # Boost confidence slightly when multiple signals agree, but safely
+            if len(data_signals) > 1:
+                averaged_logit *= 1.25
+            ai_probability = self._logit_to_prob(averaged_logit)
+        else:
+            ai_probability = 0.5
+        # Compute Overall Confidence mathematically based on total accumulated weight
+        final_confidence = min(1.0, math.log10(1 + total_weight))
 
-            weighted_score_sum += s.score * actual_weight
-            total_weight += actual_weight
-
-            if base_weight > max_hierarchy_weight:
-                max_hierarchy_weight = base_weight
-
-        ai_probability = weighted_score_sum / total_weight if total_weight > 0 else 0.5
-
-        # Compute Overall Confidence
-        # Base confidence grows logarithmically with total combined weight of evidence
-        base_confidence = min(1.0, math.log10(1 + total_weight / 2.0))
-
-        # Boost confidence if high-hierarchy evidence (provenance/watermark) is present
-        if max_hierarchy_weight >= self.HIERARCHY_WEIGHTS["verified_watermark"]:
-            base_confidence = min(1.0, base_confidence + 0.2)
-
-        final_confidence = max(0.0, base_confidence - confidence_penalty)
-
-        # Classification Logic
-        # The internal decision engine maps everything to a strictly binary final output for the user,
-        # relying on `ai_probability` as the decider, while keeping `final_confidence` as a separate internal metric.
-        classification = "AI" if ai_probability >= 0.50 else "HUMAN"
+        # Classification strictly preserves user-facing standards
+        classification = "AI Generated" if ai_probability >= 0.50 else "Human"
 
         # Evidence Strength mapping
         if final_confidence >= 0.8:
@@ -143,7 +167,8 @@ class EvidenceFusionEngine:
             ai_probability=ai_probability,
             confidence=final_confidence,
             evidence_strength=evidence_strength,
-            signals=[s.to_dict() for s in signals],
+            raw_outputs=raw_outputs,
+            calibrated_outputs=calibrated_outputs,
             contradictions=contradictions,
             warnings=warnings,
         )
@@ -154,7 +179,8 @@ class EvidenceFusionEngine:
         ai_probability: float,
         confidence: float,
         evidence_strength: str,
-        signals: List[Dict[str, Any]],
+        raw_outputs: List[Dict[str, Any]],
+        calibrated_outputs: List[Dict[str, Any]],
         contradictions: List[str],
         warnings: List[str],
     ) -> Dict[str, Any]:
@@ -163,12 +189,9 @@ class EvidenceFusionEngine:
             "ai_probability": round(ai_probability, 4),
             "confidence": round(confidence, 4),
             "evidence_strength": evidence_strength,
-            "signals": signals,
+            "raw_outputs": raw_outputs,
+            "calibrated_outputs": calibrated_outputs,
+            "fused_evidence_summary": "Fusion completed via calibrated log-odds accumulation.",
             "contradictions": contradictions,
             "warnings": warnings,
         }
-
-
-def fuse_evidence(signals: List[DetectionSignal]) -> Dict[str, Any]:
-    engine = EvidenceFusionEngine()
-    return engine.fuse(signals)

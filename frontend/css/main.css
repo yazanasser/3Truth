@@ -1,6 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&family=Sora:wght@100..800&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap");
 
 :root {
   /* Two-color beta palette: #2FEECC + #FFFFFF and derived shades */
@@ -10,14 +10,14 @@
   --accent-100: #2feecc;
   --accent-200: #a8fff0;
 
-  --text-100: #ffffff;
-  --text-200: rgba(255, 255, 255, 0.76);
+  --text-100: #f8fafc;
+  --text-200: #cbd5e1;
   --text-300: rgba(47, 238, 204, 0.72);
 
-  --bg-100: #031f1a;
+  --bg-100: #031F1A;
   --bg-200: #06352d;
   --bg-300: #0a4d41;
-  --bg-400: #0f6b5a;
+  --bg-400: #0F6B5A;
 
   --bg-primary: var(--bg-100);
   --bg-color: var(--bg-100);
@@ -38,13 +38,9 @@ body {
     color 0.5s ease;
   background-color: var(--bg-color);
   color: var(--text-primary);
-  font-family: "Sora", sans-serif;
+  font-family: "Inter", sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 h1,
@@ -53,9 +49,9 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Sora", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0;
+  font-family: "Outfit", sans-serif;
+  text-transform: none;
+  letter-spacing: -0.02em;
 }
 
 html[lang="ar"] *,
@@ -334,6 +330,14 @@ html[lang="ar"] [data-language-switcher="floating"] {
   text-shadow: 0 0 20px var(--accent-1);
 }
 
+.detector-flex-hidden {
+  display: flex;
+}
+
+.detector-flex-hidden.hidden {
+  display: none;
+}
+
 /* Spotlight Card -> Terminal Card */
 .spotlight-card {
   position: relative;
@@ -368,21 +372,13 @@ html[lang="ar"] [data-language-switcher="floating"] {
 
 .detector-card-aura {
   background:
-    radial-gradient(
-      circle at 30% 35%,
-      rgba(47, 238, 204, 0.3),
-      transparent 34%
-    ),
+    radial-gradient(circle at 30% 35%, rgba(47, 238, 204, 0.3), transparent 34%),
     radial-gradient(
       circle at 72% 62%,
       rgba(255, 255, 255, 0.12),
       transparent 32%
     ),
-    radial-gradient(
-      circle at 52% 80%,
-      rgba(47, 238, 204, 0.16),
-      transparent 34%
-    ) !important;
+    radial-gradient(circle at 52% 80%, rgba(47, 238, 204, 0.16), transparent 34%) !important;
   filter: blur(80px);
   opacity: 0.78;
   transform: translate3d(0, 0, 0) scale(1);
@@ -476,41 +472,47 @@ html[lang="ar"] [data-language-switcher="floating"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
+  padding: 10px 20px;
   font-family: "Space Mono", monospace;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   cursor: pointer;
-  border: 1px solid var(--accent-1);
-  background: rgba(47, 238, 204, 0.12);
+  border: 1px solid rgba(47, 238, 204, 0.4);
+  background: rgba(47, 238, 204, 0.05);
+  backdrop-filter: blur(8px);
   color: var(--accent-1);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
 }
 
 .btn-magnetic:hover {
-  background: var(--accent-1);
-  color: var(--bg-100);
-  box-shadow: 0 0 20px var(--accent-1);
+  background: rgba(47, 238, 204, 0.15);
+  color: #fff;
+  border-color: rgba(47, 238, 204, 0.8);
+  box-shadow: 0 0 15px rgba(47, 238, 204, 0.25);
+  transform: translateY(-1px);
 }
 
 .btn-glass {
-  background: transparent;
-  border: 1px dashed var(--text-secondary);
-  color: var(--text-secondary);
-  padding: 12px 24px;
-  font-weight: 700;
+  background: rgba(6, 53, 45, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-200);
+  padding: 10px 20px;
+  font-weight: 600;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s;
+  border-radius: 4px;
 }
 
 .btn-glass:hover {
-  border-color: var(--accent-3);
-  color: var(--accent-3);
-  background: rgba(47, 238, 204, 0.12);
+  border-color: rgba(47, 238, 204, 0.4);
+  color: var(--accent-1);
+  background: rgba(47, 238, 204, 0.05);
 }
 
 /* Utilities */
@@ -899,7 +901,7 @@ html[lang="ar"] [data-language-switcher="floating"] {
   --palette-cyan: #2feecc;
   --palette-cyan-soft: #a8fff0;
   --palette-white: #ffffff;
-  --palette-bg-deep: #031f1a;
+  --palette-bg-deep: #031F1A;
   --palette-bg-mid: #06352d;
   --palette-bg-soft: rgba(47, 238, 204, 0.1);
   --palette-bg-strong: rgba(47, 238, 204, 0.22);
@@ -914,9 +916,9 @@ html[lang="ar"] [data-language-switcher="floating"] {
 }
 
 body,
-[class*="bg-[#030305]"],
+[class*="bg-[#031F1A]"],
 [class*="bg-[#050508]"],
-[class*="bg-[#050505]"],
+[class*="bg-[#031F1A]"],
 [class*="bg-[#0a0a0f]"],
 [class*="bg-[#0a0a12]"],
 [class*="bg-black"] {
@@ -1059,7 +1061,7 @@ body,
     circle at 50% 0%,
     rgba(47, 238, 204, 0.2) 0%,
     var(--palette-bg-deep) 62%,
-    #031f1a 100%
+    #031F1A 100%
   ) !important;
 }
 
@@ -1170,11 +1172,7 @@ button.tab-btn[aria-pressed="true"] {
 .media-mode-profile {
   border: 1px solid rgba(47, 238, 204, 0.26);
   background:
-    radial-gradient(
-      circle at 20% 15%,
-      rgba(47, 238, 204, 0.2),
-      transparent 34%
-    ),
+    radial-gradient(circle at 20% 15%, rgba(47, 238, 204, 0.2), transparent 34%),
     linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.055),
@@ -1234,6 +1232,7 @@ button.tab-btn[aria-pressed="true"] {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.82rem;
   line-height: 1.55;
+  font-family: "Space Mono", monospace;
 }
 
 .media-mode-visual {
@@ -1300,11 +1299,7 @@ button.tab-btn[aria-pressed="true"] {
   min-width: 0;
   border: 1px solid rgba(47, 238, 204, 0.36);
   background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.12),
-      rgba(47, 238, 204, 0.06)
-    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(47, 238, 204, 0.06)),
     repeating-linear-gradient(
       90deg,
       rgba(47, 238, 204, 0.28) 0 2px,
@@ -1591,4 +1586,9 @@ body.detector-mode-video .media-mode-profile {
     transform: translate3d(12%, 8%, 0);
     opacity: 0.85;
   }
+}
+
+/* Enforce custom cursor everywhere */
+* {
+  cursor: none !important;
 }

@@ -1,15 +1,11 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pricing | 3truth</title>
     <link rel="icon" href="assets/favicon.svg" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap"
-      rel="stylesheet"
-    />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <link rel="stylesheet" href="css/tailwind.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -19,9 +15,15 @@
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
 
     <link rel="stylesheet" href="css/main.css?v=6.1" />
-    <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1" />
+    <link rel="stylesheet" href="css/motion.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="bg-[#030305] text-white">
+  <body class="bg-[#031F1A] text-white">
     <!-- Reactbits Backgrounds -->
     <div class="aurora-container">
       <div class="aurora-blob cyan"></div>
@@ -32,7 +34,7 @@
 
     <!-- Navigation -->
     <div
-      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#031F1A]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
     >
       <!-- Left Logo -->
       <a
@@ -93,7 +95,7 @@
     <!-- Sidebar (Mobile Menu) -->
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+      class="fixed inset-y-0 right-0 w-80 bg-[#031F1A]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
     >
       <button
         id="mobile-menu-close"
@@ -217,11 +219,11 @@
 
         <!-- Pro Plan -->
         <div
-          class="holo-panel rounded-[24px] p-8 flex flex-col h-full group transition-all duration-300 border-2 border-[var(--accent-1)] bg-black/60 shadow-[0_0_30px_rgba(47,238,204,0.15)] relative scale-105 z-10 shrink-0"
+          class="holo-panel rounded-[24px] p-8 flex flex-col h-full group transition-all duration-300 border-2 border-[var(--accent-1)] bg-black/60 shadow-[0_0_30px_rgba(47, 238, 204,0.15)] relative scale-105 z-10 shrink-0"
           style="overflow: visible"
         >
           <div
-            class="absolute bg-[var(--accent-1)] text-[var(--text-100)] text-base font-black px-8 py-3 rounded-full uppercase tracking-widest z-30 whitespace-nowrap text-center shadow-[0_0_15px_rgba(47,238,204,0.5)]"
+            class="absolute bg-[var(--accent-1)] text-[var(--text-100)] text-base font-black px-8 py-3 rounded-full uppercase tracking-widest z-30 whitespace-nowrap text-center shadow-[0_0_15px_rgba(47, 238, 204,0.5)]"
             style="top: 0; right: 50%; transform: translate(50%, -50%)"
           >
             MOST POPULAR
@@ -500,7 +502,7 @@
           data-tilt-max="5"
           data-tilt-speed="400"
           data-tilt-perspective="1000"
-          class="holo-panel rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0 transform-gpu preserve-3d"
+          class="holo-panel clip-reveal hover-lift rounded-[24px] p-8 flex flex-col relative group transition-all duration-300 shrink-0 transform-gpu preserve-3d"
         >
           <div class="mb-6 relative z-10">
             <h3 class="text-3xl font-black mb-2 text-white">Team</h3>
@@ -640,6 +642,7 @@
     <script src="js/i18n.js?v=1"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/footer.js?v=3"></script>
+    <script src="js/motion.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/cinematic.js?v=6.0"></script>
     <script>
@@ -724,9 +727,6 @@
     <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kinet@2.2.1/dist/kinet.min.js"></script>
-    <script src="js/kinet-init.js"></script>
-    <script src="js/advanced-kinetics.js"></script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"
       integrity="sha512-wC/cunGGDjXSl9OHsu09p+sEaQZgty-fr-0KBE8k5u34zJ025q5Xf/l+w7M+R/l0eD/4wZq2j3cO9aPZp2C82g=="

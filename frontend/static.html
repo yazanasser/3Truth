@@ -32,15 +32,13 @@
         }
       }
     </style>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap"
-      rel="stylesheet"
-    />
+
     <link rel="stylesheet" href="./css/main.css?v=6.1" />
+    <link rel="stylesheet" href="css/motion.css" />
     <style>
       body {
         font-family: "Sora", sans-serif;
-        background-color: #031f1a;
+        background-color: #031F1A;
         color: #ffffff;
       }
 
@@ -79,6 +77,12 @@
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body class="overflow-x-hidden">
     <!-- Film Grain Overlay -->
@@ -88,7 +92,7 @@
 
     <!-- Navigation -->
     <div
-      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#031F1A]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
     >
       <!-- Left Logo -->
       <a
@@ -151,7 +155,7 @@
     <!-- Sidebar (Mobile Menu) -->
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+      class="fixed inset-y-0 right-0 w-80 bg-[#031F1A]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
     >
       <button
         id="mobile-menu-close"
@@ -233,7 +237,7 @@
 
         <!-- Content Card -->
         <div
-          class="glow-border bg-[#031f1a]/80 backdrop-blur-md max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out"
+          class="glow-border bg-[#031F1A]/80 backdrop-blur-md max-w-5xl mx-auto mt-12 rounded-2xl p-8 md:p-12 text-left opacity-0 translate-y-8 transition-all duration-1000 delay-300 ease-out"
           id="page-content-container"
         >
           <div
@@ -272,6 +276,7 @@
 
     <!-- External Scripts -->
     <script src="js/i18n.js?v=1"></script>
+    <script src="js/motion.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/cinematic.js?v=6.0"></script>
     <script src="js/footer.js?v=3"></script>

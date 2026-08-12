@@ -1,6 +1,0 @@
-{
-    "python.defaultInterpreterPath": "backend/ml_venv/Scripts/python.exe",
-    "python.analysis.exclude": [
-        "**/__pyrefly_virtual__/**"
-    ]
-}

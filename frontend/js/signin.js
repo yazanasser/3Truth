@@ -62,13 +62,13 @@ window._initSigninModal = function (modalRoot) {
       const signOut = escapeHtml(authTr("auth.signOut", null, "Sign Out"));
       authCard.innerHTML = `
         <div class="text-center py-12">
-          <div class="inline-flex items-center justify-center w-20 h-20 bg-[#2FEECC]/10 border border-[#2FEECC]/40 rounded-3xl mb-6 shadow-[0_0_25px_rgba(47,238,204,0.15)]">
+          <div class="inline-flex items-center justify-center w-20 h-20 bg-[#2FEECC]/10 border border-[#2FEECC]/40 rounded-3xl mb-6 shadow-[0_0_25px_rgba(47, 238, 204,0.15)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2FEECC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
           </div>
           <h2 class="text-3xl md:text-4xl font-black tracking-tighter mb-4">${alreadySignedIn}</h2>
           <p class="text-gray-400 mb-8">${loggedInAs} <strong class="text-white font-mono">${escapeHtml(user.email)}</strong></p>
           <div class="flex flex-col gap-4">
-            <a href="detector.html" id="modal-go-detector" class="w-full py-4 text-black bg-[var(--accent-1)] font-black rounded-2xl hover:bg-[var(--accent-1)]/80 transition-all text-center text-lg shadow-[0_0_25px_rgba(47,238,204,0.3)]">
+            <a href="detector.html" id="modal-go-detector" class="w-full py-4 text-black bg-[var(--accent-1)] font-black rounded-2xl hover:bg-[var(--accent-1)]/80 transition-all text-center text-lg shadow-[0_0_25px_rgba(47, 238, 204,0.3)]">
               ${goDetector}
             </a>
             <button id="modal-signout-btn" class="w-full py-4 bg-white/5 border border-white/10 text-gray-300 font-bold rounded-2xl hover:bg-[#2FEECC]/10 hover:border-[#2FEECC]/40 hover:text-[#2FEECC] transition-all text-center">

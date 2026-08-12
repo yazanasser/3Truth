@@ -32,7 +32,36 @@ app.use(cors({
     maxAge: 600
 }));
 app.disable('x-powered-by');
+// --- JSON Body Sanitization ---
+function sanitizeValue(value) {
+    if (typeof value === 'string') {
+        // Remove null bytes and prevent prototype pollution / NoSQL injection
+        return value.replace(/\0/g, '').replace(/^\$+/g, ''); 
+    }
+    if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+            return value.map(sanitizeValue);
+        }
+        const sanitized = {};
+        for (const [k, v] of Object.entries(value)) {
+            // Prevent prototype pollution
+            if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+            // Prevent NoSQL injection
+            const cleanKey = k.replace(/^\$+/g, '');
+            sanitized[cleanKey] = sanitizeValue(v);
+        }
+        return sanitized;
+    }
+    return value;
+}
+
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '1mb' }));
+app.use((req, res, next) => {
+    if (req.body && typeof req.body === 'object') {
+        req.body = sanitizeValue(req.body);
+    }
+    next();
+});
 app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -83,24 +112,39 @@ app.get(['/docs', '/docs.html', '/about', '/about.html', '/info', '/info.html'],
     res.sendFile(path.join(frontendDir, 'static.html'));
 });
 
-const upload = multer({
-    dest: os.tmpdir(),
-    limits: {
-        fileSize: maxUploadBytes,
-        files: 1,
-        fields: 8,
-        fieldSize: 1024 * 1024
-    }
-});
+// --- Rate Limiting ---
+const rateLimits = new Map();
+const RATE_LIMIT_WINDOW_MS = 60000;
+const MAX_REQUESTS_PER_WINDOW = 30;
 
-function cleanupUploadedFile(file) {
-    if (!file || !file.path) return;
-    fs.unlink(file.path, (err) => {
-        if (err && err.code !== 'ENOENT') {
-            console.warn(`[TEMP_FILE_CLEANUP_FAILED] ${file.path}: ${err.message}`);
-        }
-    });
+function rateLimiter(req, res, next) {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    if (!rateLimits.has(ip)) {
+        rateLimits.set(ip, { count: 1, firstRequest: now });
+        return next();
+    }
+    const record = rateLimits.get(ip);
+    if (now - record.firstRequest > RATE_LIMIT_WINDOW_MS) {
+        rateLimits.set(ip, { count: 1, firstRequest: now });
+        return next();
+    }
+    record.count++;
+    if (record.count > MAX_REQUESTS_PER_WINDOW) {
+        return res.status(429).json({ error: 'Too many requests, please try again later.' });
+    }
+    next();
 }
+
+// Clean up stale rate limit entries
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, record] of rateLimits.entries()) {
+        if (now - record.firstRequest > RATE_LIMIT_WINDOW_MS) {
+            rateLimits.delete(ip);
+        }
+    }
+}, RATE_LIMIT_WINDOW_MS);
 
 const TEXT_FILE_EXTENSIONS = new Set([
     '.txt', '.md', '.markdown', '.csv', '.tsv', '.json', '.jsonl', '.xml',
@@ -126,6 +170,64 @@ function getFileExtension(fileName = '') {
     const cleanName = String(fileName || '').toLowerCase().split(/[?#]/)[0];
     const lastDot = cleanName.lastIndexOf('.');
     return lastDot >= 0 ? cleanName.slice(lastDot) : '';
+}
+
+// --- Multer Upload Validation ---
+const baseMulterOptions = {
+    dest: os.tmpdir(),
+    limits: {
+        files: 1,
+        fields: 8,
+        fieldSize: 1024 * 1024
+    }
+};
+
+const uploadText = multer({
+    ...baseMulterOptions,
+    limits: { ...baseMulterOptions.limits, fileSize: Number.parseInt(process.env.MAX_TEXT_BYTES || '5242880', 10) } // 5MB
+});
+
+const uploadImage = multer({
+    ...baseMulterOptions,
+    limits: { ...baseMulterOptions.limits, fileSize: Number.parseInt(process.env.MAX_IMAGE_BYTES || '20971520', 10) }, // 20MB
+    fileFilter: (req, file, cb) => {
+        const ext = getFileExtension(file.originalname);
+        const mime = String(file.mimetype || '').toLowerCase();
+        if (mime.startsWith('image/') || IMAGE_FILE_EXTENSIONS.has(ext)) {
+            return cb(null, true);
+        }
+        cb(new Error('Invalid file type: expected an image'));
+    }
+});
+
+const uploadVideo = multer({
+    ...baseMulterOptions,
+    limits: { ...baseMulterOptions.limits, fileSize: Number.parseInt(process.env.MAX_VIDEO_BYTES || '104857600', 10) }, // 100MB
+    fileFilter: (req, file, cb) => {
+        const ext = getFileExtension(file.originalname);
+        const mime = String(file.mimetype || '').toLowerCase();
+        if (mime.startsWith('video/') || VIDEO_FILE_EXTENSIONS.has(ext)) {
+            return cb(null, true);
+        }
+        cb(new Error('Invalid file type: expected a video'));
+    }
+});
+
+// A dynamic upload handler that uses the 'type' field from req.body (if possible, though multer needs to know beforehand)
+// Since multipart/form-data doesn't guarantee field order, it's safer to just use maxUploadBytes for the generic endpoint 
+// or split the endpoint. We will use a 100MB generic limit for /api/analyze.
+const uploadGeneric = multer({
+    ...baseMulterOptions,
+    limits: { ...baseMulterOptions.limits, fileSize: Number.parseInt(process.env.MAX_GENERIC_BYTES || '104857600', 10) } // 100MB
+});
+
+function cleanupUploadedFile(file) {
+    if (!file || !file.path) return;
+    fs.unlink(file.path, (err) => {
+        if (err && err.code !== 'ENOENT') {
+            console.warn(`[TEMP_FILE_CLEANUP_FAILED] ${file.path}: ${err.message}`);
+        }
+    });
 }
 
 function isTextLikeMime(mimeType = '') {
@@ -2043,6 +2145,56 @@ function withFallbackEvidence(result, modality) {
     };
 }
 
+// ----------------------------------------------------
+// AUTHENTICATION ROUTES
+// ----------------------------------------------------
+app.post('/api/send-otp', async (req, res) => {
+    const { email, otp_code } = req.body;
+    if (!email || !otp_code) {
+        return res.status(400).json({ error: 'Email and OTP code are required' });
+    }
+    
+    try {
+        const emailJsPayload = {
+            service_id: 'service_3kf3fn8',
+            template_id: 'template_jlhm2ml',
+            user_id: 'UuI2vD4k5BPXDdMyD',
+            template_params: {
+                to_email: email,
+                email: email,
+                user_email: email,
+                otp_code: otp_code,
+                code: otp_code,
+                otp: otp_code,
+                message: otp_code
+            }
+        };
+
+        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(emailJsPayload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[AUTH] EmailJS Error:', errorText);
+            return res.status(500).json({ error: 'Failed to send OTP email via EmailJS', details: errorText });
+        }
+
+        console.log(`[AUTH] Real Email dispatched to: ${email}`);
+        return res.json({ success: true, message: 'OTP dispatched successfully' });
+    } catch (error) {
+        console.error('[AUTH] Failed to send email:', error);
+        return res.status(500).json({ error: 'Internal server error while sending email' });
+    }
+});
+
+// ----------------------------------------------------
+// ML PIPELINE ROUTES
+// ----------------------------------------------------
 app.post('/detect/text', async (req, res) => {
     const { text, language = 'auto' } = req.body;
     if (!text) return res.status(400).json({ error: 'No text provided' });
@@ -2057,7 +2209,7 @@ app.post('/detect/text', async (req, res) => {
     }
 });
 
-app.post('/api/analyze', upload.single('file'), async (req, res) => {
+app.post('/api/analyze', rateLimiter, uploadGeneric.single('file'), async (req, res) => {
     const requestedType = String(req.body.type || 'text').toLowerCase();
     const type = req.file ? inferAnalysisTypeFromFile(req.file, requestedType) : requestedType;
     try {
@@ -2123,7 +2275,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
     }
 });
 
-app.post('/detect/image', upload.single('image'), async (req, res) => {
+app.post('/detect/image', rateLimiter, uploadImage.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
     try {
         const pyResult = await tryProxyToPython(req, '/api/analyze', { type: 'image' }, req.file, 'file');
@@ -2140,7 +2292,7 @@ app.post('/detect/image', upload.single('image'), async (req, res) => {
     }
 });
 
-app.post('/detect/video', upload.single('video'), async (req, res) => {
+app.post('/detect/video', rateLimiter, uploadVideo.single('video'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No video provided' });
     try {
         const pyResult = await tryProxyToPython(req, '/api/analyze', { type: 'video' }, req.file, 'file');

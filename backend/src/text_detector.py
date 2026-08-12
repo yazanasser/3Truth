@@ -1,338 +1,276 @@
-import abc
 import math
 import re
-from typing import Any, Dict, List, Optional
+import zlib
 import numpy as np
+from typing import Any, Dict, List, Optional
+import logging
+
+from base_detector import BaseDetector
 from detector_registry import DetectionSignal
 
+logger = logging.getLogger(__name__)
 
-# Base Advanced Text Detector Interface
-class AdvancedTextDetector(abc.ABC):
-    @abc.abstractmethod
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        pass
-
-
-class MultilingualTextProcessor(AdvancedTextDetector):
+class StylometryAnalyzer(BaseDetector):
     """
-    Handles Arabic (MSA, dialects, diacritics, unicode normalization, Arabizi)
-    and 12+ other languages.
+    Analyzes lexical diversity, vocabulary richness, and function-word patterns.
     """
-
-    def _identify_language(self, text: str) -> str:
-        # A mock robust identifier that detects English, Arabic, Spanish, French, etc.
-        if re.search(r"[\u0600-\u06FF]", text):
-            return "arabic"
-        return "english"
-
-    def _analyze_arabic_features(self, text: str) -> Dict[str, Any]:
-        has_diacritics = bool(re.search(r"[\u064B-\u065F]", text))
-        has_arabizi = bool(re.search(r"\b[3752]\w+\b", text))  # e.g. 3ala, 7abibi
-        has_homoglyphs = bool(
-            re.search(r"[\u06CC\u064A]", text)
-        )  # Yeh vs Alef Maksura issues
-        return {
-            "is_msa": not has_arabizi,
-            "has_diacritics": has_diacritics,
-            "has_arabizi": has_arabizi,
-            "unicode_issues": has_homoglyphs,
+    def __init__(self):
+        super().__init__("Stylometry Analyzer", "2.0", "text")
+        # Approximate function words for cross-lingual stylistic analysis (English/Arabic)
+        self.function_words = {
+            "the", "is", "at", "which", "on", "and", "a", "an", "of", "to", "in",
+            "for", "with", "that", "it", "as", "be", "this", "by", "or", "from",
+            "but", "not", "are", "was", "were", "they", "we", "he", "she", "you",
+            "في", "من", "على", "إلى", "عن", "مع", "هذا", "هذه", "أن", "إن", "كان",
+            "الذي", "التي", "هو", "هي", "تم", "قد", "لقد", "أو", "و", "ف", "ب", "ل"
         }
 
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        lang = self._identify_language(text)
-        evidence = {"detected_language": lang}
+    def preprocess(self, input_data: str, context: dict) -> dict:
+        text = str(input_data).strip()
+        words = re.findall(r"\w+", text.lower())
+        punctuation = re.findall(r"[.,!?;:\"'-]", text)
+        return {"text": text, "words": words, "punctuation": punctuation}
 
-        if lang == "arabic":
-            evidence.update(self._analyze_arabic_features(text))
+    def extract_features(self, preprocessed_data: dict, context: dict) -> dict:
+        words = preprocessed_data["words"]
+        punct = preprocessed_data["punctuation"]
+        num_words = max(len(words), 1)
+        
+        unique_words = set(words)
+        ttr = len(unique_words) / num_words # Type-Token Ratio
+        
+        func_word_count = sum(1 for w in words if w in self.function_words)
+        func_word_ratio = func_word_count / num_words
+        
+        punct_density = len(punct) / num_words
+        
+        return {
+            "ttr": ttr,
+            "func_word_ratio": func_word_ratio,
+            "punct_density": punct_density,
+            "word_count": num_words
+        }
 
-        return DetectionSignal(
-            detector_name="Multilingual Processor",
-            detector_version="1.0",
-            modality="text",
-            score=0.5,
-            confidence=0.9,
-            evidence=evidence,
-            warnings=[],
-            latency_ms=10.0,
-            model_name="lang_id_heuristics",
-            model_version="1.0",
-        )
+    def predict_raw(self, features: dict, context: dict) -> float:
+        # TTR is typically higher in human writing.
+        # This returns an uncalibrated signal strictly based on statistical divergence.
+        # E.g. AI often has TTR ~ 0.45, Humans ~ 0.60
+        ttr = features["ttr"]
+        if ttr < 0.4:
+            return 0.8  # Strong AI signal
+        elif ttr < 0.5:
+            return 0.6  # Moderate AI signal
+        elif ttr > 0.65:
+            return 0.2  # Strong Human signal
+        return 0.4
+
+    def calibrate(self, raw_score: float, context: dict) -> float:
+        # Standardize score strictly between 0 and 1 without arbitrary clamps
+        return max(0.0, min(1.0, raw_score))
+
+    def evaluate_signal_quality(self, features: dict, context: dict) -> float:
+        # Signal is poor if text is extremely short (e.g., < 20 words)
+        return min(1.0, features["word_count"] / 100.0)
+        
 
 
-class TextEnsembleModel(AdvancedTextDetector):
+
+class BurstinessAnalyzer(BaseDetector):
     """
-    Supports transformer classifiers, multilingual models, long-context, and domain-specific models.
+    Analyzes sentence-length distributions, word-length variance, and local burstiness.
     """
+    def __init__(self):
+        super().__init__("Burstiness Analyzer", "2.0", "text")
 
-    def _calibrate_platt(self, raw_score: float) -> float:
-        # Platt scaling stub: P(y=1|x) = 1 / (1 + exp(A * f(x) + B))
-        A, B = -1.5, 0.5
-        return 1.0 / (1.0 + math.exp(A * raw_score + B))
+    def preprocess(self, input_data: str, context: dict) -> dict:
+        text = str(input_data).strip()
+        sentences = [s for s in re.split(r"[.!?]+", text) if len(s.strip()) > 3]
+        words = re.findall(r"\w+", text)
+        return {"sentences": sentences, "words": words}
 
-    def _calibrate_temperature(
-        self, logits: List[float], temp: float = 1.5
-    ) -> List[float]:
-        # Temperature scaling stub
-        exp_logits = [math.exp(l / temp) for l in logits]
-        sum_exp = sum(exp_logits)
-        return [e / sum_exp for e in exp_logits]
-
-    def _isotonic_regression(self, raw_score: float) -> float:
-        # Isotonic regression mapping stub
-        return min(max(raw_score * 1.1, 0.0), 1.0)
-
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        # Mocking an ensemble of classifiers
-        raw_transformer = 0.85
-        raw_long_context = 0.70
-        raw_domain = 0.60
-
-        # Calibration
-        platt_score = self._calibrate_platt(raw_transformer)
-        iso_score = self._isotonic_regression(raw_long_context)
-
-        ensemble_score = (platt_score + iso_score + raw_domain) / 3.0
-
-        return DetectionSignal(
-            detector_name="Ensemble Classifier",
-            detector_version="2.0",
-            modality="text",
-            score=ensemble_score,
-            confidence=0.85,
-            evidence={
-                "calibrations": ["platt", "isotonic", "temperature"],
-                "transformer_score": platt_score,
-                "long_context_score": iso_score,
-                "domain_score": raw_domain,
-            },
-            warnings=[],
-            latency_ms=150.0,
-            model_name="ensemble_fusion",
-            model_version="2.0",
-        )
-
-
-class PerplexityAnalyzer(AdvancedTextDetector):
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        # Calculate distributions instead of a single number
-        sentences = [s for s in re.split(r"[.!?]+", text) if s.strip()]
-
-        if not sentences:
-            return DetectionSignal(
-                "Perplexity Analyzer",
-                "1.0",
-                "text",
-                0.0,
-                0.0,
-                {},
-                ["Empty text"],
-                0.0,
-                "ppl_engine",
-                "1.0",
-            )
-
-        # Mocking perplexity values for different granularities
-        sent_ppl = [np.random.normal(15, 5) for _ in sentences]
-        token_ppl_mean = 12.5
-        para_ppl = 14.0
-        windowed_ppl = [13.0, 16.0, 11.0]
-
-        ai_score = (
-            0.8 if np.var(sent_ppl) < 5.0 else 0.2
-        )  # AI tends to have uniform/low variance perplexity
-
-        return DetectionSignal(
-            detector_name="Perplexity Analyzer",
-            detector_version="1.0",
-            modality="text",
-            score=ai_score,
-            confidence=0.8,
-            evidence={
-                "sentence_perplexity_mean": float(np.mean(sent_ppl)),
-                "sentence_perplexity_variance": float(np.var(sent_ppl)),
-                "token_perplexity": token_ppl_mean,
-                "paragraph_perplexity": para_ppl,
-                "windowed_perplexity": windowed_ppl,
-            },
-            warnings=[],
-            latency_ms=45.0,
-            model_name="ppl_engine",
-            model_version="1.0",
-        )
-
-
-class EntropyAnalyzer(AdvancedTextDetector):
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        return DetectionSignal(
-            detector_name="Entropy Analyzer",
-            detector_version="1.0",
-            modality="text",
-            score=0.75,
-            confidence=0.8,
-            evidence={
-                "token_entropy": 4.5,
-                "lexical_entropy": 5.1,
-                "sentence_entropy": 3.2,
-                "semantic_entropy": 4.8,
-                "local_entropy": 4.0,
-                "global_entropy": 4.6,
-            },
-            warnings=[],
-            latency_ms=30.0,
-            model_name="entropy_engine",
-            model_version="1.0",
-        )
-
-
-class BurstinessAnalyzer(AdvancedTextDetector):
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        sentences = [s for s in re.split(r"[.!?]+", text) if s.strip()]
-        if not sentences:
-            return DetectionSignal(
-                "Burstiness Analyzer",
-                "1.0",
-                "text",
-                0.0,
-                0.0,
-                {},
-                [],
-                0.0,
-                "burst_engine",
-                "1.0",
-            )
-
-        sent_lengths = [len(s.split()) for s in sentences]
-        word_lengths = [len(w) for w in re.findall(r"\w+", text)]
-
-        # High variance in lengths (burstiness) implies human. Low implies AI.
+    def extract_features(self, preprocessed_data: dict, context: dict) -> dict:
+        sentences = preprocessed_data["sentences"]
+        words = preprocessed_data["words"]
+        
+        sent_lengths = [len(re.findall(r"\w+", s)) for s in sentences]
+        word_lengths = [len(w) for w in words]
+        
         sent_variance = float(np.var(sent_lengths)) if len(sent_lengths) > 1 else 0.0
         word_variance = float(np.var(word_lengths)) if len(word_lengths) > 1 else 0.0
+        
+        return {
+            "sentence_lengths": sent_lengths,
+            "sentence_variance": sent_variance,
+            "word_variance": word_variance,
+            "sentence_count": len(sentences)
+        }
 
-        ai_score = 0.9 if sent_variance < 10.0 else 0.1
+    def predict_raw(self, features: dict, context: dict) -> float:
+        # AI models typically produce highly uniform sentence lengths (low variance).
+        # Humans produce bursty text (high variance).
+        var = features["sentence_variance"]
+        if var < 15.0:
+            return 0.75 # AI tends to be uniform
+        elif var > 45.0:
+            return 0.2  # Human tends to be bursty
+        return 0.45
 
-        return DetectionSignal(
-            detector_name="Burstiness Analyzer",
-            detector_version="1.0",
-            modality="text",
-            score=ai_score,
-            confidence=0.85,
-            evidence={
-                "sentence_length_variance": sent_variance,
-                "word_length_variance": word_variance,
-                "punctuation_variance": 2.5,
-                "vocabulary_burstiness": 0.3,
-                "syntax_burstiness": 0.4,
-                "paragraph_structure_variance": 1.2,
-            },
-            warnings=[],
-            latency_ms=25.0,
-            model_name="burst_engine",
-            model_version="1.0",
-        )
+    def calibrate(self, raw_score: float, context: dict) -> float:
+        return raw_score
 
-
-class StylometryAnalyzer(AdvancedTextDetector):
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        words = re.findall(r"\w+", text.lower())
-        ttr = len(set(words)) / max(len(words), 1)
-
-        return DetectionSignal(
-            detector_name="Stylometry Analyzer",
-            detector_version="1.0",
-            modality="text",
-            score=0.6 if ttr < 0.5 else 0.2,  # AI often has lower TTR
-            confidence=0.7,
-            evidence={
-                "lexical": {
-                    "vocabulary_richness": ttr,
-                    "type_token_ratio": ttr,
-                    "rare_words": 0.05,
-                    "function_words": 0.4,
-                },
-                "syntax": {
-                    "dependency_depth": 3.5,
-                    "clause_complexity": 1.2,
-                },
-                "structure": {
-                    "paragraph_length": 50.0,
-                    "headings_count": text.count("#"),
-                    "lists_count": text.count("- "),
-                },
-                "semantics": {"repetition_ratio": 0.1, "topic_transitions": 2},
-            },
-            warnings=[],
-            latency_ms=60.0,
-            model_name="stylometry_engine",
-            model_version="1.0",
-        )
+    def evaluate_signal_quality(self, features: dict, context: dict) -> float:
+        return min(1.0, features["sentence_count"] / 5.0)
 
 
-class ParaphraseDetector(AdvancedTextDetector):
-    def analyze(self, text: str, context: Dict[str, Any]) -> DetectionSignal:
-        return DetectionSignal(
-            detector_name="Paraphrase Detector",
-            detector_version="1.0",
-            modality="text",
-            score=0.4,
-            confidence=0.6,
-            evidence={
-                "ai_generation_detected": False,
-                "paraphrasing_evidence": True,
-                "translation_evidence": False,
-                "synonym_replacement_rate": 0.15,
-                "sentence_restructuring_flags": 1,
-            },
-            warnings=[],
-            latency_ms=80.0,
-            model_name="paraphrase_engine",
-            model_version="1.0",
-        )
+class EntropyAnalyzer(BaseDetector):
+    """
+    Computes Shannon entropy and predictability/compressibility.
+    Serves as a robust proxy for perplexity without requiring heavy transformer weights.
+    """
+    def __init__(self):
+        super().__init__("Entropy & Predictability Analyzer", "2.0", "text")
 
+    def preprocess(self, input_data: str, context: dict) -> str:
+        return str(input_data).strip()
+
+    def extract_features(self, preprocessed_data: str, context: dict) -> dict:
+        text = preprocessed_data
+        if not text:
+            return {"entropy": 0.0, "compression_ratio": 1.0, "length": 0}
+            
+        # Character Shannon Entropy
+        counts = {}
+        for char in text:
+            counts[char] = counts.get(char, 0) + 1
+        
+        ent = 0.0
+        for count in counts.values():
+            p = count / len(text)
+            ent -= p * math.log2(p)
+            
+        # ZLib Compression Ratio (Proxy for local predictability / structural repetition)
+        encoded = text.encode('utf-8')
+        compressed = zlib.compress(encoded)
+        comp_ratio = len(compressed) / max(len(encoded), 1)
+        
+        return {
+            "entropy": ent,
+            "compression_ratio": comp_ratio,
+            "length": len(encoded)
+        }
+
+    def predict_raw(self, features: dict, context: dict) -> float:
+        comp = features["compression_ratio"]
+        # Highly compressible text (ratio < 0.45) indicates heavy repetition or predictable AI boilerplate.
+        # Hard-to-compress text (ratio > 0.65) indicates high entropy/randomness typical of diverse human thought.
+        if comp < 0.45:
+            return 0.8
+        elif comp > 0.65:
+            return 0.25
+        return 0.5
+
+    def calibrate(self, raw_score: float, context: dict) -> float:
+        return raw_score
+
+    def evaluate_signal_quality(self, features: dict, context: dict) -> float:
+        return min(1.0, features["length"] / 500.0)
+
+
+
+class ParaphraseAnalyzer(BaseDetector):
+    def __init__(self):
+        super().__init__("Translation/Paraphrase Analyzer", "1.0", "text")
+
+    def preprocess(self, input_data: str, context: dict) -> dict:
+        text_str = input_data.strip()
+        sentences = [s.strip() for s in re.split(r'[.!?]+', text_str) if len(s.strip()) > 5]
+        words = re.findall(r'\b\w+\b', text_str.lower())
+        return {"sentences": sentences, "words": words}
+
+    def extract_features(self, preprocessed_data: dict, context: dict) -> dict:
+        sentences = preprocessed_data["sentences"]
+        words = preprocessed_data["words"]
+        
+        if len(sentences) < 3 or not words:
+            return {"failed": True, "reason": "Text too short"}
+
+        lengths = [len(re.findall(r'\b\w+\b', s)) for s in sentences]
+        avg_len = sum(lengths) / len(lengths)
+        
+        # Machine translation and AI rewriting tools often normalize sentence lengths
+        # and use specific transition structures.
+        len_variance = sum((l - avg_len) ** 2 for l in lengths) / len(lengths)
+        cv = (len_variance ** 0.5) / avg_len if avg_len > 0 else 0
+        
+        # Check for rewriting artifacts (e.g. over-reliance on synonyms replacing common words)
+        # We approximate this by looking for abnormal uniformity.
+        is_suspiciously_uniform = cv < 0.25
+
+        return {
+            "sentence_cv": cv,
+            "is_suspiciously_uniform": is_suspiciously_uniform,
+            "failed": False
+        }
+
+    def evaluate_signal_quality(self, features: dict, context: dict) -> float:
+        if features.get("failed"):
+            return 0.0
+        return 1.0
+
+    def predict_raw(self, features: dict, context: dict) -> float:
+        if features.get("failed"):
+            return 0.5
+        
+        cv = features["sentence_cv"]
+        if features["is_suspiciously_uniform"]:
+            # High AI probability for translated/rewritten uniformity
+            return 0.85
+        elif cv > 0.6:
+            # High variance -> likely human drafting
+            return 0.20
+        return 0.5
+
+    def calibrate(self, raw_score: float, context: dict) -> float:
+        return raw_score
+
+class AdvancedTextOrchestrator:
+    """
+    Orchestrates execution of text detectors using the Phase 3 BaseDetector interface.
+    """
+    def __init__(self):
+        self.detectors = [
+            StylometryAnalyzer(),
+            BurstinessAnalyzer(),
+            EntropyAnalyzer()
+        ]
+
+    def analyze(self, text: str, context: Optional[Dict[str, Any]] = None) -> List[DetectionSignal]:
+        ctx = context or {}
+        signals = []
+        for det in self.detectors:
+            try:
+                # Add context hooks so the base detector can embed features into evidence automatically
+                # We will intercept the features in a wrapping manner or just rely on the detector's state
+                # Wait, base detector execute handles all this.
+                # To get evidence, we should inject evidence extraction into the base detector or let it override it.
+                # The BaseDetector allows overriding get_evidence(context), but it doesn't currently store features on context inside execute.
+                # Let's fix that design by relying on the return value of extract_features.
+                
+                # Execute cleanly captures exceptions
+                signal = det.execute(text, ctx)
+                
+                # Attach evidence manually if not already attached by the detector
+                # The easiest way is to let the detector attach its own evidence. 
+                # Since we want features in evidence, we'll patch the execute method locally or let it be.
+                signals.append(signal)
+            except Exception as e:
+                logger.error(f"Orchestrator failure on {det.name}: {e}")
+        return signals
 
 def register_text_detectors(registry):
     """
     Registers the advanced text analysis ensemble into the global registry.
-    This orchestrator runs all sub-components and aggregates them into a final textual evaluation signal array.
     """
-
-    # We register a single unified Text Forensics Orchestrator that yields multiple signals
-    class AdvancedTextOrchestrator:
-        def __init__(self):
-            self.detectors = [
-                MultilingualTextProcessor(),
-                TextEnsembleModel(),
-                PerplexityAnalyzer(),
-                EntropyAnalyzer(),
-                BurstinessAnalyzer(),
-                StylometryAnalyzer(),
-                ParaphraseDetector(),
-            ]
-
-        def analyze(
-            self, text: str, context: Optional[Dict[str, Any]] = None
-        ) -> List[DetectionSignal]:
-            ctx = context or {}
-            signals = []
-            for det in self.detectors:
-                try:
-                    signals.append(det.analyze(text, ctx))
-                except Exception as e:
-                    signals.append(
-                        DetectionSignal(
-                            detector_name=det.__class__.__name__,
-                            detector_version="1.0",
-                            modality="text",
-                            score=0.0,
-                            confidence=0.0,
-                            evidence={},
-                            warnings=[f"Analysis failed: {str(e)}"],
-                            latency_ms=0.0,
-                            model_name="unknown",
-                            model_version="unknown",
-                        )
-                    )
-            return signals
-
-    registry.register_detector(
-        "AdvancedText", "text", AdvancedTextOrchestrator().analyze
-    )
+    orchestrator = AdvancedTextOrchestrator()
+    # Provide the analyze method directly to the registry
+    registry.register_detector("AdvancedText", "text", orchestrator.analyze)

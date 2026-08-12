@@ -15,6 +15,11 @@ class DetectionSignal:
     score: float
     confidence: float
     evidence: Dict[str, Any]
+    prediction: Optional[Any] = None
+    calibrated_probability: Optional[float] = None
+    reliability: Optional[float] = None
+    signal_quality: Optional[float] = None
+    diagnostic_information: Dict[str, Any] = field(default_factory=dict)
     warnings: List[str] = field(default_factory=list)
     latency_ms: float = 0.0
     model_name: Optional[str] = None

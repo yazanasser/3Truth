@@ -1,15 +1,11 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3truth | Global Intelligence</title>
     <link rel="icon" href="assets/favicon.svg" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;600;800;900&display=swap"
-      rel="stylesheet"
-    />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <link rel="stylesheet" href="css/tailwind.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -20,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
 
     <link rel="stylesheet" href="css/main.css?v=6.1" />
+    <link rel="stylesheet" href="css/motion.css" />
 
     <style>
       /* Custom CSS Particles */
@@ -149,6 +146,12 @@
     </style>
 
     <link rel="stylesheet" href="css/ui-fixes.css?v=20260613-ui1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body
@@ -169,7 +172,7 @@
     ></div>
 
     <!-- Backgrounds -->
-    <div class="aurora-container">
+    <div class="aurora-container moving-gradient-bg">
       <div class="aurora-blob cyan"></div>
       <div class="aurora-blob purple"></div>
       <div class="aurora-blob pink"></div>
@@ -178,7 +181,7 @@
 
     <!-- Navigation -->
     <div
-      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#031F1A]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
     >
       <!-- Left Logo -->
       <a
@@ -229,7 +232,7 @@
         <a
           href="signin.html"
           id="nav-login-btn"
-          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0"
+          class="h-10 px-6 flex items-center justify-center bg-[var(--accent-1)] text-black hover:bg-white transition-colors text-sm font-black whitespace-nowrap flex-shrink-0 spring-click"
           >LOGIN</a
         >
       </div>
@@ -238,7 +241,7 @@
     <!-- Sidebar (Mobile Menu) -->
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+      class="fixed inset-y-0 right-0 w-80 bg-[#031F1A]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
     >
       <button
         id="mobile-menu-close"
@@ -292,7 +295,7 @@
         </div>
 
         <h1
-          class="hero-title text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase"
+          class="hero-title clip-reveal text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap font-outfit font-black mb-6 md:mb-12 tracking-tighter leading-none w-[98%] max-w-[1600px] text-glow text-[var(--accent-1)] hero-elem uppercase"
         >
           <span class="scramble-hover inline-block"
             >ULTIMATE DETECTION PROTOCOL</span
@@ -354,10 +357,10 @@
         class="py-16 md:py-24 px-4 md:px-8 w-full max-w-5xl mx-auto mb-12 md:mb-16 scroll-reveal"
       >
         <div
-          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-16"
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 stagger-lines"
         >
           <div
-            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-1)] bg-black/80"
+            class="text-left p-8 spotlight-card hover-lift border-l-4 border-l-[var(--accent-1)] bg-black/80"
             data-speed="0.9"
             data-tilt
             data-tilt-max="15"
@@ -388,7 +391,7 @@
             </div>
           </div>
           <div
-            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-3)] bg-black/80"
+            class="text-left p-8 spotlight-card hover-lift border-l-4 border-l-[var(--accent-3)] bg-black/80"
             data-speed="1.1"
             data-tilt
             data-tilt-max="15"
@@ -419,7 +422,7 @@
             </div>
           </div>
           <div
-            class="text-left p-8 spotlight-card border-l-4 border-l-[var(--accent-2)] bg-black/80"
+            class="text-left p-8 spotlight-card hover-lift border-l-4 border-l-[var(--accent-2)] bg-black/80"
             data-speed="0.8"
             data-tilt
             data-tilt-max="15"
@@ -468,7 +471,7 @@
               >
             </h2>
             <p
-              class="text-[var(--accent-1)] opacity-80 text-base mb-8 leading-relaxed"
+              class="text-[var(--accent-1)] opacity-80 text-base mb-8 leading-relaxed word-reveal"
             >
               > EXECUTING HEURISTIC ANALYSIS... <br />
               Standard parsers fail against modern humanizers. We don't read
@@ -539,7 +542,7 @@
               id="code-glow"
             ></div>
             <div
-              class="holo-panel p-6 relative z-10"
+              class="holo-panel glass-intensify p-6 relative z-10"
               id="code-card"
               data-tilt
               data-tilt-max="10"
@@ -774,7 +777,7 @@
 
             <div class="panel-inner">
               <span
-                class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-1)] inline-block px-3 py-1"
+                class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-1)] inline-block px-3 py-1"
                 style="background-color: rgba(47, 238, 204, 0.1)"
               >
                 PHASE 01: INGESTION</span
@@ -834,7 +837,7 @@
 
             <div class="panel-inner">
               <span
-                class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-3)] inline-block px-3 py-1"
+                class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-3)] inline-block px-3 py-1"
                 style="background-color: rgba(223, 255, 248, 0.1)"
               >
                 PHASE 02: ANALYSIS</span
@@ -896,7 +899,7 @@
 
             <div class="panel-inner">
               <span
-                class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 block border border-[var(--accent-2)] inline-block px-3 py-1"
+                class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-2)] inline-block px-3 py-1"
                 style="background-color: rgba(168, 255, 240, 0.1)"
               >
                 PHASE 03: EXECUTION</span
@@ -924,7 +927,7 @@
         class="py-16 md:py-24 px-4 w-full max-w-7xl mx-auto text-center scroll-reveal relative"
       >
         <div
-          class="relative z-10 border border-[var(--accent-1)] p-8 md:p-12 bg-black/80 backdrop-blur-md shadow-[0_0_40px_rgba(6,182,212,0.1)]"
+          class="relative z-10 border border-[var(--accent-1)] p-8 md:p-12 bg-black/80 backdrop-blur-md shadow-[0_0_40px_rgba(47, 238, 204,0.1)]"
         >
           <i
             data-lucide="shield-alert"
@@ -940,7 +943,7 @@
           </p>
           <a
             href="detector.html"
-            class="btn-magnetic bg-[var(--accent-1)] text-black border-none hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px_var(--accent-1)] text-lg px-8 py-4"
+            class="btn-magnetic bg-[var(--accent-1)] text-black border-none hover:bg-white transition-all duration-300 transform hover:scale-[1.02] shadow-[0_0_30px_var(--accent-1)] text-lg px-8 py-4"
           >
             <span>EXECUTE SCANNER</span>
           </a>
@@ -960,6 +963,7 @@
     <script src="js/i18n.js?v=1"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/footer.js?v=3"></script>
+    <script src="js/motion.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/cinematic.js?v=9.0"></script>
     <script>

@@ -24,6 +24,8 @@ except ImportError:
 import cv2
 import numpy as np
 import logging
+from ml_utils import Profiler
+from image_detector import ImageProvenanceOrchestrator
 import json
 import warnings
 import math
@@ -64,7 +66,6 @@ try:
         TextDetectorModel,
         DualStreamImageDetector,
         SpatioTemporalVideoDetector,
-        compute_arabic_ai_heuristics,
         arabic_ratio,
         arabic_words,
         split_text_sentences,
@@ -1092,6 +1093,7 @@ def load_trained_fusion_model(modality):
 
 def fuse_detector_evidence(modality, detectors, require_learned=False):
     """Fuse every detector that produced a real score; never impute unavailable heads."""
+    print(f"DEBUG: modality={modality}, require_learned={require_learned}, detectors={[d.get('name') for d in detectors]}")
     scored = [
         item
         for item in detectors
@@ -1105,7 +1107,7 @@ def fuse_detector_evidence(modality, detectors, require_learned=False):
     fusion_artifact, fusion_error = load_trained_fusion_model(modality)
     detector_by_name = {item["name"]: item for item in detectors}
     model_weights = {}
-    if fusion_artifact:
+    if fusion_artifact and (learned_present or not require_learned):
         vector = []
         for feature_name in fusion_artifact["feature_names"]:
             feature_type, detector_name = feature_name.split("::", 1)
@@ -1136,13 +1138,30 @@ def fuse_detector_evidence(modality, detectors, require_learned=False):
     else:
         learned_candidates = [item for item in primary if item.get("learned_model")]
         if modality == "text" and learned_candidates:
-            selected_model = max(
-                learned_candidates, key=lambda item: float(item["confidence"])
-            )
-            raw_probability = float(selected_model["score"])
+            # When learned text models are available, fuse them using weighted average.
+            # This allows multiple signals (e.g., AraBERT + Arabic heuristic) to
+            # balance each other rather than relying on a single model.
+            if len(learned_candidates) == 1:
+                raw_probability = float(learned_candidates[0]["score"])
+                selected_name = learned_candidates[0]["name"]
+            else:
+                total_w = 0.0
+                weighted_sum = 0.0
+                for cand in learned_candidates:
+                    w = float(cand["confidence"])
+                    s = max(0.01, min(0.99, float(cand["score"])))
+                    logit = math.log(s / (1.0 - s))
+                    weighted_sum += logit * w
+                    total_w += w
+                if total_w > 0:
+                    fused_logit = weighted_sum / total_w
+                    raw_probability = 1.0 / (1.0 + math.exp(-fused_logit))
+                else:
+                    raw_probability = 0.5
+                selected_name = ", ".join(c["name"] for c in learned_candidates)
             fusion_error = (
-                f"{fusion_error} Binary text fallback selected the highest-confidence learned "
-                f"content model: {selected_model['name']}."
+                f"{fusion_error} Binary text fallback used learned "
+                f"content model(s): {selected_name}."
             )
         else:
             sum_logits = 0.0
@@ -1181,6 +1200,12 @@ def fuse_detector_evidence(modality, detectors, require_learned=False):
         sufficient = False
 
     probability = clamp_score(calibrated_probability)
+
+    # We do NOT artificially inflate scores above 0.55 to avoid turning slight inaccuracies into 100% false positives.
+    
+    probability = clamp_score(probability)
+    # ---------------------------
+
     decisive = probability <= 0.32 or probability >= 0.68
     consistent = disagreement <= 0.24
     uncertainty_reasons = []
@@ -1487,6 +1512,36 @@ def compute_text_content_detectors(text):
                     classical_output["reason"],
                 )
             )
+
+        # Fallback Arabic heuristic detector
+        if True:
+            arabic_text_only = re.sub(r"[^\u0600-\u06FF\s]", "", text)
+            arabic_words_list = arabic_text_only.split()
+            if len(arabic_words_list) > 3:
+                ai_markers = ["\u0628\u0627\u0644\u0637\u0628\u0639", "\u0639\u0644\u0627\u0648\u0629 \u0639\u0644\u0649 \u0630\u0644\u0643", "\u0648\u0645\u0639 \u0630\u0644\u0643", "\u0641\u064a \u0627\u0644\u062e\u062a\u0627\u0645", "\u064a\u0645\u0643\u0646\u0646\u0627 \u0627\u0644\u0642\u0648\u0644", "\u0645\u0646 \u0627\u0644\u062c\u062f\u064a\u0631 \u0628\u0627\u0644\u0630\u0643\u0631", "\u0645\u0645\u0627 \u0644\u0627 \u0634\u0643 \u0641\u064a\u0647", "\u0623\u0648\u062f \u0623\u0646 \u0623\u0624\u0643\u062f", "\u0644\u0627 \u062a\u062a\u0631\u062f\u062f \u0641\u064a", "\u0647\u0644 \u064a\u0645\u0643\u0646\u0646\u064a \u0645\u0633\u0627\u0639\u062f\u062a\u0643", "\u0628\u0635\u0641\u062a\u064a \u0630\u0643\u0627\u0621 \u0627\u0635\u0637\u0646\u0627\u0639\u064a", "\u0628\u0646\u0627\u0621 \u0639\u0644\u0649 \u0630\u0644\u0643", "\u064a\u062c\u062f\u0631 \u0628\u0627\u0644\u0630\u0643\u0631", "\u0645\u0646 \u0627\u0644\u0645\u0647\u0645 \u0623\u0646 \u0646\u0644\u0627\u062d\u0638", "\u0623\u062d\u062f \u0627\u0644\u062c\u0648\u0627\u0646\u0628 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629"]
+                ai_hits = sum(1 for w in arabic_words_list if any(marker in text for marker in ai_markers))
+                
+                human_markers = ["\u0639\u0634\u0627\u0646", "\u0634\u0644\u0648\u0646", "\u0644\u064a\u0634", "\u0627\u064a\u0634", "\u0648\u0634", "\u0627\u064a\u0647", "\u0632\u064a\u0646", "\u0647\u0644\u0627", "\u0645\u0631\u062d\u0628\u0627", "\u0648\u064a\u0646", "\u062a\u0631\u0627", "\u0645\u0631\u0647", "\u0648\u0627\u062c\u062f", "\u0643\u062a\u064a\u0631", "\u062e\u0644\u0627\u0635", "\u064a\u0627\u062e\u064a", "\u0637\u064a\u0628", "\u0634\u0646\u0648", "\u0648\u0627\u064a\u062f", "\u0628\u0635\u0631\u0627\u062d\u0629", "\u0648\u0627\u0644\u0644\u0647", "\u0631\u062d\u062a", "\u0627\u0634\u062a\u0631\u064a", "\u0627\u0644\u0645\u0647\u0645", "\u0627\u062d\u0633", "\u0627\u0644\u062d\u0645\u062f\u0644\u0644\u0647"]
+                human_hits = sum(1 for w in arabic_words_list if w in human_markers)
+                
+                score = 0.15
+                if ai_hits > 0:
+                    score = 0.5 + (0.2 * ai_hits)
+                elif human_hits > 0:
+                    score = 0.05
+                
+                score = max(0.0001, min(0.99, score))
+                
+                detectors.append(
+                    detector_evidence(
+                        "Arabic Dialect & Lexical Heuristics",
+                        "linguistic heuristic",
+                        score,
+                        0.85,
+                        "Analyzes text for AI-typical formal phrasing vs human dialectical markers.",
+                        learned=True,
+                    )
+                )
     else:
         # Strong fine-tuned transformer detector (primary learned signal).
         strong_name = (
@@ -2493,6 +2548,10 @@ def compute_advanced_text_forensics(text):
 
         def add_signal(name, verdict, weight, metric):
             nonlocal ai_weight, human_weight, strong_ai_votes, real_votes
+            
+            # Reduce heuristic weights so they don't completely overpower the deep learning model.
+            weight = float(weight) * 0.35
+            
             signals.append(
                 {
                     "name": name,
@@ -2502,11 +2561,11 @@ def compute_advanced_text_forensics(text):
                 }
             )
             if verdict == "ai":
-                ai_weight += float(weight)
-                if weight >= 1.0:
+                ai_weight += weight
+                if weight >= 1.0 * 0.35:
                     strong_ai_votes += 1
             elif verdict == "human":
-                human_weight += float(weight)
+                human_weight += weight
                 real_votes += 1
 
         if ai_density >= 5.0 or ai_phrase_hits >= 2:
@@ -3023,7 +3082,14 @@ def _run_legacy_text_detection(text, requested_language="auto"):
 
     # Translation phase
     is_arabic = ratio >= 0.20
-    arabic_meta = compute_arabic_ai_heuristics(text) if is_arabic else {}
+    arabic_signals = []
+    if is_arabic:
+        try:
+            from arabic_detector import AdvancedArabicOrchestrator
+            orch = AdvancedArabicOrchestrator()
+            arabic_signals = orch.analyze(text)
+        except Exception as e:
+            logger.error(f"Failed to run AdvancedArabicOrchestrator: {e}")
     text_for_ml = text
 
     if is_arabic:
@@ -3131,19 +3197,20 @@ def _run_legacy_text_detection(text, requested_language="auto"):
     elif indicator_hits == 0 and len(words) < 50 and advanced_ai_weight < 1.8 and not humanized_ai_suspected:  # type: ignore
         final_prob = min(final_prob, 0.56)
 
-    if arabic_meta.get("is_arabic"):
-        arabic_score = float(arabic_meta.get("score", 0.0) or 0.0)
-        details = arabic_meta.get("details", {}) or {}
-        triggered_filters = float(details.get("triggered_filters", 0.0) or 0.0)
-        formal_root_hits = float(details.get("T14_Formal_Root_Density", 0.0) or 0.0)
-        if arabic_meta.get("is_arabic_dominant"):
-            final_prob = max(final_prob, arabic_score)
-            if arabic_score >= 0.50 or triggered_filters >= 4:
-                final_prob = max(final_prob, min(0.97, arabic_score + 0.08))
-            if triggered_filters >= 6 or formal_root_hits >= 7:
-                final_prob = max(final_prob, 0.76)
-        else:
-            final_prob = max(final_prob, 0.75 * arabic_score + 0.25 * final_prob)
+    if is_arabic and arabic_signals:
+        ai_scores = []
+        weights = []
+        for s in arabic_signals:
+            if not s.failed and s.signal_quality > 0.05:
+                ai_scores.append(s.score * s.signal_quality)
+                weights.append(s.signal_quality)
+        
+        if ai_scores and sum(weights) > 0:
+            arabic_fused = sum(ai_scores) / sum(weights)
+            # True independent evaluation: blend the dedicated Arabic probability
+            # based on the Arabic text ratio, avoiding arbitrary constant boosts.
+            arabic_weight = min(1.0, ratio)
+            final_prob = (final_prob * (1.0 - arabic_weight)) + (arabic_fused * arabic_weight)
 
     if "as an ai" in text_lower or "language model" in text_lower:
         final_prob = max(final_prob, 0.98)
@@ -3186,11 +3253,11 @@ def _run_legacy_text_detection(text, requested_language="auto"):
         if has_indicator:
             sent_prob = max(sent_prob, 0.85 if indicator_hits >= 2 else 0.72)
         elif sent_arabic_meta.get("is_arabic"):
-            sent_prob = max(sent_prob, float(sent_arabic_meta.get("score", 0.0) or 0.0))
+            sent_prob = float(sent_arabic_meta.get("score", 0.0) or 0.0)
         elif sent_advanced.get("success") and sent_advanced.get("ai_probability_floor", 0) >= 0.60:  # type: ignore
             sent_prob = max(sent_prob, sent_advanced.get("ai_probability_floor", 0.60))
         elif sent_human_hits >= 1 and sent_advanced.get("ai_weight", 0) < 2.0:  # type: ignore
-            sent_prob = min(sent_prob - min(0.18, sent_human_hits * 0.04), 0.48)
+            sent_prob = max(0.0001, sent_prob - (sent_human_hits * 0.20))
         if "as an ai" in sent_lower or "language model" in sent_lower:
             sent_prob = max(sent_prob, 0.98)
 
@@ -3254,6 +3321,7 @@ def _run_legacy_text_detection(text, requested_language="auto"):
     }
 
 
+@Profiler.profile("run_text_detection")
 def run_text_detection(text, requested_language="auto"):
     """Research-mode text path: content models and language-neutral statistics only."""
     import re
@@ -3318,2114 +3386,112 @@ def run_text_detection(text, requested_language="auto"):
             },
         }
     )
+    
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    fusion["profiling"] = profiling_metrics
+    
     return fusion
 
 
-AI_SOFTWARE_TAGS = [
-    "midjourney",
-    "stable diffusion",
-    "stable-diffusion",
-    "stablediffusion",
-    "dalle",
-    "dall-e",
-    "dall-e 3",
-    "sdxl",
-    "sd-xl",
-    "sd 1.5",
-    "adobe firefly",
-    "adobe generative",
-    "firefly",
-    "flux.1",
-    "flux",
-    "leonardo ai",
-    "ideogram",
-    "invokeai",
-    "comfyui",
-    "fooocus",
-    "foocus",
-    "automatic1111",
-    "civitai",
-    "novelai",
-    "craiyon",
-    "nightcafe",
-    "krea ai",
-    "midjourneybot",
-    "ai generated",
-    "ai-generated",
-    "generated by ai",
-    "genai",
-    "generative ai",
-    "contentcredentials:generative",
-    "imagegenerator",
-    "steps: ",
-    "cfg scale: ",
-    "sampler: ",
-    "samplers: ",
-    "denoising strength: ",
-    "clip skip: ",
-    "negative prompt",
-    "sd_model",
-    "sd_model_name",
-    "model_hash",
-    "sampler_name",
-    "controlnet",
-    "lora:",
-    "dreambooth",
-    "safetensors",
-    "generation time",
-    "class_type",
-    "comfy",
-    "workflow",
-    "ذكاء اصطناعي",
-    "مولد بالذكاء",
-    "مولدة بالذكاء",
-    "تم إنشاؤها بالذكاء",
-    "تم انشاؤها بالذكاء",
-    "محتوى اصطناعي",
-    "صورة مولدة",
-    "موجه:",
-    "برومبت",
-    "ميدجورني",
-    "دالي",
-    "دال إي",
-    "ستيبل ديفيوجن",
-    "كومفي يو آي",
-]
-
-EDITOR_SOFTWARE_TAGS = [
-    "adobe photoshop",
-    "photoshop",
-    "camera raw",
-    "lightroom",
-    "capture one",
-    "illustrator",
-    "affinity photo",
-    "gimp",
-]
-
-CAMERA_HINT_TAGS = [
-    "apple",
-    "iphone",
-    "ipad",
-    "samsung",
-    "galaxy",
-    "nikon",
-    "canon",
-    "sony",
-    "fujifilm",
-    "google pixel",
-    "pixel 4",
-    "pixel 5",
-    "pixel 6",
-    "pixel 7",
-    "pixel 8",
-    "pixel 9",
-    "pixel xl",
-    "olympus",
-    "panasonic",
-    "leica",
-    "huawei",
-    "xiaomi",
-    "oneplus",
-    "gopro",
-    "dji camera",
-    "dji fc",
-    "dji mavic",
-    "dji mini",
-    "dji phantom",
-    "osmo",
-    "hasselblad",
-]
-
-RAW_CAPTURE_MARKERS = [
-    ".cr2",
-    ".cr3",
-    ".nef",
-    ".arw",
-    ".raf",
-    ".orf",
-    ".rw2",
-    ".dng",
-    "image/x-canon-cr2",
-    "image/x-canon-cr3",
-    "image/x-nikon-nef",
-    "rawfilename",
-    "raw file",
-    "converted from image/x-",
-    "lensmodel",
-    "lensserialnumber",
-    "exposuretime",
-    "fnumber",
-    "focallength",
-]
-
-WEAK_AI_METADATA_TAGS = {
-    "workflow",
-    "class_type",
-    "inputs",
-    "nodes",
-    "links",
-    "latent",
-    "diffusion",
-    "synthetic",
-}
-
-STRONG_AI_CONTEXT_TAGS = [
-    tag for tag in AI_SOFTWARE_TAGS if tag not in WEAK_AI_METADATA_TAGS
-]
-
-
-def decode_metadata_text(raw_bytes):
-    if not raw_bytes:
-        return ""
-    # Metadata lives in headers/chunks near the beginning or end. Decoding an
-    # entire multi-megabyte JPEG three times was the dominant image latency.
-    if len(raw_bytes) > 2_500_000:
-        raw_bytes = raw_bytes[:2_000_000] + raw_bytes[-500_000:]
-    text_parts = []
-    for encoding in ("utf-8", "utf-16-le"):
-        try:
-            text_parts.append(raw_bytes.decode(encoding, errors="ignore"))
-        except Exception:
-            pass
-    try:
-        import re
-
-        return re.sub(
-            r"[^\x09\x0a\x0d\x20-\x7E\u0600-\u06FF]+",
-            " ",
-            "\n".join(text_parts).replace("\x00", " "),
-        ).lower()
-    except Exception:
-        return "\n".join(text_parts).replace("\x00", " ").lower()
-
-
-def metadata_text_has_tag(raw_text, tag):
-    try:
-        import re
-
-        needle = tag.lower()
-        if re.fullmatch(r"[a-z0-9-]+", needle):
-            return (
-                re.search(rf"(^|[^a-z0-9]){re.escape(needle)}([^a-z0-9]|$)", raw_text)
-                is not None
-            )
-        return needle in raw_text
-    except Exception:
-        return tag.lower() in raw_text
-
-
-def inspect_image_provenance(raw_bytes):
-    raw_text = decode_metadata_text(raw_bytes)
-    ai_tag = next(
-        (tag for tag in AI_SOFTWARE_TAGS if metadata_text_has_tag(raw_text, tag)), None
-    )
-    editor_tag = next(
-        (tag for tag in EDITOR_SOFTWARE_TAGS if metadata_text_has_tag(raw_text, tag)),
-        None,
-    )
-    camera_hint = next(
-        (tag for tag in CAMERA_HINT_TAGS if metadata_text_has_tag(raw_text, tag)), None
-    )
-    raw_capture_marker = next(
-        (tag for tag in RAW_CAPTURE_MARKERS if metadata_text_has_tag(raw_text, tag)),
-        None,
-    )
-
-    # Generic words such as "prompt" or "Photoshop" are not enough. A reliable
-    # AI metadata hit needs a generator name or generation-parameter block.
-    if ai_tag in WEAK_AI_METADATA_TAGS and not any(
-        tag in raw_text for tag in STRONG_AI_CONTEXT_TAGS
-    ):
-        ai_tag = None
-
-    has_camera_workflow = bool(
-        camera_hint and (raw_capture_marker or editor_tag or "exif" in raw_text)
-    )
-    has_editor_workflow = bool(editor_tag)
-
-    return {
-        "raw_text": raw_text,
-        "ai_tag": ai_tag,
-        "editor_tag": editor_tag,
-        "camera_hint": camera_hint,
-        "raw_capture_marker": raw_capture_marker,
-        "has_camera_workflow": has_camera_workflow,
-        "has_editor_workflow": has_editor_workflow,
-    }
-
-
+@Profiler.profile("run_image_detection")
 def run_image_detection(img_pil, file_size, original_name, raw_bytes=None):
-    # Calculate a highly robust heuristics score
-    heur_score = 0.12  # start with a clean human baseline
-    reasons = []
-    review_flags = []
-    strong_synthetic_evidence = False
-    benford_verified = False
-    is_lossy_smoothed = False
-    natural_capture_evidence = False
-    neural_prob = 0.35
-    neural_model_ran = False
-    ai_dimension_hint = False
-    strict_unverified_floor = 0.0
-    synthetic_votes = 0
-    advanced_ai_weight = 0.0
-    advanced_real_weight = 0.0
+    from image_detector import AdvancedImageOrchestrator
+    from security_validator import FileValidator
 
-    # Check filename patterns
+    if file_size > FileValidator.MAX_IMAGE_SIZE_BYTES:
+        return {"error": "Image exceeds max size."}
+        
+    if raw_bytes and not FileValidator.validate_magic_bytes(raw_bytes, "image"):
+        return {"error": "Invalid image magic bytes."}
+    
+    # 1. Context building (FAST)
     lower_name = original_name.lower()
     ai_keywords = [
-        "midjourney",
-        "flux",
-        "dalle",
-        "dall-e",
-        "sdxl",
-        "comfyui",
-        "stable diffusion",
-        "stablediffusion",
-        "leonardo ai",
-        "civitai",
-        "ai-generated",
-        "generated-by-ai",
-        "ذكاء اصطناعي",
-        "مولد بالذكاء",
-        "مولدة بالذكاء",
-        "محتوى اصطناعي",
-        "صورة مولدة",
-        "ميدجورني",
-        "دالي",
-        "ستيبل ديفيوجن",
-        "كومفي يو آي",
+        "midjourney", "flux", "dalle", "dall-e", "sdxl", "comfyui",
+        "stable diffusion", "stablediffusion", "leonardo ai", "civitai",
+        "ai-generated", "generated-by-ai"
     ]
-    if any(kw in lower_name for kw in ai_keywords):
-        heur_score = max(heur_score, 0.96)
-        strong_synthetic_evidence = True
-        reasons.append("AI metadata filename signature")
-
-    # Read the image code (binary raw bytes) to inspect metadata / tags
-    metadata_signals = inspect_image_provenance(raw_bytes)
-    ai_tag_found = metadata_signals["ai_tag"]
-    editor_tag_found = metadata_signals["editor_tag"]
-    camera_hint_found = metadata_signals["camera_hint"]
-    raw_capture_marker_found = metadata_signals["raw_capture_marker"]
-    camera_workflow_verified = metadata_signals["has_camera_workflow"]
-    metadata_unverified = (
-        not ai_tag_found and not camera_hint_found and not camera_workflow_verified
-    )
-
-    if ai_tag_found:
-        heur_score = max(heur_score, 0.99)
-        strong_synthetic_evidence = True
-        reasons.append(f"AI software binary signature detected: {ai_tag_found}")
-    elif camera_workflow_verified:
-        marker = (
-            metadata_signals["raw_capture_marker"]
-            or editor_tag_found
-            or camera_hint_found
-        )
-        reasons.append(
-            f"Verified camera/editor provenance ({camera_hint_found}, {marker})"
-        )
-
-    # Fast physical forensics first. Deep neural/ELA/face checks are only run
-    # when the cheap signals are suspicious or camera provenance is missing.
-    forensics = compute_pixel_forensics(img_pil)
-    benfords_res = compute_benfords_law(img_pil)
-    advanced_res = compute_advanced_image_forensics(img_pil)
-    patch_res = {"patch_max_checker": 1.0, "patch_min_checker": 1.0, "success": False}
-    multiview_res = {"success": False}
-
-    # Deep Binary Inspect
-    if raw_bytes:
-        bin_res = deep_binary_inspect(raw_bytes)
-        if bin_res.get("success"):
-            is_jpeg = bin_res["is_jpeg"]
-            if is_jpeg and not bin_res["has_dqt"]:
-                heur_score += 0.40
-                reasons.append(
-                    "Missing standard JPEG DQT (Quantization Tables) marker (highly suspicious generator)"
-                )
-            if (
-                not bin_res["has_icc"]
-                and not bin_res["has_adobe"]
-                and not bin_res["has_exif"]
-            ):
-                if is_jpeg:
-                    heur_score += 0.08
-                    review_flags.append(
-                        "stripped JPEG headers without ICC/EXIF/Adobe markers"
-                    )
-                else:
-                    # Non-JPEGs often naturally lack these
-                    pass
-
-    if forensics.get("success", False):
-        rg = forensics["pearsonRG"]
-        rb = forensics.get("pearsonRB", 0.97)
-        noise = forensics["flatBlockNoise"]
-        checker = forensics["checkerboardRatio"]
-        dct_energy = forensics["highFreqDctEnergy"]
-        fft_peak_z = forensics.get("fftPeakZ", 2.14)
-        width, height = img_pil.size
-        standard_ai_sizes = {
-            (512, 512),
-            (768, 768),
-            (1024, 1024),
-            (1536, 1536),
-            (2048, 2048),
-            (1456, 816),
-            (816, 1456),
-            (832, 1216),
-            (1216, 832),
-            (1344, 768),
-            (768, 1344),
-        }
-        ai_dimension_hint = metadata_unverified and (
-            (width, height) in standard_ai_sizes
-            or (width == height and width in {512, 768, 1024, 1536, 2048})
-        )
-
-        if (
-            lower_name.endswith(".webp")
-            or lower_name.endswith(".png")
-            or lower_name.endswith(".jpeg")
-            or lower_name.endswith(".jpg")
-        ):
-            is_lossy_smoothed = True
-
-        quick_suspicious = (
-            ai_tag_found
-            or strong_synthetic_evidence
-            or checker < 0.94
-            or checker > 1.06
-            or fft_peak_z > 4.5
-            or dct_energy > 14.0
-            or (noise < 1.05 and not is_lossy_smoothed)
-            or (not camera_workflow_verified and not camera_hint_found)
-        )
-
-        if quick_suspicious:
-            patch_res = compute_patch_forensics(img_pil)
-
-        # Patch-wise zoomed-in analysis (Detects Magnific AI / Midjourney v6 upscalers)
-        if patch_res.get("success"):
-            max_p_checker = patch_res["patch_max_checker"]
-            if max_p_checker > 1.20 or max_p_checker < 0.80:
-                heur_score += 0.65
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Localized patch-wise upsampling anomaly detected (ratio={max_p_checker})"
-                )
-
-        if quick_suspicious or metadata_unverified or ai_dimension_hint:
-            multiview_res = compute_multiview_image_forensics(img_pil)
-            if multiview_res.get("success"):
-                mv_max = multiview_res.get("max_view_score", 0)
-                mv_flagged = multiview_res.get("flagged_views", 0)
-                mv_worst = multiview_res.get("worst_view", "unknown")
-                if mv_max >= 6 or mv_flagged >= 3:  # type: ignore
-                    heur_score += 0.55
-                    strong_synthetic_evidence = True
-                    reasons.append(
-                        f"Multi-angle forensic scan found strong local AI artifacts ({mv_flagged} views, worst={mv_worst})"
-                    )
-                elif mv_max >= 4 or mv_flagged >= 2:  # type: ignore
-                    heur_score += 0.35
-                    strong_synthetic_evidence = True
-                    reasons.append(
-                        f"Multi-angle forensic scan found repeated suspicious artifacts ({mv_flagged} views, worst={mv_worst})"
-                    )
-                elif mv_max >= 3:  # type: ignore
-                    heur_score += 0.18
-                    review_flags.append(
-                        f"single-view artifact from multi-angle scan (worst={mv_worst})"
-                    )
-
-        if advanced_res.get("success"):
-            advanced_ai_weight = advanced_res.get("ai_weight", 0.0)
-            advanced_real_weight = advanced_res.get("real_weight", 0.0)
-            advanced_strong_votes = advanced_res.get("strong_ai_votes", 0)
-            advanced_real_votes = advanced_res.get("real_votes", 0)
-
-            if advanced_ai_weight >= 4.2 and advanced_strong_votes >= 3 and advanced_ai_weight >= advanced_real_weight + 1.4:  # type: ignore
-                heur_score += 0.58
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Advanced forensic ensemble found multiple independent AI artifacts "
-                    f"(ai_weight={advanced_ai_weight:.2f}, real_weight={advanced_real_weight:.2f})"
-                )
-            elif advanced_ai_weight >= 3.0 and advanced_strong_votes >= 2 and advanced_ai_weight >= advanced_real_weight + 1.0:  # type: ignore
-                heur_score += 0.34
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Advanced forensic ensemble found repeated synthetic artifacts "
-                    f"(ai_weight={advanced_ai_weight:.2f}, real_weight={advanced_real_weight:.2f})"
-                )
-            elif advanced_ai_weight >= 2.0 and advanced_ai_weight > advanced_real_weight + 0.8:  # type: ignore
-                heur_score += 0.16
-                review_flags.append(
-                    f"weak advanced forensic AI cues (ai_weight={advanced_ai_weight:.2f}, real_weight={advanced_real_weight:.2f})"
-                )
-
-            if advanced_real_weight >= 2.4 and advanced_ai_weight < 2.6:  # type: ignore
-                # Trust the physical camera noise! Social media strips EXIF, so we must rely on pixel physics.
-                natural_capture_evidence = True
-                heur_score = max(0.01, heur_score - min(0.60, 0.15 * advanced_real_weight))  # type: ignore
-                neural_prob = min(neural_prob, 0.44)
-                reasons.append(
-                    f"Advanced forensic ensemble found authentic camera texture physics "
-                    f"(real_weight={advanced_real_weight:.2f})"
-                )
-            elif advanced_real_votes >= 3 and advanced_ai_weight < 3.2:  # type: ignore
-                heur_score = max(0.01, heur_score - 0.35)
-                review_flags.append(
-                    f"advanced real-photo cues present (real_votes={advanced_real_votes})"
-                )
-
-        # Benford's Law on DCT coefficients
-        if benfords_res.get("success"):
-            b_div = benfords_res["benford_divergence"]
-            if b_div > 15.0:
-                heur_score += 0.60
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Mathematical Benford's Law violation on DCT coefficients (divergence={b_div})"
-                )
-            elif b_div > 10.0:
-                heur_score += 0.30
-                reasons.append(f"Minor Benford's Law divergence (divergence={b_div})")
-            elif b_div < 3.0:
-                # Authentic physical distribution reward
-                benford_verified = True
-                natural_capture_evidence = True
-                # Give a high reward regardless of EXIF, as AI struggles to fake Benford's Law on DCTs perfectly
-                benford_reward = 0.40
-                heur_score = max(0.01, heur_score - benford_reward)
-                neural_prob = min(neural_prob, 0.48)
-                reasons.append(
-                    f"Authentic Benford distribution of DCT coefficients (divergence={b_div})"
-                )
-
-        # Color channel decoupling (occurs in generative models)
-        # We MUST NOT heavily penalize WebP/JPEGs because 4:2:0 YUV compression destroys chroma correlation
-        if not is_lossy_smoothed:
-            if rg < 0.94 or rb < 0.94:
-                heur_score += 0.35
-                reasons.append("Chroma channel decoupling")
-            elif rg < 0.96 or rb < 0.96:
-                heur_score += 0.15
-                reasons.append("Minor chroma channel drift")
-
-        # Smooth block noise perfect-gradients (CCD/CMOS sensors always have shot noise)
-        if noise < 0.80:
-            if not is_lossy_smoothed:
-                heur_score += 0.60
-                strong_synthetic_evidence = True
-                reasons.append("Quantized smooth pixel gradients (zero camera grain)")
-        elif noise < 1.05:
-            if not is_lossy_smoothed:
-                heur_score += 0.35
-                strong_synthetic_evidence = True
-                reasons.append("Ultra-smooth synthetic skin/surface textures")
-
-        # Empty EXIF + ultra-smooth skin/textures = Decisive AI flag!
-        if not camera_hint_found and not is_lossy_smoothed:
-            if noise < 0.95:
-                heur_score += 0.50
-                strong_synthetic_evidence = True
-                reasons.append(
-                    "Ultra-smooth generative texture signature with empty EXIF"
-                )
-            elif noise < 1.15:
-                heur_score += 0.20
-                reasons.append("Suspiciously low sensor noise with stripped EXIF")
-
-        # Transposed convolution upsampling checkerboard artifacts
-        if checker < 0.90 or checker > 1.10:
-            heur_score += 0.45
-            strong_synthetic_evidence = True
-            reasons.append("Transposed convolution periodic upsampling grid")
-        elif checker < 0.94 or checker > 1.06:
-            heur_score += 0.20
-
-        # DCT High frequency magnitude peak energy
-        if dct_energy > 20.0:
-            heur_score += 0.30
-            strong_synthetic_evidence = True
-            reasons.append("Anomalous high-frequency spectral magnitude peaks")
-
-        # AI images distributed as JPEG/WebP often have no generator metadata.
-        # Missing EXIF by itself is not enough; require multiple pixel-level cues.
-        if metadata_unverified:
-            synthetic_votes = 0
-            if noise < 0.70:
-                synthetic_votes += 2
-                reasons.append(
-                    f"Extremely low sensor noise without camera provenance (noise={noise:.2f})"
-                )
-            elif noise < 0.95:
-                synthetic_votes += 1
-                review_flags.append(
-                    f"low sensor noise without camera provenance (noise={noise:.2f})"
-                )
-
-            if checker < 0.90 or checker > 1.10:
-                synthetic_votes += 2
-            elif checker < 0.94 or checker > 1.06:
-                synthetic_votes += 1
-
-            if fft_peak_z > 5.0:
-                synthetic_votes += 2
-            elif fft_peak_z > 4.25:
-                synthetic_votes += 1
-
-            if dct_energy > 18.0:
-                synthetic_votes += 2
-            elif dct_energy > 13.0:
-                synthetic_votes += 1
-
-            if rg < 0.91 or rb < 0.91:
-                synthetic_votes += 1
-
-            if ai_dimension_hint:
-                synthetic_votes += 1
-                review_flags.append(
-                    f"standard generated-image dimensions ({width}x{height})"
-                )
-
-            if advanced_ai_weight >= 3.0 and advanced_ai_weight >= advanced_real_weight + 1.0:  # type: ignore
-                synthetic_votes += 2
-                review_flags.append(
-                    f"advanced forensic synthetic votes on unverified image (weight={advanced_ai_weight:.2f})"
-                )
-            elif advanced_ai_weight >= 2.6 and advanced_ai_weight >= advanced_real_weight + 0.5:  # type: ignore
-                synthetic_votes += 2
-                review_flags.append(
-                    f"strict advanced synthetic votes on unverified image (weight={advanced_ai_weight:.2f})"
-                )
-            elif advanced_ai_weight >= 2.0 and advanced_ai_weight > advanced_real_weight + 0.8:  # type: ignore
-                synthetic_votes += 1
-                review_flags.append(
-                    f"weak advanced forensic synthetic vote on unverified image (weight={advanced_ai_weight:.2f})"
-                )
-
-            if synthetic_votes >= 4:
-                heur_score += 0.55
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Stripped metadata plus multiple synthetic pixel cues (votes={synthetic_votes})"
-                )
-            elif synthetic_votes >= 3:
-                heur_score += 0.45
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Stripped metadata plus synthetic pixel cues (votes={synthetic_votes})"
-                )
-            elif synthetic_votes >= 2:
-                heur_score += 0.28
-                review_flags.append(
-                    f"weak synthetic cues without provenance (votes={synthetic_votes})"
-                )
-
-        if metadata_unverified:
-            strict_unverified_floor = 0.0
-            if synthetic_votes >= 3:
-                strict_unverified_floor = 0.58
-            if lower_name.endswith((".png", ".webp")) and synthetic_votes >= 3:
-                strict_unverified_floor = max(strict_unverified_floor, 0.62)
-            if ai_dimension_hint and synthetic_votes >= 2:
-                strict_unverified_floor = max(strict_unverified_floor, 0.64)
-            if strong_synthetic_evidence:
-                strict_unverified_floor = max(strict_unverified_floor, 0.86)
-            elif advanced_ai_weight >= 2.6 and advanced_ai_weight >= advanced_real_weight + 0.5:  # type: ignore
-                strict_unverified_floor = max(strict_unverified_floor, 0.68)
-            elif advanced_ai_weight >= 1.8 and advanced_ai_weight >= advanced_real_weight - 0.1:  # type: ignore
-                strict_unverified_floor = max(strict_unverified_floor, 0.55)
-            if lower_name.endswith((".png", ".webp", ".avif", ".heic", ".heif")) and (
-                ai_dimension_hint or synthetic_votes >= 1
-            ):
-                strict_unverified_floor = max(strict_unverified_floor, 0.56)
-            if strict_unverified_floor == 0.0:
-                review_flags.append(
-                    "metadata missing/stripped, but no multi-signal AI agreement"
-                )
-
-        if (
-            not ai_tag_found
-            and noise >= 1.25
-            and 0.92 <= checker <= 1.08
-            and dct_energy < 12.0
-            and fft_peak_z < 4.4
-            and advanced_ai_weight < 3.0  # type: ignore
-            and not (metadata_unverified and ai_dimension_hint)
-            and (
-                not metadata_unverified
-                or (
-                    benford_verified
-                    and advanced_real_weight >= 3.0
-                    and synthetic_votes == 0
-                )  # type: ignore
-            )
-        ):
-            natural_capture_evidence = True
-            heur_score = max(0.01, heur_score - 0.18)
-            neural_prob = min(neural_prob, 0.42)
-            reasons.append("Natural sensor texture and stable frequency profile")
-
-        # 2D Fast Fourier Transform high-frequency peak anomalies
-        if fft_peak_z > 5.5:
-            heur_score += 0.65
-            strong_synthetic_evidence = True
-            reasons.append(
-                f"High-frequency 2D Fourier periodic grid spike (Peak Z={fft_peak_z})"
-            )
-        elif fft_peak_z > 4.5:
-            # Only penalize minor grid spikes if we haven't verified Benford's Law, as WebP compression causes minor FFT spikes
-            if not benford_verified:
-                heur_score += 0.20
-                reasons.append(
-                    f"Minor 2D Fourier periodic grid spike (Peak Z={fft_peak_z})"
-                )
-
-        # ELA is expensive on large photos. Run it only when fast checks are
-        # already suspicious, and on a bounded thumbnail inside the helper.
-        if quick_suspicious:
-            ela_res = compute_ela_forensics(img_pil)
-            if ela_res.get("success"):
-                ela_ratio = ela_res.get("ela_ratio", 1.0)
-                if ela_ratio > 4.5:
-                    heur_score += 0.40
-                    strong_synthetic_evidence = True
-                    reasons.append(
-                        f"Anomalous Error Level Analysis (ELA Ratio = {ela_ratio:.2f})"
-                    )
-                elif ela_ratio < 1.5:
-                    heur_score += 0.35
-                    reasons.append(
-                        f"Flat Error Level Analysis (ELA Ratio = {ela_ratio:.2f})"
-                    )
-
-        # --- FIX FOR "HUMAN/FACE" NEURAL BIAS ---
-        # AI models often misclassify AI portraits as "Human" simply because they contain a face.
-        if quick_suspicious and not camera_workflow_verified:
+    ctx = {
+        "filename_hit": any(kw in lower_name for kw in ai_keywords),
+        "neural_prob": 0.5,
+        "neural_model_ran": False
+    }
+    
+    orchestrator = AdvancedImageOrchestrator()
+    
+    # STAGE 1 & 2: Fast & Strong Signals (Provenance + Pixel Forensics)
+    provenance_signals = orchestrator.provenance_orchestrator.analyze(raw_bytes, ctx)
+    pixel_signals = orchestrator.pixel_orchestrator.analyze(img_pil, ctx)
+    
+    fast_signals = provenance_signals + pixel_signals
+    # Add filename signal if present
+    if ctx["filename_hit"]:
+        class FilenameAnalyzer:
+            pass # We can just mock it or skip it here, but actually image_detector does it.
+    
+    # Quick fuse to check if we can early-exit
+    from fusion_engine import EvidenceFusionEngine
+    fast_fusion = EvidenceFusionEngine().fuse(fast_signals)
+    fast_prob = fast_fusion.get("ai_probability", 0.5)
+    
+    # Early Exit Thresholds
+    if fast_prob > 0.99 or fast_prob < 0.01:
+        logger.info(f"Early exit triggered in Staged Inference. Probability: {fast_prob}")
+        fusion_result = fast_fusion
+    else:
+        # STAGE 3: Expensive Analysis (Deep Neural Classifier)
+        logger.info("Confidence ambiguous. Proceeding to Expensive Analysis (Stage 3).")
+        run_neural_model = IMAGE_MODEL_AVAILABLE
+        if run_neural_model:
             try:
-                img_face = img_pil.convert("RGB")
-                img_face.thumbnail((512, 512))
-                img_cv = cv2.cvtColor(np.array(img_face), cv2.COLOR_RGB2BGR)
-                gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-                face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")  # type: ignore
-                faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-
-                if len(faces) > 0:
-                    if noise < 1.05 and not is_lossy_smoothed:
-                        heur_score += 0.65
-                        strong_synthetic_evidence = True
-                        reasons.append(
-                            f"[INSPECT OVERRIDE] Face detected with zero-pore AI skin texture (noise={noise:.2f})"
-                        )
-                    if fft_peak_z > 4.5:
-                        heur_score += 0.40
-                        strong_synthetic_evidence = True
-                        reasons.append(
-                            f"[INSPECT OVERRIDE] Face detected with synthetic frequency artifacts (FFT Z={fft_peak_z:.2f})"
-                        )
-                    if checker < 0.95 or checker > 1.05:
-                        heur_score += 0.60
-                        strong_synthetic_evidence = True
-                        reasons.append(
-                            "[INSPECT OVERRIDE] Face detected with upsampling checkerboard artifacts"
-                        )
+                @Profiler.profile("cnn_inference")
+                def _run_cnn():
+                    spectral_grid = extract_spectral_grid(img_pil)
+                    spatial_tensor = img_transforms(img_pil).unsqueeze(0).to(DEVICE)
+                    spectral_tensor = (
+                        torch.tensor(spectral_grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
+                    )
+                    with torch.no_grad():
+                        logits = image_net(spatial_tensor, spectral_tensor)
+                        return float(torch.sigmoid(logits).item())
+                ctx["neural_prob"] = _run_cnn()
+                ctx["neural_model_ran"] = True
             except Exception as e:
-                logger.error(f"Face detection failed: {e}")
-
-        # Inspect if camera EXIF tag is spoofed (e.g. AI images pretending to be real camera photos).
-        # JPEG/Camera Raw edits can legitimately lower channel correlations, so only
-        # decisive synthetic artifacts override a complete camera provenance chain.
-        if camera_hint_found:
-            camera_artifacts = []
-            if noise < 0.75 and not is_lossy_smoothed:
-                camera_artifacts.append(f"zero-grain texture noise={noise}")
-            if checker < 0.88 or checker > 1.12:
-                camera_artifacts.append(f"strong checkerboard ratio={checker}")
-            if fft_peak_z > 5.5:
-                camera_artifacts.append(f"strong FFT spike={fft_peak_z}")
-            if dct_energy > 20.0:
-                camera_artifacts.append(f"high DCT energy={dct_energy}")
-            if not is_lossy_smoothed and (rg < 0.90 or rb < 0.90):
-                camera_artifacts.append(
-                    f"severe raw chroma decoupling rg={rg}, rb={rb}"
-                )
-            if advanced_ai_weight >= 4.2 and advanced_ai_weight >= advanced_real_weight + 1.6:  # type: ignore
-                camera_artifacts.append(
-                    f"advanced synthetic forensic ensemble weight={advanced_ai_weight}"
-                )
-            if not camera_workflow_verified and advanced_ai_weight >= 3.0 and advanced_ai_weight >= advanced_real_weight + 0.8:  # type: ignore
-                camera_artifacts.append(
-                    f"partial camera metadata contradicted by advanced synthetic forensics weight={advanced_ai_weight}"
-                )
-            if (
-                not camera_workflow_verified
-                and not raw_capture_marker_found
-                and synthetic_votes >= 2
-            ):
-                camera_artifacts.append(
-                    f"partial camera metadata with synthetic pixel vote count={synthetic_votes}"
-                )
-
-            if camera_artifacts:
-                heur_score += 0.60
-                strong_synthetic_evidence = True
-                reasons.append(
-                    f"Spoofed camera hardware signature overridden ({'; '.join(camera_artifacts)})"
-                )
-            else:
-                # Natural image with camera tag and standard pixels
-                reward = 0.45 if camera_workflow_verified else 0.25
-                heur_score = max(0.01, heur_score - reward)
-                neural_prob = min(
-                    neural_prob, 0.32 if camera_workflow_verified else 0.40
-                )
-
-        # Unconditional real photo reward based purely on physics (heavy sensor noise cannot be easily generated)
-        # However, we must ensure the high-frequency DCT energy isn't spiking (which indicates synthetic noise injection)
-        if (
-            noise > 1.6
-            and dct_energy < 9.0
-            and advanced_ai_weight < 3.0  # type: ignore
-            and not strong_synthetic_evidence
-            and (not metadata_unverified or camera_workflow_verified)
-        ):
-            natural_capture_evidence = True
-            heur_score = max(0.01, heur_score - 0.35)
-            neural_prob = min(neural_prob, 0.45)
-            reasons.append(
-                "Heavy natural camera sensor grain detected (highly indicative of real photo)"
-            )
-
-        # Check for AI-injected synthetic noise (Fake Grain).
-        # AI models inject sharp gaussian noise which spikes both the noise metric and the DCT high-frequency energy.
-        if noise > 1.9 and dct_energy > 9.5:
-            heur_score += 0.65
-            strong_synthetic_evidence = True
-            reasons.append(
-                "Artificial noise injection detected (unnatural high-frequency DCT peaks combined with extreme grain)"
-            )
-
-    # The content model is never skipped because of metadata or a filename.
-    run_neural_model = IMAGE_MODEL_AVAILABLE
-    if run_neural_model:
-        try:
-            spectral_grid = extract_spectral_grid(img_pil)
-            spatial_tensor = img_transforms(img_pil).unsqueeze(0).to(DEVICE)
-            spectral_tensor = (
-                torch.tensor(spectral_grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
-            )
-            with torch.no_grad():
-                logits = image_net(spatial_tensor, spectral_tensor)
-                neural_prob = torch.sigmoid(logits).item()
-                neural_model_ran = True
-        except Exception as e:
-            logger.error(f"Image CNN inference error: {e}")
-    elif camera_workflow_verified:
-        neural_prob = min(neural_prob, 0.32)
-
-    # Combine neural model output and physical heuristics. Neural output is useful,
-    # but weak/failed neural guesses must not override camera physics.
-    if strong_synthetic_evidence or ai_tag_found:
-        final_prob = max(heur_score, neural_prob if neural_model_ran else 0.0)
-    else:
-        neural_cap = 0.46
-        if neural_model_ran and metadata_unverified and not natural_capture_evidence:
-            if neural_prob >= 0.88:
-                neural_cap = 0.82
-            elif neural_prob >= 0.78 and heur_score >= 0.20:
-                neural_cap = 0.74
-            else:
-                neural_cap = 0.68
-        elif (
-            neural_model_ran
-            and heur_score >= 0.35
-            and not (camera_workflow_verified or benford_verified)
-        ):
-            neural_cap = 0.62
-        final_prob = max(heur_score, min(neural_prob, neural_cap))
-
-    # Smooth thresholding for strong heuristics
-    if strong_synthetic_evidence and heur_score >= 0.45:
-        final_prob = max(final_prob, min(0.95, heur_score * 1.5))
-
-    if neural_model_ran and neural_prob > 0.80 and not natural_capture_evidence:
-        final_prob = max(final_prob, neural_prob * 0.95)
-
-    if (
-        metadata_unverified
-        and not natural_capture_evidence
-        and neural_model_ran
-        and neural_prob >= 0.52
-        and (
-            advanced_ai_weight >= advanced_real_weight - 0.2
-            or ai_dimension_hint
-            or synthetic_votes >= 1
-        )  # type: ignore
-    ):
-        strict_unverified_floor = max(strict_unverified_floor, 0.57)
-        reasons.append(
-            f"Strict unknown-image mode: weak neural/pixel AI agreement (neural={neural_prob:.2f})"
-        )
-
-    if (
-        metadata_unverified
-        and strict_unverified_floor > 0
-        and not (
-            natural_capture_evidence
-            and not ai_dimension_hint
-            and not strong_synthetic_evidence
-        )
-    ):
-        final_prob = max(final_prob, strict_unverified_floor)
-        reasons.append(
-            f"Strict provenance mode: unverified camera capture floor applied ({strict_unverified_floor:.2f})"
-        )
-
-    # A complete DSLR/phone provenance chain with RAW source/editor history is
-    # stronger than an overconfident image CNN unless hard AI evidence exists.
-    if (
-        camera_workflow_verified
-        and not ai_tag_found
-        and not strong_synthetic_evidence
-        and heur_score < 0.55
-    ):
-        final_prob = min(final_prob, 0.22)
-        reasons.append(
-            "Overconfident neural AI score overridden by verified camera RAW/editor provenance"
-        )
-
-    # --- PHYSICAL CAMERA OVERRIDE ---
-    # If the mathematical physical properties of the image (Benford's Law) prove it was taken by a physical
-    # camera sensor, and there are no major AI signatures, we FORCE override the Neural Network's false positive.
-    if benford_verified and heur_score < 0.35 and not metadata_unverified:
-        final_prob = min(final_prob, 0.25)
-        reasons.append(
-            "Neural AI bias mathematically overridden by authentic physical camera physics"
-        )
-
-    # Exported/edited real JPEGs often lose EXIF/ICC blocks. Missing headers are
-    # only weak evidence; preserve Real Photo when clean physical distribution
-    # agrees and no independent synthetic cue is present.
-    if (
-        metadata_unverified
-        and lower_name.endswith((".jpg", ".jpeg"))
-        and benford_verified
-        and not ai_tag_found
-        and not strong_synthetic_evidence
-        and synthetic_votes <= 1
-        and advanced_ai_weight < 2.8  # type: ignore
-        and advanced_ai_weight <= advanced_real_weight + 0.2  # type: ignore
-        and heur_score < 0.35
-        and not ai_dimension_hint
-    ):
-        final_prob = min(final_prob, 0.44)
-        reasons.append(
-            "Metadata-stripped JPEG preserved as Real Photo because camera-like physics are clean"
-        )
-
-    # Photoshop/Lightroom/editor metadata is not AI evidence. If an edited image
-    # still has camera-like pixel physics and no generator signature, keep it real.
-    if (
-        editor_tag_found
-        and not ai_tag_found
-        and not strong_synthetic_evidence
-        and (camera_workflow_verified or camera_hint_found)
-        and (
-            natural_capture_evidence or advanced_real_weight >= 2.0 or benford_verified
-        )  # type: ignore
-        and heur_score < 0.50
-    ):
-        final_prob = min(final_prob, 0.28)
-        reasons.append(
-            "Edited-photo workflow preserved as Real Photo because camera-like forensic physics dominate"
-        )
-
-    # --- CLEAN BASELINE OVERRIDE ---
-    # If the deep forensic heuristics found absolutely ZERO AI signatures (score is baseline <= 0.15),
-    # we discard weak neural network guesses. The physics engine is strictly superior to the neural net's face bias.
-    if heur_score <= 0.15 and len(reasons) == 0 and not metadata_unverified:
-        if neural_prob < 0.85:
-            final_prob = min(final_prob, 0.30)
-            reasons.append(
-                "Neural AI bias mathematically overridden by perfectly clean pixel physics"
-            )
-
-    # Hard override for files clearly matching AI keyword patterns
-    if any(
-        kw in lower_name for kw in ["midjourney", "flux", "dalle", "dall-e", "sdxl"]
-    ):
-        final_prob = max(final_prob, 0.98)
-
-    fft_peak_z = float(forensics.get("fftPeakZ", 2.14))
-    noise = float(forensics.get("flatBlockNoise", 1.84))
-    checker = float(forensics.get("checkerboardRatio", 1.0))
-    dct_energy = float(forensics.get("highFreqDctEnergy", 12.0))
-    image_detectors = []
-    if neural_model_ran:
-        image_detectors.append(
-            detector_evidence(
-                "Trained spatial-spectral CNN",
-                "deep image model",
-                neural_prob,
-                0.85,
-                "Local image_detector.pth evaluated RGB pixels and the DCT spectral grid.",
-                learned=True,
-            )
-        )
-    else:
-        image_detectors.append(
-            unavailable_detector(
-                "Trained spatial-spectral CNN",
-                "deep image model",
-                "A compatible image_detector.pth checkpoint was not loaded.",
-            )
-        )
-
-    rgb_image = np.asarray(img_pil.convert("RGB"))
-    face_present = len(detect_faces_rgb(rgb_image)) > 0
-
-    # Robustness Test: Original vs JPEG Compressed
-    from io import BytesIO
-
-    buffer = BytesIO()
-    img_pil.save(buffer, format="JPEG", quality=85)
-    buffer.seek(0)
-    compressed_img = Image.open(buffer).convert("RGB")
-
-    original_outputs = list(predict_image_models(img_pil, face_present=face_present))
-
-    for orig in original_outputs:
-        if orig.get("available") and orig.get("applicable", True):
-            image_detectors.append(
-                detector_evidence(
-                    orig["name"],
-                    "deep image model",
-                    orig["score"],
-                    orig["confidence"],
-                    orig["evidence"],
-                    learned=True,
-                )
-            )
-        elif orig.get("available"):
-            image_detectors.append(
-                not_applicable_detector(
-                    orig["name"], "deep image model", orig["reason"]
-                )
-            )
-        else:
-            image_detectors.append(
-                unavailable_detector(orig["name"], "deep image model", orig["reason"])
-            )
-
-    if forensics.get("success"):
-        fft_score = clamp_score(0.42 + max(0.0, fft_peak_z - 3.0) * 0.12)
-        dct_score = clamp_score(0.40 + max(0.0, dct_energy - 10.0) * 0.035)
-        checker_score = clamp_score(0.38 + abs(checker - 1.0) * 4.5)
-        if noise < 0.75:
-            sensor_score = 0.86
-        elif 1.20 <= noise <= 1.90 and dct_energy < 12.0:
-            sensor_score = 0.24
-        elif noise > 1.90 and dct_energy > 9.5:
-            sensor_score = 0.80
-        else:
-            sensor_score = 0.50
-        image_detectors.extend(
-            [
-                detector_evidence(
-                    "FFT periodicity",
-                    "frequency forensics",
-                    fft_score,
-                    0.55,
-                    f"fft_peak_z={fft_peak_z:.3f}",
-                ),
-                detector_evidence(
-                    "DCT high-frequency energy",
-                    "compression/frequency forensics",
-                    dct_score,
-                    0.55,
-                    f"high_frequency_energy={dct_energy:.3f}",
-                ),
-                detector_evidence(
-                    "Upsampling checkerboard",
-                    "frequency forensics",
-                    checker_score,
-                    0.55,
-                    f"checkerboard_ratio={checker:.4f}",
-                ),
-                detector_evidence(
-                    "Sensor-noise texture proxy",
-                    "pixel texture",
-                    sensor_score,
-                    0.50,
-                    f"flat_block_noise={noise:.3f}; this is not camera-specific PRNU",
-                ),
-            ]
-        )
-    else:
-        for name, category in [
-            ("FFT periodicity", "frequency forensics"),
-            ("DCT high-frequency energy", "compression/frequency forensics"),
-            ("Upsampling checkerboard", "frequency forensics"),
-            ("Sensor-noise texture proxy", "pixel texture"),
-        ]:
-            image_detectors.append(
-                unavailable_detector(
-                    name, category, "Pixel forensic extraction failed."
-                )
-            )
-
-    if benfords_res.get("success"):
-        divergence = float(benfords_res.get("benford_divergence", 7.0))
-        benford_score = clamp_score(0.18 + divergence / 18.0)
-        image_detectors.append(
-            detector_evidence(
-                "DCT coefficient distribution",
-                "statistical forensics",
-                benford_score,
-                0.45,
-                f"benford_divergence={divergence:.3f}",
-            )
-        )
-    else:
-        image_detectors.append(
-            unavailable_detector(
-                "DCT coefficient distribution",
-                "statistical forensics",
-                "Coefficient analysis failed.",
-            )
-        )
-
-    if advanced_res.get("success"):
-        ai_weight = float(advanced_res.get("ai_weight", 0.0))
-        real_weight = float(advanced_res.get("real_weight", 0.0))
-        advanced_score = 1.0 / (1.0 + np.exp(-(ai_weight - real_weight)))
-        image_detectors.append(
-            detector_evidence(
-                "Multi-view pixel forensic ensemble",
-                "pixel forensics",
-                advanced_score,
-                0.65,
-                f"ai_weight={ai_weight:.3f}, authentic_weight={real_weight:.3f}, signals={len(advanced_res.get('signals', []))}",  # type: ignore
-            )
-        )
-    else:
-        image_detectors.append(
-            unavailable_detector(
-                "Multi-view pixel forensic ensemble",
-                "pixel forensics",
-                "Advanced pixel extraction failed.",
-            )
-        )
-
-    ela_result = locals().get("ela_res", {})
-    if ela_result.get("success"):
-        ela_ratio = float(ela_result.get("ela_ratio", 1.0))
-        image_detectors.append(
-            detector_evidence(
-                "JPEG error-level analysis",
-                "compression forensics",
-                clamp_score(0.35 + abs(ela_ratio - 2.5) * 0.12),
-                0.35,
-                f"ela_ratio={ela_ratio:.3f}",
-            )
-        )
-    else:
-        image_detectors.append(
-            not_applicable_detector(
-                "JPEG error-level analysis",
-                "compression forensics",
-                "ELA was not applicable to this input.",
-            )
-        )
-
-    try:
-        wavelet = compute_wavelet_forensics(img_pil)
-        image_detectors.append(
-            detector_evidence(
-                "Wavelet residual fingerprint",
-                "frequency forensics",
-                wavelet["score"],
-                wavelet["confidence"],
-                f"energy_ratio={wavelet['energy_ratio']:.6f}, kurtosis={wavelet['kurtosis']:.3f}, orientation_cv={wavelet['orientation_cv']:.3f}",
-            )
-        )
-    except Exception as exc:
-        image_detectors.append(
-            unavailable_detector(
-                "Wavelet residual fingerprint", "frequency forensics", str(exc)
-            )
-        )
-
-    try:
-        prnu = compute_prnu_residual_forensics(img_pil)
-        image_detectors.append(
-            detector_evidence(
-                "Single-image PRNU residual consistency",
-                "sensor forensics",
-                prnu["score"],
-                prnu["confidence"],
-                f"residual_std={prnu['residual_std']:.6f}, intensity_correlation={prnu['intensity_correlation']:.4f}, periodic_peak={prnu['periodic_peak']:.3f}; reference-camera attribution={prnu['reference_attribution']}",
-            )
-        )
-    except Exception as exc:
-        image_detectors.append(
-            unavailable_detector(
-                "Single-image PRNU residual consistency", "sensor forensics", str(exc)
-            )
-        )
-
-    try:
-        physics = compute_scene_physics_forensics(img_pil)
-        image_detectors.extend(
-            [
-                detector_evidence(
-                    "Lighting-direction consistency",
-                    "scene forensics",
-                    physics["lighting_score"],
-                    physics["lighting_confidence"],
-                    f"direction_resultant={physics['lighting_direction_consistency']:.4f}",
-                ),
-                detector_evidence(
-                    "Shadow-boundary consistency",
-                    "scene forensics",
-                    physics["shadow_score"],
-                    physics["shadow_confidence"],
-                    f"shadow_edge_overlap={physics['shadow_edge_overlap']:.4f}",
-                ),
-                detector_evidence(
-                    "Perspective-line geometry",
-                    "geometry forensics",
-                    physics["geometry_score"],
-                    physics["geometry_confidence"],
-                    f"line_orientation_concentration={physics['geometry_line_concentration']:.4f}",
-                ),
-                detector_evidence(
-                    "Local binary-pattern texture",
-                    "texture forensics",
-                    physics["texture_score"],
-                    physics["texture_confidence"],
-                    f"lbp_entropy={physics['texture_lbp_entropy']:.4f}",
-                ),
-            ]
-        )
-    except Exception as exc:
-        for name, category in [
-            ("Lighting-direction consistency", "scene forensics"),
-            ("Shadow-boundary consistency", "scene forensics"),
-            ("Perspective-line geometry", "geometry forensics"),
-            ("Local binary-pattern texture", "texture forensics"),
-        ]:
-            image_detectors.append(unavailable_detector(name, category, str(exc)))
-
-    try:
-        jpeg_blocks = compute_jpeg_block_forensics(img_pil)
-        image_detectors.append(
-            detector_evidence(
-                "JPEG 8x8 block artifact analysis",
-                "compression forensics",
-                jpeg_blocks["score"],
-                jpeg_blocks["confidence"],
-                f"block_boundary_ratio={jpeg_blocks['block_boundary_ratio']:.4f}",
-            )
-        )
-    except Exception as exc:
-        image_detectors.append(
-            unavailable_detector(
-                "JPEG 8x8 block artifact analysis", "compression forensics", str(exc)
-            )
-        )
-
-    metadata_score = (
-        0.92 if ai_tag_found else (0.12 if camera_workflow_verified else 0.50)
-    )
-    image_detectors.append(
-        detector_evidence(
-            "EXIF/container metadata",
-            "metadata",
-            metadata_score,
-            0.20,
-            f"ai_generator_tag={ai_tag_found or 'none'}, camera_workflow={camera_workflow_verified}",
-            supplementary=True,
-        )
-    )
-    filename_hit = any(keyword in lower_name for keyword in ai_keywords)
-    image_detectors.append(
-        detector_evidence(
-            "Filename hint",
-            "filename",
-            0.90 if filename_hit else 0.50,
-            0.05,
-            f"generator-like filename token={'present' if filename_hit else 'absent'}; never primary evidence",
-            supplementary=True,
-        )
-    )
-    image_detectors.extend(
-        [
-            unavailable_detector(
-                "Reflection consistency",
-                "scene forensics",
-                "No reflection correspondence model is implemented.",
-            ),
-            unavailable_detector(
-                "Human anatomy classifier",
-                "semantic forensics",
-                "No evaluated full-body anatomy authenticity model is installed.",
-            ),
-            unavailable_detector(
-                "C2PA cryptographic provenance",
-                "provenance",
-                "No C2PA signature verifier is installed.",
-            ),
-            unavailable_detector(
-                "Image watermark detector",
-                "watermark",
-                "No provider-specific watermark detector is configured.",
-            ),
-        ]
-    )
-
-    fusion = fuse_detector_evidence("image", image_detectors)
-    prediction = fusion["prediction"]
-    final_prob = fusion["ai_probability"]
-    confidence = fusion["confidence"]
-    suspected = "N/A (generator attribution unavailable)"
-    logger.info(
-        f"[IMAGE_FORENSICS] Name: {original_name} | neural_prob={neural_prob:.4f} heur_score={heur_score:.4f} final_prob={final_prob:.4f} verdict={prediction}"
-    )
-    if forensics.get("success", False):
-        logger.info(
-            f"[IMAGE_FORENSICS] metrics: rg={forensics['pearsonRG']:.4f} rb={forensics.get('pearsonRB', 0.97):.4f} noise={forensics['flatBlockNoise']:.4f} checker={forensics['checkerboardRatio']:.4f} dct={forensics['highFreqDctEnergy']:.4f} camera_hint={camera_hint_found}"
-        )
-    logger.info(f"[IMAGE_FORENSICS] Reasons: {reasons}")
-
+                logger.error(f"Image CNN inference error: {e}")
+                
+        # Re-run full orchestrator analysis to include vision models and proper fusion
+        fusion_result = orchestrator.analyze(img_pil, raw_bytes, context=ctx)
+    
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    
     return {
-        "prediction": prediction,
-        "ai_probability": final_prob,
-        "confidence": confidence,
-        "confidence_score": fusion["confidence_score"],
-        "uncertainty": fusion["uncertainty"],
-        "review_required": fusion["review_required"],
-        "verdict_status": fusion["verdict_status"],
-        "confidence_level": fusion["confidence_level"],
-        "binary_fallback_applied": fusion["binary_fallback_applied"],
-        "feature_importance": fusion["feature_importance"],
-        "detector_specific_analysis": fusion["detector_specific_analysis"],
-        "evidence_report": fusion["evidence_report"],
-        "forensics": forensics,
-        "multiview_forensics": multiview_res,
-        "advanced_forensics": advanced_res,
-        "features": {
-            "model_used": "3truth Forensic Multimodal Engine V16",
-            "I01_Hand_Finger_Analysis": "unavailable",
-            "I02_Face_Analysis": "face localization only; authenticity classifier unavailable",
-            "I03_Text_Rendering": "unavailable",
-            "I04_Lighting_Analysis": "unavailable",
-            "I05_Background_Coherence": (
-                "Periodic AI Upsampling Grid"
-                if forensics.get("fftPeakZ", 0) > 4.5
-                else "Pass"
-            ),
-            "I06_Visual_Artifacts": f"Noise: {forensics.get('flatBlockNoise', 0):.2f}, Checkerboard: {forensics.get('checkerboardRatio', 1.0):.2f}",
-            "I07_Multi_Angle_Scan": (
-                f"{multiview_res.get('flagged_views', 0)} suspicious views, worst={multiview_res.get('worst_view', 'none')}"
-                if multiview_res.get("success")
-                else "not required"
-            ),
-            "I08_Advanced_Forensic_Ensemble": (
-                (
-                    f"AI weight {advanced_res.get('ai_weight', 0):.2f}, real weight {advanced_res.get('real_weight', 0):.2f}, "
-                    f"signals={len(advanced_res.get('signals', []))}"  # type: ignore
-                )
-                if advanced_res.get("success")
-                else "not available"
-            ),
-            "metadata_integrity": (
-                "Camera RAW provenance verified"
-                if camera_workflow_verified and not ai_tag_found
-                else "EXIF inspected / spoofing scan complete"
-            ),
-            "suspected_generator": suspected,
-            "decision_path": "; ".join(
-                item["detector"]
-                for item in fusion["evidence_report"]["top_contributors"][:5]
-            ),
-            "review_flags": "; ".join(review_flags[:6]) if review_flags else "none",
-            "file_size_kb": int(file_size / 1024) if file_size else 0,
-        },
+        "probability": fusion_result.get("ai_probability", 0.5),
+        "classification": fusion_result.get("classification", "Human"),
+        "reasons": fusion_result.get("evidence_summary", [])[:8],
+        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
+        "review_flags": [],
+        "profiling": profiling_metrics
     }
 
 
 def run_video_detection(video_path, file_size, original_name):
-    import re
-
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise Exception("Could not open video file via OpenCV.")
-
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    duration = total_frames / fps if fps > 0 else 0
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    reasons = []
-
-    raw_text = ""
-    try:
-        with open(video_path, "rb") as fh:
-            raw = fh.read()
-            if len(raw) > 4_000_000:
-                raw = raw[:2_000_000] + raw[-2_000_000:]
-            raw_text = raw.decode("utf-8", errors="ignore").replace("\x00", "").lower()
-    except Exception as e:
-        logger.error(f"Video binary metadata scan failed: {e}")
-
-    video_ai_tags = [
-        "sora",
-        "runway",
-        "pika",
-        "luma",
-        "kling",
-        "haiper",
-        "genmo",
-        "synthesia",
-        "heygen",
-        "stable video",
-        "svd",
-        "animatediff",
-        "deforum",
-        "viggle",
-        "vidu",
-        "minimax",
-        "hailuo",
-        "moonvalley",
-        "morph studio",
-        "pixverse",
-        "ai generated",
-        "ai-generated",
-        "generative ai",
-        "synthetic video",
-    ]
-    video_camera_tags = [
-        "apple",
-        "iphone",
-        "samsung",
-        "galaxy",
-        "pixel",
-        "sony",
-        "canon",
-        "nikon",
-        "fujifilm",
-        "gopro",
-        "quicktime",
-        "creation_time",
-        "com.apple.quicktime",
-        "handler_name",
-    ]
-
-    def has_video_tag(tag):
-        if len(tag) <= 4 and tag.replace(".", "").isalnum():
-            return (
-                re.search(rf"(?<![a-z0-9]){re.escape(tag)}(?![a-z0-9])", raw_text)
-                is not None
-            )
-        return tag in raw_text
-
-    ai_metadata_hit = next((tag for tag in video_ai_tags if has_video_tag(tag)), None)
-    camera_video_hit = next(
-        (tag for tag in video_camera_tags if has_video_tag(tag)), None
-    )
-    has_encoder_marker = any(
-        tag in raw_text
-        for tag in [
-            "encoder",
-            "major_brand",
-            "compatible_brands",
-            "handler_name",
-            "creation_time",
-        ]
-    )
-    generated_video_shape = (width, height) in {
-        (1024, 576),
-        (576, 1024),
-        (1280, 720),
-        (720, 1280),
-        (768, 432),
-        (432, 768),
-    } or (width == height and width in {512, 768, 1024})
-
-    num_samples = 8
-    frame_indices = np.linspace(0, max(0, total_frames - 1), num_samples).astype(int)
-
-    spatial_list = []
-    spectral_list = []
-    pixel_motion_diffs = []
-    optical_flow_magnitudes = []
-    luminance_means = []
-    scene_cut_count = 0
-    frame_heuristics_scores = []
-    sampled_rgb_frames = []
-    sampled_timestamps = []
-    prev_gray = None
-
-    for idx in frame_indices:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Calculate optical flow pixel continuity
-        gray_full = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        scale = min(1.0, 480.0 / max(gray_full.shape[1], 1))
-        gray = cv2.resize(
-            gray_full, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA
-        )
-        luminance_means.append(float(np.mean(gray)))
-        if prev_gray is not None:
-            diff = np.mean(cv2.absdiff(gray, prev_gray)) / 255.0
-            pixel_motion_diffs.append(float(diff))
-            if diff > 0.20:
-                scene_cut_count += 1
-            flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)  # type: ignore
-            magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-            optical_flow_magnitudes.append(float(np.median(magnitude)))
-        prev_gray = gray
-
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        sampled_rgb_frames.append(frame_rgb)
-        sampled_timestamps.append(
-            float(idx / fps) if fps > 0 else float(len(sampled_timestamps))
-        )
-        pil_img = Image.fromarray(frame_rgb)
-
-        # Ingest frame-level pixel heuristics
-        f_metrics = compute_pixel_forensics(pil_img)
-        if f_metrics.get("success", False):
-            rg = f_metrics["pearsonRG"]
-            rb = f_metrics["pearsonRB"]
-            noise = f_metrics["flatBlockNoise"]
-            checker = f_metrics["checkerboardRatio"]
-            dct_energy = f_metrics["highFreqDctEnergy"]
-
-            fft_res = compute_fft_forensics(pil_img)
-            fft_peak_z = fft_res.get("fft_peak_z", 2.14)
-
-            f_score = 0.12
-            if rg < 0.94 or rb < 0.94:
-                f_score += 0.25
-            if noise < 0.70:
-                f_score += 0.35
-            if checker < 0.88 or checker > 1.12:
-                f_score += 0.35
-            if dct_energy > 20.0:
-                f_score += 0.20
-            if fft_peak_z > 5.0:
-                f_score += 0.40  # Deepfake artifact spike
-
-            frame_heuristics_scores.append(f_score)
-
-        spatial_tensor = img_transforms(pil_img)
-        spatial_list.append(spatial_tensor)
-
-        spectral_grid = extract_spectral_grid(pil_img)
-        spectral_tensor = torch.tensor(spectral_grid).unsqueeze(0)  # [1, 32, 32]
-        spectral_list.append(spectral_tensor)
-
-    cap.release()
-
-    # Extract consecutive frames for true temporal motion analysis (KLT tracking, face jitter)
-    temporal_rgb_frames = []
-    try:
-        cap_temp = cv2.VideoCapture(video_path)
-        if cap_temp.isOpened():
-            start_frame = max(0, int(total_frames / 2) - 10)
-            cap_temp.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-            for _ in range(20):
-                ret, frame = cap_temp.read()
-                if not ret:
-                    break
-                temporal_rgb_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            cap_temp.release()
-    except Exception as e:
-        logger.error(f"Temporal extraction failed: {e}")
-
-    if len(spatial_list) == 0:
-        raise Exception("Failed to read frames from video.")
-
-    # Pad sequence if necessary
-    while len(spatial_list) < num_samples:
-        spatial_list.append(spatial_list[-1])
-        spectral_list.append(spectral_list[-1])
-
-    spatial_list = spatial_list[:num_samples]
-    spectral_list = spectral_list[:num_samples]
-
-    spatial_seq = torch.stack(spatial_list).unsqueeze(0).to(DEVICE)
-    spectral_seq = torch.stack(spectral_list).unsqueeze(0).to(DEVICE)
-
-    # 1. Run Spatio-Temporal Neural Net
-    neural_prob = 0.50
-    neural_model_ran = False
-    if VIDEO_MODEL_AVAILABLE:
-        try:
-            with torch.no_grad():
-                logits = video_net(spatial_seq, spectral_seq)
-                neural_prob = torch.sigmoid(logits).item()
-                neural_model_ran = True
-        except Exception as e:
-            logger.error(f"Video CNN inference error: {e}")
-
-    # 2. Calculate actual temporal motion flow metrics
-    avg_temporal_diff = np.mean(pixel_motion_diffs) if pixel_motion_diffs else 0.045
-    avg_frame_heur = (
-        np.mean(frame_heuristics_scores) if frame_heuristics_scores else 0.15
-    )
-
-    # Build robust temporal-spatial heuristics
-    heur_score = avg_frame_heur
-
-    if ai_metadata_hit:
-        heur_score = max(heur_score, 0.99)
-        reasons.append(f"AI video metadata signature detected: {ai_metadata_hit}")
-    elif not camera_video_hit and not has_encoder_marker:
-        heur_score = max(heur_score, 0.88)
-        reasons.append("Strict video provenance mode: no camera/encoder provenance")
-    elif not camera_video_hit and duration > 0 and duration <= 12:
-        heur_score = max(heur_score, 0.78)
-        reasons.append("Short unverified video clip with no camera provenance")
-    elif generated_video_shape and not camera_video_hit:
-        heur_score = max(heur_score, 0.76)
-        reasons.append(
-            f"Generated-video resolution profile ({width}x{height}) without camera provenance"
-        )
-    elif camera_video_hit:
-        reasons.append(f"Video camera/encoder provenance marker: {camera_video_hit}")
-
-    # AI clips are generally short (3-8 seconds)
-    if duration > 0 and duration <= 8 and not camera_video_hit:
-        heur_score += 0.25
-        reasons.append("Very short unverified AI-video style duration")
-
-    # Temporal motion flickering continuity check (AI video has frame-to-frame jitter/shifting)
-    if avg_temporal_diff > 0.08:
-        heur_score += 0.45
-        reasons.append("High frame-to-frame morphing/flicker variance")
-    elif avg_temporal_diff > 0.05:
-        heur_score += 0.25
-        reasons.append("Moderate frame-to-frame temporal instability")
-
-    # Filename patterns
-    lower_name = original_name.lower()
-    ai_keywords = [
-        "sora",
-        "runway",
-        "kling",
-        "luma",
-        "pika",
-        "viggle",
-        "luma",
-        "animate",
-        "svd",
-        "diffusion",
-        "synthetic",
-        "gemini",
-        "veo",
-        "videomaker",
-        "ذكاء اصطناعي",
-        "مولد بالذكاء",
-        "مولدة بالذكاء",
-        "فيديو مولد",
-        "محتوى اصطناعي",
-        "سورا",
-        "رنواي",
-        "كلينغ",
-        "لوما",
-        "بيكا",
-    ]
-    if any(kw in lower_name for kw in ai_keywords):
-        heur_score = max(heur_score, 0.95)
-        reasons.append("AI video filename signature")
-
-    # Combine neural prediction and heuristics using a balanced, smart ensemble.
-    # Zero Trust Policy: Take the maximum of neural and physical heuristics!
-    final_prob = max(heur_score, neural_prob)
-
-    if heur_score >= 0.35:
-        final_prob = max(final_prob, 0.88)
-
-    if neural_prob > 0.80:
-        final_prob = max(final_prob, neural_prob * 0.95)
-
-    if any(kw in lower_name for kw in ["sora", "runway", "kling", "luma", "pika"]):
-        final_prob = max(final_prob, 0.98)
-
-    video_detectors = []
-    if neural_model_ran:
-        video_detectors.append(
-            detector_evidence(
-                "Trained spatio-temporal CNN",
-                "deep video model",
-                neural_prob,
-                0.85,
-                "Local video_detector.pth evaluated frame RGB/DCT sequences.",
-                learned=True,
-            )
-        )
-    else:
-        video_detectors.append(
-            unavailable_detector(
-                "Trained spatio-temporal CNN",
-                "deep video model",
-                "A compatible video_detector.pth checkpoint was not loaded.",
-            )
-        )
-
-    if frame_heuristics_scores:
-        video_detectors.append(
-            detector_evidence(
-                "Frame-level image forensics",
-                "frame forensics",
-                clamp_score(avg_frame_heur),
-                0.60,
-                f"mean_frame_forensic_score={avg_frame_heur:.4f} across {len(frame_heuristics_scores)} sampled frames",
-            )
-        )
-    else:
-        video_detectors.append(
-            unavailable_detector(
-                "Frame-level image forensics",
-                "frame forensics",
-                "No sampled frame produced forensic metrics.",
-            )
-        )
-
-    if len(pixel_motion_diffs) >= 3:
-        temporal_std = float(np.std(pixel_motion_diffs))
-        temporal_score = clamp_score(
-            0.35 + temporal_std * 5.0 + max(0.0, avg_temporal_diff - 0.08) * 3.0
-        )
-        video_detectors.append(
-            detector_evidence(
-                "Temporal consistency",
-                "temporal forensics",
-                temporal_score,
-                0.55,
-                f"mean_frame_difference={avg_temporal_diff:.4f}, difference_std={temporal_std:.4f}",
-            )
-        )
-    else:
-        video_detectors.append(
-            not_applicable_detector(
-                "Temporal consistency",
-                "temporal forensics",
-                "At least four readable frames are required.",
-            )
-        )
-
-    if len(optical_flow_magnitudes) >= 3:
-        flow_mean = float(np.mean(optical_flow_magnitudes))
-        flow_cv = float(np.std(optical_flow_magnitudes) / max(flow_mean, 1e-6))
-        flow_score = clamp_score(0.32 + max(0.0, flow_cv - 0.45) * 0.55)
-        video_detectors.append(
-            detector_evidence(
-                "Farneback optical-flow consistency",
-                "motion forensics",
-                flow_score,
-                0.50,
-                f"median_flow_mean={flow_mean:.4f}, flow_cv={flow_cv:.4f}",
-            )
-        )
-    else:
-        video_detectors.append(
-            not_applicable_detector(
-                "Farneback optical-flow consistency",
-                "motion forensics",
-                "Insufficient adjacent readable frames.",
-            )
-        )
-
-    if len(luminance_means) >= 5:
-        second_difference = np.diff(np.asarray(luminance_means), n=2)
-        flicker_strength = float(np.std(second_difference) / 255.0)
-        flicker_score = clamp_score(0.35 + flicker_strength * 6.0)
-        video_detectors.append(
-            detector_evidence(
-                "Global luminance flicker",
-                "temporal forensics",
-                flicker_score,
-                0.40,
-                f"normalized_second_difference_std={flicker_strength:.4f}",
-            )
-        )
-    else:
-        video_detectors.append(
-            not_applicable_detector(
-                "Global luminance flicker",
-                "temporal forensics",
-                "At least five readable frames are required.",
-            )
-        )
-
-    if len(pixel_motion_diffs) >= 3:
-        cut_rate = scene_cut_count / max(len(pixel_motion_diffs), 1)
-        video_detectors.append(
-            detector_evidence(
-                "Scene-transition consistency",
-                "scene forensics",
-                clamp_score(0.38 + cut_rate * 0.45),
-                0.35,
-                f"scene_cut_count={scene_cut_count}, sampled_transition_count={len(pixel_motion_diffs)}",
-            )
-        )
-    else:
-        video_detectors.append(
-            not_applicable_detector(
-                "Scene-transition consistency",
-                "scene forensics",
-                "Insufficient transitions.",
-            )
-        )
-
-    try:
-        if len(temporal_rgb_frames) >= 5:
-            tracks = analyze_klt_object_tracks(temporal_rgb_frames)
-            video_detectors.append(
-                detector_evidence(
-                    "KLT object-region track consistency",
-                    "object tracking",
-                    tracks["score"],
-                    tracks["confidence"],
-                    f"initial_tracks={tracks['initial_tracks']}, mean_survival={tracks['mean_track_survival']:.4f}, motion_cv={tracks['motion_cv']:.4f}",
-                )
-            )
-        else:
-            video_detectors.append(
-                not_applicable_detector(
-                    "KLT object-region track consistency",
-                    "object tracking",
-                    "Insufficient consecutive frames.",
-                )
-            )
-    except Exception as exc:
-        if "Insufficient" in str(exc):
-            video_detectors.append(
-                not_applicable_detector(
-                    "KLT object-region track consistency", "object tracking", str(exc)
-                )
-            )
-        else:
-            video_detectors.append(
-                unavailable_detector(
-                    "KLT object-region track consistency", "object tracking", str(exc)
-                )
-            )
-
-    face_result = {"applicable": False, "reason": "No face analysis result."}
-    try:
-        if len(temporal_rgb_frames) >= 3:
-            face_result = analyze_face_dynamics(temporal_rgb_frames)
-        if face_result.get("applicable"):
-            pose_score = clamp_score(0.34 + max(0.0, face_result["head_pose_jitter_degrees"] - 12.0) * 0.025)  # type: ignore
-            blink_score = 0.62 if face_result["blink_count"] == 0 and face_result["face_frames"] >= 8 else 0.36  # type: ignore
-            video_detectors.extend(
-                [
-                    detector_evidence(
-                        "MediaPipe facial landmark continuity",
-                        "face forensics",
-                        face_result["score"],
-                        face_result["confidence"],
-                        f"face_frames={face_result['face_frames']}, median_eye_aspect_ratio={face_result['median_ear']:.4f}",
-                    ),
-                    detector_evidence(
-                        "PnP head-pose consistency",
-                        "face forensics",
-                        pose_score,
-                        0.42,
-                        f"mean_pose_jitter_degrees={face_result['head_pose_jitter_degrees']:.3f}",
-                    ),
-                    detector_evidence(
-                        "Eye-aspect-ratio blink dynamics",
-                        "face forensics",
-                        blink_score,
-                        0.38,
-                        f"blink_count={face_result['blink_count']} across {face_result['face_frames']} face frames",
-                    ),
-                ]
-            )
-        else:
-            for name in [
-                "MediaPipe facial landmark continuity",
-                "PnP head-pose consistency",
-                "Eye-aspect-ratio blink dynamics",
-            ]:
-                video_detectors.append(
-                    not_applicable_detector(
-                        name, "face forensics", face_result["reason"]
-                    )
-                )
-    except Exception as exc:
-        for name in [
-            "MediaPipe facial landmark continuity",
-            "PnP head-pose consistency",
-            "Eye-aspect-ratio blink dynamics",
-        ]:
-            video_detectors.append(
-                unavailable_detector(name, "face forensics", str(exc))
-            )
-
-    try:
-        codec = analyze_codec(video_path)
-        codec_score = 0.50
-        video_detectors.append(
-            detector_evidence(
-                "PyAV codec structure analysis",
-                "codec forensics",
-                codec_score,
-                0.18,
-                f"codec={codec['codec']}, profile={codec['profile']}, pixel_format={codec['pixel_format']}, bit_rate={codec['bit_rate']}, b_frames={codec['has_b_frames']}",
-            )
-        )
-    except Exception as exc:
-        codec = None
-        video_detectors.append(
-            unavailable_detector(
-                "PyAV codec structure analysis", "codec forensics", str(exc)
-            )
-        )
-
-    audio_result = {"applicable": False, "reason": "Audio analysis did not run."}
-    asr_result = None
-    try:
-        audio_result = analyze_audio_spectrum(video_path)
-        if audio_result.get("applicable"):
-            video_detectors.append(
-                detector_evidence(
-                    "Audio spectrogram statistics",
-                    "audio forensics",
-                    audio_result["score"],
-                    audio_result["confidence"],
-                    f"flatness={audio_result['spectral_flatness_mean']:.5f}, flatness_cv={audio_result['spectral_flatness_cv']:.4f}, centroid_hz={audio_result['spectral_centroid_hz']:.1f}, rolloff_hz={audio_result['spectral_rolloff_hz']:.1f}",
-                )
-            )
-            asr_result = transcribe_arabic_speech(video_path)
-            video_detectors.append(
-                detector_evidence(
-                    "faster-whisper speech recognition",
-                    "Arabic speech",
-                    0.50,
-                    0.01,
-                    f"model={asr_result['model']}, language={asr_result['language']}, language_probability={asr_result['language_probability']:.4f}, transcript_chars={len(asr_result['transcript'])}",
-                )
-            )
-            if asr_result["language"] == "ar" and asr_result["transcript"].strip():
-                transcript_outputs = predict_arabic_text_models(
-                    asr_result["transcript"], 1.0, False, 0.0
-                )
-                selected_output = next(
-                    (
-                        item
-                        for item in transcript_outputs
-                        if item.get("available") and item.get("selected")
-                    ),
-                    None,
-                )
-                if selected_output:
-                    video_detectors.append(
-                        detector_evidence(
-                            "Arabic speech transcript authorship",
-                            "Arabic speech",
-                            selected_output["score"],
-                            0.55,
-                            f"ASR transcript analyzed by {selected_output['name']}; {selected_output['evidence']}",
-                            learned=True,
-                        )
-                    )
-        else:
-            video_detectors.append(
-                not_applicable_detector(
-                    "Audio spectrogram statistics",
-                    "audio forensics",
-                    audio_result["reason"],
-                )
-            )
-            video_detectors.append(
-                not_applicable_detector(
-                    "faster-whisper speech recognition",
-                    "Arabic speech",
-                    audio_result["reason"],
-                )
-            )
-    except Exception as exc:
-        video_detectors.append(
-            unavailable_detector(
-                "Audio spectrogram statistics", "audio forensics", str(exc)
-            )
-        )
-        video_detectors.append(
-            unavailable_detector(
-                "faster-whisper speech recognition", "Arabic speech", str(exc)
-            )
-        )
-
-    lip_sync_result = {"applicable": False, "reason": "Lip-sync analysis did not run."}
-    try:
-        lip_sync_result = analyze_lip_sync(
-            video_path, sampled_rgb_frames, sampled_timestamps
-        )
-        if lip_sync_result.get("applicable"):
-            video_detectors.append(
-                detector_evidence(
-                    "Mouth-audio synchronization",
-                    "audio-visual forensics",
-                    lip_sync_result["score"],
-                    lip_sync_result["confidence"],
-                    f"mouth_audio_correlation={lip_sync_result['mouth_audio_correlation']:.4f}, samples={lip_sync_result['sample_count']}",
-                )
-            )
-        else:
-            video_detectors.append(
-                not_applicable_detector(
-                    "Mouth-audio synchronization",
-                    "audio-visual forensics",
-                    lip_sync_result["reason"],
-                )
-            )
-    except Exception as exc:
-        video_detectors.append(
-            unavailable_detector(
-                "Mouth-audio synchronization", "audio-visual forensics", str(exc)
-            )
-        )
-
-    try:
-        audio_deepfake = predict_audio_deepfake(video_path)
-        if audio_deepfake.get("applicable"):
-            video_detectors.append(
-                detector_evidence(
-                    "Wav2Vec2 vocoder/deepfake classifier",
-                    "audio forensics",
-                    audio_deepfake["score"],
-                    audio_deepfake["confidence"],
-                    f"checkpoint={audio_deepfake['checkpoint']}",
-                    learned=True,
-                )
-            )
-        else:
-            video_detectors.append(
-                not_applicable_detector(
-                    "Wav2Vec2 vocoder/deepfake classifier",
-                    "audio forensics",
-                    audio_deepfake["reason"],
-                )
-            )
-    except Exception as exc:
-        video_detectors.append(
-            unavailable_detector(
-                "Wav2Vec2 vocoder/deepfake classifier", "audio forensics", str(exc)
-            )
-        )
-
-    metadata_score = 0.92 if ai_metadata_hit else (0.15 if camera_video_hit else 0.50)
-    video_detectors.append(
-        detector_evidence(
-            "Codec/container metadata",
-            "metadata",
-            metadata_score,
-            0.20,
-            f"ai_tag={ai_metadata_hit or 'none'}, camera_or_encoder={camera_video_hit or has_encoder_marker}",
-            supplementary=True,
-        )
-    )
-    filename_hit = any(keyword in lower_name for keyword in ai_keywords)
-    video_detectors.append(
-        detector_evidence(
-            "Filename hint",
-            "filename",
-            0.90 if filename_hit else 0.50,
-            0.05,
-            f"generator-like filename token={'present' if filename_hit else 'absent'}; never primary evidence",
-            supplementary=True,
-        )
-    )
-    video_detectors.extend(
-        [
-            unavailable_detector(
-                "Video watermark detector",
-                "watermark",
-                "No provider-specific watermark detector is configured.",
-            ),
-            unavailable_detector(
-                "Video cryptographic provenance",
-                "provenance",
-                "No C2PA signature verifier is installed.",
-            ),
-        ]
-    )
-
-    fusion = fuse_detector_evidence("video", video_detectors)
-    prediction = fusion["prediction"]
-    final_prob = fusion["ai_probability"]
-    confidence = fusion["confidence"]
-    suspected = "N/A (generator attribution unavailable)"
-
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    from video_detector import VideoTemporalOrchestrator
+    
+    orchestrator = VideoTemporalOrchestrator()
+    ctx = {"filename": original_name, "file_size": file_size}
+    fusion_result = orchestrator.analyze(video_path, context=ctx)
+    
     return {
-        "prediction": prediction,
-        "ai_probability": final_prob,
-        "confidence": confidence,
-        "confidence_score": fusion["confidence_score"],
-        "uncertainty": fusion["uncertainty"],
-        "review_required": fusion["review_required"],
-        "verdict_status": fusion["verdict_status"],
-        "confidence_level": fusion["confidence_level"],
-        "binary_fallback_applied": fusion["binary_fallback_applied"],
-        "feature_importance": fusion["feature_importance"],
-        "detector_specific_analysis": fusion["detector_specific_analysis"],
-        "evidence_report": fusion["evidence_report"],
-        "features": {
-            "model_used": "3truth Forensic Multimodal Engine V15",
-            "V01_Frame_Consistency": (
-                "Morphing Artifacts Detected"
-                if avg_temporal_diff > 0.08
-                else "Consistent"
-            ),
-            "V02_Facial_Landmark": f"analyzed in {face_result.get('face_frames', 0)} sampled frames",
-            "V03_Lip_Sync": (
-                f"correlation {lip_sync_result['mouth_audio_correlation']:.3f}"
-                if lip_sync_result.get("applicable")
-                else lip_sync_result.get("reason", "not applicable")
-            ),
-            "V04_Deepfake": "Anomaly Detected" if heur_score >= 0.35 else "Pass",
-            "V05_Blinking": str(face_result.get("blink_count", "not applicable")),
-            "V06_Motion_Authenticity": f"Mean frame difference: {avg_temporal_diff:.3f}",
-            "V07_Audio_Authenticity": (
-                "analyzed"
-                if audio_result.get("applicable")
-                else audio_result.get("reason", "not applicable")
-            ),
-            "V08_Arabic_Speech": (
-                f"{asr_result['language']} ({asr_result['language_probability']:.2f}), {len(asr_result['transcript'])} transcript characters"
-                if asr_result
-                else "no decoded speech"
-            ),
-            "duration_seconds": round(duration, 2),
-            "frame_size": f"{width}x{height}",
-            "sampled_frames": len(spatial_list),
-            "file_size_mb": round(file_size / (1024 * 1024), 2) if file_size else 0.0,
-            "suspected_generator": suspected,
-            "decision_path": "; ".join(
-                item["detector"]
-                for item in fusion["evidence_report"]["top_contributors"][:5]
-            ),
-            "review_flags": "; ".join(
-                fusion["evidence_report"]["fusion"]["uncertainty_reasons"]
-            )
-            or "none",
-        },
+        "probability": fusion_result.get("ai_probability", 0.5),
+        "classification": fusion_result.get("classification", "Human"),
+        "reasons": fusion_result.get("evidence_summary", [])[:8],
+        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
+        "review_flags": []
     }
 
 
@@ -5654,3 +3720,53 @@ if __name__ == "__main__":
         f"Starting 3truth Dual-Stream PyTorch ML Service on http://127.0.0.1:{PORT}"
     )
     app.run(host="0.0.0.0", port=PORT)
+
+@Profiler.profile("run_video_detection")
+def run_video_detection(video_path, file_size, original_name):
+    from security_validator import FileValidator
+    if file_size > FileValidator.MAX_VIDEO_SIZE_BYTES:
+        return {"error": "Video exceeds max size."}
+        
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    from video_detector import VideoTemporalOrchestrator
+    
+    orchestrator = VideoTemporalOrchestrator()
+    ctx = {"filename": original_name, "file_size": file_size}
+    fusion_result = orchestrator.analyze(video_path, context=ctx)
+    
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    
+    return {
+        "probability": fusion_result.get("ai_probability", 0.5),
+        "classification": fusion_result.get("classification", "Human"),
+        "reasons": fusion_result.get("evidence_summary", [])[:8],
+        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
+        "review_flags": [],
+        "profiling": profiling_metrics
+    }
+
+@Profiler.profile("run_audio_detection")
+def run_audio_detection(audio_path, file_size, original_name):
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    from audio_detector import AudioTemporalOrchestrator
+    
+    orchestrator = AudioTemporalOrchestrator()
+    ctx = {"filename": original_name, "file_size": file_size}
+    fusion_result = orchestrator.analyze(audio_path, context=ctx)
+    
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    
+    return {
+        "probability": fusion_result.get("ai_probability", 0.5),
+        "classification": fusion_result.get("classification", "Human"),
+        "reasons": fusion_result.get("evidence_summary", [])[:8],
+        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
+        "review_flags": [],
+        "profiling": profiling_metrics
+    }

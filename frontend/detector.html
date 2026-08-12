@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,10 +7,7 @@
     <link rel="icon" href="assets/favicon.svg" />
 
     <!-- Fonts & Icons -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap"
-      rel="stylesheet"
-    />
+
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
     <!-- Tailwind -->
@@ -48,9 +45,14 @@
 
     <!-- Main CSS -->
     <link rel="stylesheet" href="css/main.css?v=6.1" />
+    <link rel="stylesheet" href="css/motion.css" />
     <link rel="stylesheet" href="css/ui-fixes.css?v=20260614-detector6" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
   </head>
-  <body class="bg-[#030305] text-white">
+
+  <body class="bg-[#031F1A] text-white">
     <!-- Reactbits Style Aurora Background -->
     <div class="aurora-container">
       <div class="aurora-blob cyan"></div>
@@ -61,7 +63,7 @@
 
     <!-- Navigation -->
     <div
-      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#030305]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
+      class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 bg-[#031F1A]/90 backdrop-blur-md border-b border-[var(--accent-1)]/20 flex justify-between items-center"
     >
       <!-- Left Logo -->
       <a
@@ -125,7 +127,7 @@
     <!-- Sidebar (Mobile Menu) -->
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 w-80 bg-[#030305]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
+      class="fixed inset-y-0 right-0 w-80 bg-[#031F1A]/95 backdrop-blur-xl border-l border-[var(--accent-1)]/20 z-[100] transform translate-x-full transition-transform duration-300 hidden flex-col p-8 pt-24 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
     >
       <button
         id="mobile-menu-close"
@@ -170,12 +172,12 @@
       <!-- Header -->
       <div class="text-center mb-8 md:mb-10 px-4">
         <h1
-          class="text-3xl md:text-6xl font-black mb-4 md:mb-6 tracking-tighter hero-title text-gradient scramble-hover whitespace-nowrap"
+          class="text-3xl md:text-6xl font-black mb-4 md:mb-6 tracking-tighter hero-title text-gradient char-reveal reveal-mask whitespace-nowrap"
         >
           THE APEX DETECTOR
         </h1>
         <p
-          class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium hero-sub leading-relaxed scramble-hover"
+          class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-medium hero-sub leading-relaxed reveal-blur word-reveal"
         >
           Unescapable intelligence. Drop your content below and let the neural
           engine dissect the truth.
@@ -189,19 +191,19 @@
       >
         <button
           data-tab="text"
-          class="tab-btn active flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[var(--accent-1)] text-[var(--accent-1)] bg-[var(--accent-1)]/10 hover:bg-[var(--accent-1)]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_var(--accent-1)] transition-all font-black tracking-widest text-base transform"
+          class="tab-btn spring-click active flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[var(--accent-1)] text-[var(--accent-1)] bg-[var(--accent-1)]/10 hover:bg-[var(--accent-1)]/20 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(47, 238, 204,0.3)] transition-all font-black tracking-widest text-base transform"
         >
           <i data-lucide="file-text" class="w-5 h-5"></i> TEXT
         </button>
         <button
           data-tab="image"
-          class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#b829ff] text-[#b829ff] bg-[#b829ff]/10 hover:bg-[#b829ff]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#b829ff] transition-all font-black tracking-widest text-base transform"
+          class="tab-btn spring-click flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] bg-[#8B5CF6]/10 hover:bg-[#8B5CF6]/20 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all font-black tracking-widest text-base transform"
         >
           <i data-lucide="image" class="w-5 h-5"></i> IMAGE
         </button>
         <button
           data-tab="video"
-          class="tab-btn flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#ff2a85] text-[#ff2a85] bg-[#ff2a85]/10 hover:bg-[#ff2a85]/20 hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_20px_#ff2a85] transition-all font-black tracking-widest text-base transform"
+          class="tab-btn spring-click flex items-center justify-center gap-3 flex-1 sm:flex-none min-w-[200px] py-5 px-8 rounded-xl border border-[#EF4444] text-[#EF4444] bg-[#EF4444]/10 hover:bg-[#EF4444]/20 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all font-black tracking-widest text-base transform"
         >
           <i data-lucide="video" class="w-5 h-5"></i> VIDEO
         </button>
@@ -217,7 +219,7 @@
           id="main-detector-card"
         >
           <div
-            class="detector-workspace bg-[#050505]/80 backdrop-blur-3xl rounded-[22px] w-full flex flex-col md:flex-row overflow-hidden relative"
+            class="detector-workspace clip-reveal glass-motion glass-intensify bg-[#031F1A]/80 backdrop-blur-3xl rounded-[22px] w-full flex flex-col md:flex-row overflow-hidden relative"
           >
             <!-- Scanner Effect -->
             <div
@@ -303,7 +305,7 @@
               <!-- File Input (Image/Video) -->
               <div
                 id="tab-content-file"
-                class="media-upload-zone flex-grow flex flex-col items-center justify-center hidden border-2 border-dashed border-white/10 rounded-xl hover:border-[var(--accent-1)]/50 transition-colors cursor-pointer group relative overflow-hidden p-6"
+                class="media-upload-zone flex-col items-center justify-center hidden border border-solid border-slate-700 bg-slate-900/50 rounded-xl hover:border-[var(--accent-1)] hover:bg-[var(--accent-1)]/5 transition-all duration-300 cursor-pointer group relative overflow-hidden p-6"
               >
                 <input
                   type="file"
@@ -376,14 +378,17 @@
                 <!-- Preview State -->
                 <div
                   id="file-upload-preview"
-                  class="hidden w-full flex flex-col items-center justify-center relative"
+                  class="detector-flex-hidden hidden w-full flex-col items-center justify-center relative"
                 >
                   <!-- Preview Canvas or Image or Video will be rendered here dynamically -->
                 </div>
               </div>
               <div id="file-analyze-anchor" class="analyze-anchor"></div>
 
-              <button id="analyze-btn" class="btn-magnetic w-full group">
+              <button
+                id="analyze-btn"
+                class="btn-magnetic w-full group spring-click"
+              >
                 <span id="analyze-btn-label">INITIALIZE SCAN</span>
               </button>
             </div>
@@ -580,11 +585,11 @@
                     Neural Provenance Code Inspector
                   </h4>
                   <div
-                    class="border border-[#b829ff]/30 bg-[#050508] rounded-2xl p-6 relative overflow-hidden group shadow-[0_0_30px_rgba(184,41,255,0.05)]"
+                    class="border border-[#8B5CF6]/30 bg-[#050508] rounded-2xl p-6 relative overflow-hidden group shadow-[0_0_30px_rgba(184,41,255,0.05)]"
                   >
                     <!-- Glow accents -->
                     <div
-                      class="absolute -top-10 -right-10 w-40 h-40 bg-[#b829ff]/10 rounded-full blur-3xl pointer-events-none"
+                      class="absolute -top-10 -right-10 w-40 h-40 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none"
                     ></div>
 
                     <!-- Terminal Header -->
@@ -599,7 +604,7 @@
                         <span
                           class="w-3 h-3 rounded-full bg-green-500/80"
                         ></span>
-                        <span class="ml-2 text-[#b829ff] font-bold"
+                        <span class="ml-2 text-[#8B5CF6] font-bold"
                           >PROVENANCE_SHELL_v1.0.4_STABLE</span
                         >
                       </div>
@@ -624,7 +629,7 @@
                   </button>
                   <button
                     id="pdf-btn"
-                    class="hidden w-full btn-glass flex items-center justify-center gap-2 py-4"
+                    class="hidden w-full btn-glass items-center justify-center gap-2 py-4"
                   >
                     <i data-lucide="file-down" class="w-4 h-4"></i> CONVERT TO
                     PDF
@@ -638,7 +643,7 @@
         <!-- Error Message -->
         <div
           id="error-message"
-          class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-bold hidden flex items-center justify-center gap-2 text-sm"
+          class="detector-flex-hidden mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-center font-bold hidden items-center justify-center gap-2 text-sm"
         >
           <i data-lucide="alert-triangle" class="w-4 h-4"></i>
           <span id="error-text"></span>
@@ -667,6 +672,7 @@
       });
     </script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/motion.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/cinematic.js?v=9.0"></script>
     <script src="js/detector.js?v=4"></script>

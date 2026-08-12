@@ -1,94 +1,44 @@
-import sys
+import pytest
 import os
-import unittest
-from unittest.mock import patch, MagicMock
+import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../backend/src'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../backend/src')))
+from provenance_engine import ProvenanceOrchestrator
 
-from provenance_detector import evaluate_provenance_and_metadata # type: ignore
-
-class TestProvenanceDetector(unittest.TestCase):
-
-    def setUp(self):
-        self.mock_image = MagicMock()
-        self.mock_image.getexif.return_value = {}
-
-    def test_missing_metadata(self):
-        # Empty EXIF, no C2PA bytes
-        evidence = evaluate_provenance_and_metadata(self.mock_image, None)
-        
-        self.assertEqual(evidence["score"], 0.0)
-        self.assertEqual(evidence["provenance_status"], "MISSING")
-        self.assertEqual(evidence["metadata_anomalies"], [])
-        
-    def test_normal_camera_metadata(self):
-        # EXIF claims physical camera, no synthetic flags
-        self.mock_image.getexif.return_value = {
-            271: b"Canon",         # Make
-            272: b"Canon EOS 5D",  # Model
-            305: b"Firmware 1.0"   # Software
-        }
-        
-        evidence = evaluate_provenance_and_metadata(self.mock_image, None)
-        self.assertEqual(evidence["score"], 0.0)
-        self.assertEqual(evidence["provenance_status"], "MISSING")
-        self.assertEqual(evidence["metadata_anomalies"], [])
-
-    def test_edited_image_metadata_anomaly(self):
-        # EXIF claims physical camera, BUT software indicates manipulation
-        self.mock_image.getexif.return_value = {
-            271: b"Sony",               # Make
-            272: b"ILCE-7M3",           # Model
-            305: b"Adobe Photoshop 24"  # Software
-        }
-        
-        evidence = evaluate_provenance_and_metadata(self.mock_image, None)
-        
-        self.assertTrue(evidence["score"] >= 0.8)
-        self.assertTrue(any("Contradiction" in anomaly for anomaly in evidence["metadata_anomalies"]))
-
-    def test_synthetic_metadata(self):
-        # EXIF claims Midjourney directly
-        self.mock_image.getexif.return_value = {
-            305: b"Midjourney v5"
-        }
-        
-        evidence = evaluate_provenance_and_metadata(self.mock_image, None)
-        
-        self.assertTrue(evidence["score"] >= 0.6)
-        self.assertTrue(any("Software signature indicates synthetic" in anomaly for anomaly in evidence["metadata_anomalies"]))
-
-    def test_malformed_metadata(self):
-        # Simulate an exception in EXIF parsing
-        self.mock_image.getexif.side_effect = Exception("Corrupt EXIF header")
-        
-        # Should catch gracefully and return score 0
-        evidence = evaluate_provenance_and_metadata(self.mock_image, None)
-        self.assertEqual(evidence["score"], 0.0)
-
-    @patch('provenance_detector.c2pa')
-    def test_valid_c2pa(self, mock_c2pa):
-        mock_reader = MagicMock()
-        mock_reader.json.return_value = '{"active_manifest": "m1", "manifests": {"m1": {"signature_info": {"issuer": "Adobe"}, "assertions": [{"label": "c2pa.actions", "data": {"actions": [{"action": "c2pa.created", "parameters": {"description": "Photoshop"}}]}}]}}}'
-        mock_c2pa.Reader.try_create.return_value = mock_reader
-        
-        evidence = evaluate_provenance_and_metadata(self.mock_image, b"fake_bytes")
-        
-        self.assertEqual(evidence["provenance_status"], "VERIFIED")
-        self.assertEqual(evidence["issuer"], "Adobe")
-        self.assertEqual(evidence["origin"], "Photoshop")
-        self.assertIn("c2pa.created", evidence["editing_history"])
-        
-    @patch('provenance_detector.c2pa')
-    def test_invalid_c2pa(self, mock_c2pa):
-        mock_reader = MagicMock()
-        mock_reader.json.return_value = '{"active_manifest": "m1", "validation_status": [{"code": "signature_mismatch"}], "manifests": {"m1": {}}}'
-        mock_c2pa.Reader.try_create.return_value = mock_reader
-        
-        evidence = evaluate_provenance_and_metadata(self.mock_image, b"fake_bytes")
-        
-        self.assertEqual(evidence["provenance_status"], "INVALID")
-        self.assertTrue(any("signature_mismatch" in anomaly for anomaly in evidence["metadata_anomalies"]))
-
-if __name__ == '__main__':
-    unittest.main()
+def test_provenance_c2pa():
+    """
+    Test that the ProvenanceOrchestrator detects C2PA markers with high confidence
+    and successfully lowers the confidence of easily spoofed hardware strings.
+    """
+    orchestrator = ProvenanceOrchestrator()
+    
+    # 1. Test missing provenance (should NOT prove Human)
+    signals_missing = orchestrator.analyze(b"just random bytes here")
+    # All signals should drop below quality threshold or return 0.5 (neutral)
+    for s in signals_missing:
+        assert s.score <= 0.5 
+    
+    # 2. Test hardware signature (should have low quality due to spoofability)
+    # The iPhone EXIF string
+    signals_hw = orchestrator.analyze(b"exif data iphone 15 pro max")
+    hw_sig = next((s for s in signals_hw if s.detector_name == "Hardware Provenance Analyzer"), None)
+    assert hw_sig is not None
+    # Even if detected, its quality must be heavily penalized
+    assert hw_sig.signal_quality <= 0.3
+    # And its score is a weak indicator of Human (e.g. 0.1)
+    assert hw_sig.score < 0.5
+    
+    # 3. Test C2PA signature (should have absolute high confidence as AI)
+    # The JUMBF box is used by C2PA/Content Credentials
+    signals_c2pa = orchestrator.analyze(b"uuid jumb c2pa midjourney")
+    c2pa_sig = next((s for s in signals_c2pa if s.detector_name == "C2PA Metadata Analyzer"), None)
+    
+    assert c2pa_sig is not None
+    assert c2pa_sig.signal_quality == 1.0 # 100% reliable metric
+    assert c2pa_sig.score >= 0.95 # Absolute proof of AI
+    
+    # 4. Test Software EXIF signature (should have high confidence as AI)
+    soft_sig = next((s for s in signals_c2pa if s.detector_name == "EXIF Software Analyzer"), None)
+    assert soft_sig is not None
+    assert soft_sig.signal_quality == 1.0
+    assert soft_sig.score >= 0.95

@@ -1,4 +1,4 @@
-const textInput = document.getElementById("text-input");
+﻿const textInput = document.getElementById("text-input");
 const fileInput = document.getElementById("file-input");
 const tabContentText = document.getElementById("tab-content-text");
 const tabContentFile = document.getElementById("tab-content-file");
@@ -1218,6 +1218,80 @@ function diagnosticLogDelay(ms) {
   );
 }
 
+async function runPipelineUnpack(data) {
+  const initial = document.getElementById("loading-initial");
+  const unpacker = document.getElementById("pipeline-unpack");
+  if (!initial || !unpacker) return;
+
+  initial.classList.add("hidden");
+  unpacker.classList.remove("hidden");
+  unpacker.innerHTML = "";
+
+  const addStage = async (text, delayMs) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const p = document.createElement("p");
+        p.className =
+          "opacity-0 transform translate-y-2 transition-all duration-300";
+        p.innerHTML = `<span class="text-white">></span> ${text}`;
+        unpacker.appendChild(p);
+        requestAnimationFrame(() =>
+          p.classList.remove("opacity-0", "translate-y-2"),
+        );
+        resolve();
+      }, delayMs);
+    });
+  };
+
+  const forensics = data.forensics || {};
+  const calibrated = forensics.calibrated_outputs || [];
+
+  let provenanceCount = 0;
+  let forensicCount = 0;
+  let mlCount = 0;
+  let heuristicCount = 0;
+
+  calibrated.forEach((sig) => {
+    if (
+      sig.category === "verified_cryptographic_provenance" ||
+      sig.category === "verified_watermark" ||
+      sig.category === "signed_metadata"
+    ) {
+      provenanceCount++;
+    } else if (sig.category === "forensic_evidence") {
+      forensicCount++;
+    } else if (sig.category === "ml_classifier") {
+      mlCount++;
+    } else {
+      heuristicCount++;
+    }
+  });
+
+  const total = calibrated.length;
+  if (total > 0) {
+    await addStage(
+      `Extracting forensic signals... Found ${forensicCount} signals.`,
+      100,
+    );
+    if (provenanceCount > 0) {
+      await addStage(
+        `Checking provenance... Verified ${provenanceCount} markers.`,
+        400,
+      );
+    } else {
+      await addStage(`Checking provenance... No markers found.`, 400);
+    }
+    await addStage(`Running models... ${mlCount} models completed.`, 400);
+    await addStage(`Calibrating evidence across ${total} detectors...`, 300);
+    await addStage(`Final Classification Reached.`, 300);
+    await new Promise((r) => setTimeout(r, 600));
+  } else {
+    await addStage(`Calibrating evidence...`, 100);
+    await addStage(`Final Classification Reached.`, 300);
+    await new Promise((r) => setTimeout(r, 400));
+  }
+}
+
 async function runTerminalDiagnosticLogs(type, file) {
   const terminal = document.getElementById("loading-terminal-logs");
   if (!terminal) return;
@@ -1253,11 +1327,11 @@ async function runTerminalDiagnosticLogs(type, file) {
   }
 
   const formulas = [
-    "[SYSTEM] Optimizing weights: W_{ij} = W_{ij} - α * (∂L/∂W_{ij})",
+    "[SYSTEM] Optimizing weights: W_{ij} = W_{ij} - ╬▒ * (ΓêéL/ΓêéW_{ij})",
     "[MATRIX] [[0.912, 0.421, 0.111], [0.334, 0.887, 0.551]] ... processing tensors...",
     "[NEURAL] ReLU(x) = max(0, x) activation triggered at hidden layer 14...",
     "[FORENSIC] DCT Coefficient Entropy: 14.2234 | Divergence: 0.1002 (Authentic bounds)",
-    "[ATTENTION] Softmax(QK^T / √d_k) V -> Self-attention weights stabilized.",
+    "[ATTENTION] Softmax(QK^T / ΓêÜd_k) V -> Self-attention weights stabilized.",
     "[SYSTEM] Calculating Error Level Analysis... JPEG Quantization Table 0x01",
     "[MATH] f(x) = 1 / (1 + e^{-x}) Sigmoid probability converging...",
     "[GPU] Allocating 4.2GB VRAM... Crunching local forensic heuristics...",
@@ -1267,7 +1341,7 @@ async function runTerminalDiagnosticLogs(type, file) {
     "[BAYES] P(AI|x) = P(x|AI)*P(AI) / P(x) ... Bayesian inference running...",
     "[META] Extracting multi-layer Exif provenance headers...",
     "[NOISE] PRNU Sensor Noise Correlation: 0.8893 (Variance: 0.0012)",
-    "[MATH] ∇f(x) gradients calculating across 1024 dimensions...",
+    "[MATH] Γêçf(x) gradients calculating across 1024 dimensions...",
     "[SYSTEM] Ensembling model votes... AI_Weight = 14.3, Real_Weight = 2.1",
   ];
 
@@ -1602,7 +1676,7 @@ if (analyzeBtn) {
 
     // Start continuous diagnostic terminal logs
     window.isScanning = true;
-    runTerminalDiagnosticLogs(activeTab, fileObj);
+    // UI handled by loading-initial state
 
     // Run browser-side forensic pre-scan in parallel with the backend request.
     let forensics = null;
@@ -1695,7 +1769,7 @@ if (analyzeBtn) {
             let current = "";
             for (let i = 0; i < textVal.length; i++) {
               current += textVal[i];
-              if (/[.!?؟।\n]/.test(textVal[i]) || i === textVal.length - 1) {
+              if (/[.!?╪ƒαÑñ\n]/.test(textVal[i]) || i === textVal.length - 1) {
                 if (current.trim().length > 0) sentences.push(current.trim());
                 current = "";
               }
@@ -1784,6 +1858,7 @@ if (analyzeBtn) {
       }
 
       currentResult = data;
+      await runPipelineUnpack(data);
       renderResult(data);
 
       // Beta access is unlimited; keep account state synced without blocking results.
@@ -2056,7 +2131,7 @@ SAMPLING PROFILE: BILINEAR TRANSPOSED CONVOLUTION LATTICE
 
 [ANALYSIS] DISASSEMBLING HIGH-FREQUENCY COHESION...
   * Pearson RGB Covariance  : r_RG = ${(forensics ? forensics.pearsonRG : 0.923).toFixed(4)} | r_RB = ${(forensics ? forensics.pearsonRB : 0.915).toFixed(4)}
-  * Quantization Deviation  : σ = ${(forensics ? forensics.flatBlockNoise : 0.61).toFixed(4)} LSB (Ultra-smooth perfect gradient)
+  * Quantization Deviation  : ╧â = ${(forensics ? forensics.flatBlockNoise : 0.61).toFixed(4)} LSB (Ultra-smooth perfect gradient)
   * Upsampling Grid Ratio   : ${(forensics ? forensics.checkerboardRatio : 1.214).toFixed(4)} (Checkerboard periodic grid)
 
 [DECOMPILER] WEIGHTS DEVIATION MATRIX:
@@ -2091,14 +2166,14 @@ SAMPLING PROFILE: BAYER INTERPOLATION SCANNING GRID
 
 [ANALYSIS] EVALUATING PIXEL SPECTRUM INTEGRITY...
   * Pearson RGB Covariance  : r_RG = ${(forensics ? forensics.pearsonRG : 0.984).toFixed(4)} | r_RB = ${(forensics ? forensics.pearsonRB : 0.979).toFixed(4)}
-  * CMOS Shot-Noise (Green) : σ = ${(forensics ? forensics.flatBlockNoise : 2.14).toFixed(4)} LSB (Standard sensor grain)
+  * CMOS Shot-Noise (Green) : ╧â = ${(forensics ? forensics.flatBlockNoise : 2.14).toFixed(4)} LSB (Standard sensor grain)
   * Periodic Lattice Grid   : ${(forensics ? forensics.checkerboardRatio : 1.01).toFixed(4)} Ratio (Isotropic high-frequency pattern)
 
 [DIAGNOSTICS] PROVENANCE INTEGRITY BOUNDARY:
-  ✓ standard analog-to-digital sensor voltage fluctuations.
-  ✓ standard Bayer interpolation chroma correlations.
-  ✓ No digital deconvolution checkerboards or synthetic grids detected.
-  ✓ Verdict: COHERENT PHOTON CAPTURE FROM PHYSICAL CMOS SENSOR.
+  Γ£ô standard analog-to-digital sensor voltage fluctuations.
+  Γ£ô standard Bayer interpolation chroma correlations.
+  Γ£ô No digital deconvolution checkerboards or synthetic grids detected.
+  Γ£ô Verdict: COHERENT PHOTON CAPTURE FROM PHYSICAL CMOS SENSOR.
 ================================================================================`,
       };
     }
@@ -2137,7 +2212,7 @@ if (copyBtn) {
     if (!currentResult) return;
     const lines = [
       `${tr("detector.verdictLabel", null, "Verdict")}: ${currentResult.prediction}`,
-      `${window._3truthI18n && window._3truthI18n.isArabic() ? "الثقة" : "Confidence"}: ${currentResult.confidence}`,
+      `${window._3truthI18n && window._3truthI18n.isArabic() ? "╪º┘ä╪½┘é╪⌐" : "Confidence"}: ${currentResult.confidence}`,
       `${tr("detector.reportAiScore", null, "AI Score")}: ${((currentResult.ai_probability ?? 0) * 100).toFixed(1)}%`,
       `${tr("detector.reportHumanScore", null, "Human Score")}: ${((1 - (currentResult.ai_probability ?? 0)) * 100).toFixed(1)}%`,
     ];
@@ -2464,250 +2539,250 @@ const HEDGES = [
 ];
 
 const ARABIC_AI_PHRASES = [
-  "من المهم الإشارة إلى",
-  "في الختام",
-  "علاوة على ذلك",
-  "يجدر بالذكر أن",
-  "من ناحية أخرى",
-  "بشكل عام",
-  "من الجدير بالذكر",
-  "خلاصة القول",
-  "في هذا السياق",
-  "على سبيل المثال لا الحصر",
-  "تجدر الإشارة",
-  "لا بد من الإشارة",
-  "بالإضافة إلى ذلك",
-  "فضلاً عن ذلك",
-  "فضلا عن ذلك",
-  "على صعيد آخر",
-  "في نهاية المطاف",
-  "يمكن القول",
-  "يمكن القول إن",
-  "لا شك أن",
-  "يلعب دورا محوريا",
-  "دورا محوريا",
-  "يسهم بشكل كبير",
-  "يساهم بشكل كبير",
-  "يمثل خطوة مهمة",
-  "يشكل عاملا أساسيا",
-  "تحقيق التنمية المستدامة",
-  "تعزيز الكفاءة",
-  "تحسين جودة",
-  "مواكبة التطورات",
-  "مما لا شك فيه",
-  "في العصر الحديث",
-  "في ظل التطورات",
-  "لا يخفى على أحد",
-  "أصبح من الضروري",
-  "مما يسهم في",
-  "مما يؤدي إلى",
-  "بناء على ذلك",
-  "نتيجة لذلك",
-  "في ظل التطورات المتسارعة",
-  "في عالمنا اليوم",
-  "في العصر الرقمي",
-  "في عالمنا المترابط",
-  "من المهم أن ندرك",
-  "من المهم ملاحظة",
-  "لا يمكن إنكار أن",
-  "من الواضح أن",
-  "من أبرز الجوانب",
-  "على نطاق واسع",
-  "بشكل متزايد",
-  "بشكل ملحوظ",
-  "بصورة فعالة",
-  "بشكل فعال",
-  "يلعب دورا حيويا",
-  "دورا حيويا",
-  "أمرا بالغ الأهمية",
-  "أمر بالغ الأهمية",
-  "يسلط الضوء على",
-  "يسلط الضوء",
-  "يعكس أهمية",
-  "يعزز القدرة على",
-  "مفتاحا أساسيا",
-  "ركيزة أساسية",
-  "حجر الزاوية",
-  "حلولا مبتكرة",
-  "نهجا شاملا",
-  "إطارا متكاملا",
-  "تجربة أكثر سلاسة",
-  "التحول الرقمي",
-  "المشهد الرقمي",
-  "المشهد المتطور بسرعة",
-  "التطور السريع",
-  "التغيرات المتسارعة",
-  "الخوض في",
-  "نسيجا من",
-  "نسيج غني",
-  "متعدد الأوجه",
+  "┘à┘å ╪º┘ä┘à┘ç┘à ╪º┘ä╪Ñ╪┤╪º╪▒╪⌐ ╪Ñ┘ä┘ë",
+  "┘ü┘è ╪º┘ä╪«╪¬╪º┘à",
+  "╪╣┘ä╪º┘ê╪⌐ ╪╣┘ä┘ë ╪░┘ä┘â",
+  "┘è╪¼╪»╪▒ ╪¿╪º┘ä╪░┘â╪▒ ╪ú┘å",
+  "┘à┘å ┘å╪º╪¡┘è╪⌐ ╪ú╪«╪▒┘ë",
+  "╪¿╪┤┘â┘ä ╪╣╪º┘à",
+  "┘à┘å ╪º┘ä╪¼╪»┘è╪▒ ╪¿╪º┘ä╪░┘â╪▒",
+  "╪«┘ä╪º╪╡╪⌐ ╪º┘ä┘é┘ê┘ä",
+  "┘ü┘è ┘ç╪░╪º ╪º┘ä╪│┘è╪º┘é",
+  "╪╣┘ä┘ë ╪│╪¿┘è┘ä ╪º┘ä┘à╪½╪º┘ä ┘ä╪º ╪º┘ä╪¡╪╡╪▒",
+  "╪¬╪¼╪»╪▒ ╪º┘ä╪Ñ╪┤╪º╪▒╪⌐",
+  "┘ä╪º ╪¿╪» ┘à┘å ╪º┘ä╪Ñ╪┤╪º╪▒╪⌐",
+  "╪¿╪º┘ä╪Ñ╪╢╪º┘ü╪⌐ ╪Ñ┘ä┘ë ╪░┘ä┘â",
+  "┘ü╪╢┘ä╪º┘ï ╪╣┘å ╪░┘ä┘â",
+  "┘ü╪╢┘ä╪º ╪╣┘å ╪░┘ä┘â",
+  "╪╣┘ä┘ë ╪╡╪╣┘è╪» ╪ó╪«╪▒",
+  "┘ü┘è ┘å┘ç╪º┘è╪⌐ ╪º┘ä┘à╪╖╪º┘ü",
+  "┘è┘à┘â┘å ╪º┘ä┘é┘ê┘ä",
+  "┘è┘à┘â┘å ╪º┘ä┘é┘ê┘ä ╪Ñ┘å",
+  "┘ä╪º ╪┤┘â ╪ú┘å",
+  "┘è┘ä╪╣╪¿ ╪»┘ê╪▒╪º ┘à╪¡┘ê╪▒┘è╪º",
+  "╪»┘ê╪▒╪º ┘à╪¡┘ê╪▒┘è╪º",
+  "┘è╪│┘ç┘à ╪¿╪┤┘â┘ä ┘â╪¿┘è╪▒",
+  "┘è╪│╪º┘ç┘à ╪¿╪┤┘â┘ä ┘â╪¿┘è╪▒",
+  "┘è┘à╪½┘ä ╪«╪╖┘ê╪⌐ ┘à┘ç┘à╪⌐",
+  "┘è╪┤┘â┘ä ╪╣╪º┘à┘ä╪º ╪ú╪│╪º╪│┘è╪º",
+  "╪¬╪¡┘é┘è┘é ╪º┘ä╪¬┘å┘à┘è╪⌐ ╪º┘ä┘à╪│╪¬╪»╪º┘à╪⌐",
+  "╪¬╪╣╪▓┘è╪▓ ╪º┘ä┘â┘ü╪º╪í╪⌐",
+  "╪¬╪¡╪│┘è┘å ╪¼┘ê╪»╪⌐",
+  "┘à┘ê╪º┘â╪¿╪⌐ ╪º┘ä╪¬╪╖┘ê╪▒╪º╪¬",
+  "┘à┘à╪º ┘ä╪º ╪┤┘â ┘ü┘è┘ç",
+  "┘ü┘è ╪º┘ä╪╣╪╡╪▒ ╪º┘ä╪¡╪»┘è╪½",
+  "┘ü┘è ╪╕┘ä ╪º┘ä╪¬╪╖┘ê╪▒╪º╪¬",
+  "┘ä╪º ┘è╪«┘ü┘ë ╪╣┘ä┘ë ╪ú╪¡╪»",
+  "╪ú╪╡╪¿╪¡ ┘à┘å ╪º┘ä╪╢╪▒┘ê╪▒┘è",
+  "┘à┘à╪º ┘è╪│┘ç┘à ┘ü┘è",
+  "┘à┘à╪º ┘è╪ñ╪»┘è ╪Ñ┘ä┘ë",
+  "╪¿┘å╪º╪í ╪╣┘ä┘ë ╪░┘ä┘â",
+  "┘å╪¬┘è╪¼╪⌐ ┘ä╪░┘ä┘â",
+  "┘ü┘è ╪╕┘ä ╪º┘ä╪¬╪╖┘ê╪▒╪º╪¬ ╪º┘ä┘à╪¬╪│╪º╪▒╪╣╪⌐",
+  "┘ü┘è ╪╣╪º┘ä┘à┘å╪º ╪º┘ä┘è┘ê┘à",
+  "┘ü┘è ╪º┘ä╪╣╪╡╪▒ ╪º┘ä╪▒┘é┘à┘è",
+  "┘ü┘è ╪╣╪º┘ä┘à┘å╪º ╪º┘ä┘à╪¬╪▒╪º╪¿╪╖",
+  "┘à┘å ╪º┘ä┘à┘ç┘à ╪ú┘å ┘å╪»╪▒┘â",
+  "┘à┘å ╪º┘ä┘à┘ç┘à ┘à┘ä╪º╪¡╪╕╪⌐",
+  "┘ä╪º ┘è┘à┘â┘å ╪Ñ┘å┘â╪º╪▒ ╪ú┘å",
+  "┘à┘å ╪º┘ä┘ê╪º╪╢╪¡ ╪ú┘å",
+  "┘à┘å ╪ú╪¿╪▒╪▓ ╪º┘ä╪¼┘ê╪º┘å╪¿",
+  "╪╣┘ä┘ë ┘å╪╖╪º┘é ┘ê╪º╪│╪╣",
+  "╪¿╪┤┘â┘ä ┘à╪¬╪▓╪º┘è╪»",
+  "╪¿╪┤┘â┘ä ┘à┘ä╪¡┘ê╪╕",
+  "╪¿╪╡┘ê╪▒╪⌐ ┘ü╪╣╪º┘ä╪⌐",
+  "╪¿╪┤┘â┘ä ┘ü╪╣╪º┘ä",
+  "┘è┘ä╪╣╪¿ ╪»┘ê╪▒╪º ╪¡┘è┘ê┘è╪º",
+  "╪»┘ê╪▒╪º ╪¡┘è┘ê┘è╪º",
+  "╪ú┘à╪▒╪º ╪¿╪º┘ä╪║ ╪º┘ä╪ú┘ç┘à┘è╪⌐",
+  "╪ú┘à╪▒ ╪¿╪º┘ä╪║ ╪º┘ä╪ú┘ç┘à┘è╪⌐",
+  "┘è╪│┘ä╪╖ ╪º┘ä╪╢┘ê╪í ╪╣┘ä┘ë",
+  "┘è╪│┘ä╪╖ ╪º┘ä╪╢┘ê╪í",
+  "┘è╪╣┘â╪│ ╪ú┘ç┘à┘è╪⌐",
+  "┘è╪╣╪▓╪▓ ╪º┘ä┘é╪»╪▒╪⌐ ╪╣┘ä┘ë",
+  "┘à┘ü╪¬╪º╪¡╪º ╪ú╪│╪º╪│┘è╪º",
+  "╪▒┘â┘è╪▓╪⌐ ╪ú╪│╪º╪│┘è╪⌐",
+  "╪¡╪¼╪▒ ╪º┘ä╪▓╪º┘ê┘è╪⌐",
+  "╪¡┘ä┘ê┘ä╪º ┘à╪¿╪¬┘â╪▒╪⌐",
+  "┘å┘ç╪¼╪º ╪┤╪º┘à┘ä╪º",
+  "╪Ñ╪╖╪º╪▒╪º ┘à╪¬┘â╪º┘à┘ä╪º",
+  "╪¬╪¼╪▒╪¿╪⌐ ╪ú┘â╪½╪▒ ╪│┘ä╪º╪│╪⌐",
+  "╪º┘ä╪¬╪¡┘ê┘ä ╪º┘ä╪▒┘é┘à┘è",
+  "╪º┘ä┘à╪┤┘ç╪» ╪º┘ä╪▒┘é┘à┘è",
+  "╪º┘ä┘à╪┤┘ç╪» ╪º┘ä┘à╪¬╪╖┘ê╪▒ ╪¿╪│╪▒╪╣╪⌐",
+  "╪º┘ä╪¬╪╖┘ê╪▒ ╪º┘ä╪│╪▒┘è╪╣",
+  "╪º┘ä╪¬╪║┘è╪▒╪º╪¬ ╪º┘ä┘à╪¬╪│╪º╪▒╪╣╪⌐",
+  "╪º┘ä╪«┘ê╪╢ ┘ü┘è",
+  "┘å╪│┘è╪¼╪º ┘à┘å",
+  "┘å╪│┘è╪¼ ╪║┘å┘è",
+  "┘à╪¬╪╣╪»╪» ╪º┘ä╪ú┘ê╪¼┘ç",
 ];
 
 const ARABIC_AI_TRANSITIONS = [
-  "أولا",
-  "ثانيا",
-  "ثالثا",
-  "أخيرا",
-  "لذلك",
-  "وبالتالي",
-  "ومن ثم",
-  "علاوة",
-  "بالإضافة",
-  "فضلا",
-  "فضلاً",
-  "كذلك",
-  "أيضا",
-  "أيضاً",
-  "في المقابل",
-  "من ناحية",
-  "من جهة",
-  "على الرغم",
-  "بالرغم",
-  "ومع ذلك",
-  "بالمثل",
-  "من ثم",
-  "ومن هنا",
-  "عليه",
-  "بناء عليه",
-  "نتيجة لذلك",
-  "إضافة إلى ذلك",
-  "علاوة على ذلك",
-  "من جانب آخر",
-  "في المقابل",
+  "╪ú┘ê┘ä╪º",
+  "╪½╪º┘å┘è╪º",
+  "╪½╪º┘ä╪½╪º",
+  "╪ú╪«┘è╪▒╪º",
+  "┘ä╪░┘ä┘â",
+  "┘ê╪¿╪º┘ä╪¬╪º┘ä┘è",
+  "┘ê┘à┘å ╪½┘à",
+  "╪╣┘ä╪º┘ê╪⌐",
+  "╪¿╪º┘ä╪Ñ╪╢╪º┘ü╪⌐",
+  "┘ü╪╢┘ä╪º",
+  "┘ü╪╢┘ä╪º┘ï",
+  "┘â╪░┘ä┘â",
+  "╪ú┘è╪╢╪º",
+  "╪ú┘è╪╢╪º┘ï",
+  "┘ü┘è ╪º┘ä┘à┘é╪º╪¿┘ä",
+  "┘à┘å ┘å╪º╪¡┘è╪⌐",
+  "┘à┘å ╪¼┘ç╪⌐",
+  "╪╣┘ä┘ë ╪º┘ä╪▒╪║┘à",
+  "╪¿╪º┘ä╪▒╪║┘à",
+  "┘ê┘à╪╣ ╪░┘ä┘â",
+  "╪¿╪º┘ä┘à╪½┘ä",
+  "┘à┘å ╪½┘à",
+  "┘ê┘à┘å ┘ç┘å╪º",
+  "╪╣┘ä┘è┘ç",
+  "╪¿┘å╪º╪í ╪╣┘ä┘è┘ç",
+  "┘å╪¬┘è╪¼╪⌐ ┘ä╪░┘ä┘â",
+  "╪Ñ╪╢╪º┘ü╪⌐ ╪Ñ┘ä┘ë ╪░┘ä┘â",
+  "╪╣┘ä╪º┘ê╪⌐ ╪╣┘ä┘ë ╪░┘ä┘â",
+  "┘à┘å ╪¼╪º┘å╪¿ ╪ó╪«╪▒",
+  "┘ü┘è ╪º┘ä┘à┘é╪º╪¿┘ä",
 ];
 
 const ARABIC_FORMAL_WORDS = [
-  "محوري",
-  "استراتيجي",
-  "شامل",
-  "مستدام",
-  "مبتكر",
-  "فعال",
-  "متكامل",
-  "منظومة",
-  "تعزيز",
-  "تحسين",
-  "تطوير",
-  "تحقيق",
-  "تسهم",
-  "يسهم",
-  "تساهم",
-  "يساهم",
-  "يعد",
-  "تعد",
-  "يعتبر",
-  "تعتبر",
-  "ضرورة",
-  "أهمية",
-  "الرقمي",
-  "التحول",
-  "الكفاءة",
-  "الجودة",
-  "المستقبل",
-  "الابتكار",
-  "التحديات",
-  "الفرص",
-  "المجالات",
-  "المختلفة",
-  "حيوي",
-  "بالغ",
-  "الأهمية",
-  "إطار",
-  "نهج",
-  "حلول",
-  "متطورة",
-  "متسارعة",
-  "سلاسة",
-  "مرونة",
-  "فعالية",
-  "رئيسي",
-  "أساسي",
+  "┘à╪¡┘ê╪▒┘è",
+  "╪º╪│╪¬╪▒╪º╪¬┘è╪¼┘è",
+  "╪┤╪º┘à┘ä",
+  "┘à╪│╪¬╪»╪º┘à",
+  "┘à╪¿╪¬┘â╪▒",
+  "┘ü╪╣╪º┘ä",
+  "┘à╪¬┘â╪º┘à┘ä",
+  "┘à┘å╪╕┘ê┘à╪⌐",
+  "╪¬╪╣╪▓┘è╪▓",
+  "╪¬╪¡╪│┘è┘å",
+  "╪¬╪╖┘ê┘è╪▒",
+  "╪¬╪¡┘é┘è┘é",
+  "╪¬╪│┘ç┘à",
+  "┘è╪│┘ç┘à",
+  "╪¬╪│╪º┘ç┘à",
+  "┘è╪│╪º┘ç┘à",
+  "┘è╪╣╪»",
+  "╪¬╪╣╪»",
+  "┘è╪╣╪¬╪¿╪▒",
+  "╪¬╪╣╪¬╪¿╪▒",
+  "╪╢╪▒┘ê╪▒╪⌐",
+  "╪ú┘ç┘à┘è╪⌐",
+  "╪º┘ä╪▒┘é┘à┘è",
+  "╪º┘ä╪¬╪¡┘ê┘ä",
+  "╪º┘ä┘â┘ü╪º╪í╪⌐",
+  "╪º┘ä╪¼┘ê╪»╪⌐",
+  "╪º┘ä┘à╪│╪¬┘é╪¿┘ä",
+  "╪º┘ä╪º╪¿╪¬┘â╪º╪▒",
+  "╪º┘ä╪¬╪¡╪»┘è╪º╪¬",
+  "╪º┘ä┘ü╪▒╪╡",
+  "╪º┘ä┘à╪¼╪º┘ä╪º╪¬",
+  "╪º┘ä┘à╪«╪¬┘ä┘ü╪⌐",
+  "╪¡┘è┘ê┘è",
+  "╪¿╪º┘ä╪║",
+  "╪º┘ä╪ú┘ç┘à┘è╪⌐",
+  "╪Ñ╪╖╪º╪▒",
+  "┘å┘ç╪¼",
+  "╪¡┘ä┘ê┘ä",
+  "┘à╪¬╪╖┘ê╪▒╪⌐",
+  "┘à╪¬╪│╪º╪▒╪╣╪⌐",
+  "╪│┘ä╪º╪│╪⌐",
+  "┘à╪▒┘ê┘å╪⌐",
+  "┘ü╪╣╪º┘ä┘è╪⌐",
+  "╪▒╪ª┘è╪│┘è",
+  "╪ú╪│╪º╪│┘è",
 ];
 
 const ARABIC_FORMAL_ROOTS = [
-  "محور",
-  "استراتيج",
-  "شامل",
-  "مستدام",
-  "مبتكر",
-  "فعال",
-  "متكامل",
-  "منظوم",
-  "تعزيز",
-  "تحسين",
-  "تطوير",
-  "تحقيق",
-  "كفاء",
-  "جود",
-  "ابتكار",
-  "تحدي",
-  "فرص",
-  "مجال",
-  "ضرور",
-  "اهمي",
-  "رقمي",
-  "تحول",
-  "مستقبل",
-  "حلول",
-  "نهج",
-  "اطار",
-  "متسارع",
-  "متطور",
-  "حيوي",
-  "بالغ",
-  "رئيسي",
-  "اساسي",
-  "ركيز",
-  "يسلط",
-  "مواكب",
-  "يسهم",
-  "يساهم",
-  "تعكس",
-  "يعكس",
+  "┘à╪¡┘ê╪▒",
+  "╪º╪│╪¬╪▒╪º╪¬┘è╪¼",
+  "╪┤╪º┘à┘ä",
+  "┘à╪│╪¬╪»╪º┘à",
+  "┘à╪¿╪¬┘â╪▒",
+  "┘ü╪╣╪º┘ä",
+  "┘à╪¬┘â╪º┘à┘ä",
+  "┘à┘å╪╕┘ê┘à",
+  "╪¬╪╣╪▓┘è╪▓",
+  "╪¬╪¡╪│┘è┘å",
+  "╪¬╪╖┘ê┘è╪▒",
+  "╪¬╪¡┘é┘è┘é",
+  "┘â┘ü╪º╪í",
+  "╪¼┘ê╪»",
+  "╪º╪¿╪¬┘â╪º╪▒",
+  "╪¬╪¡╪»┘è",
+  "┘ü╪▒╪╡",
+  "┘à╪¼╪º┘ä",
+  "╪╢╪▒┘ê╪▒",
+  "╪º┘ç┘à┘è",
+  "╪▒┘é┘à┘è",
+  "╪¬╪¡┘ê┘ä",
+  "┘à╪│╪¬┘é╪¿┘ä",
+  "╪¡┘ä┘ê┘ä",
+  "┘å┘ç╪¼",
+  "╪º╪╖╪º╪▒",
+  "┘à╪¬╪│╪º╪▒╪╣",
+  "┘à╪¬╪╖┘ê╪▒",
+  "╪¡┘è┘ê┘è",
+  "╪¿╪º┘ä╪║",
+  "╪▒╪ª┘è╪│┘è",
+  "╪º╪│╪º╪│┘è",
+  "╪▒┘â┘è╪▓",
+  "┘è╪│┘ä╪╖",
+  "┘à┘ê╪º┘â╪¿",
+  "┘è╪│┘ç┘à",
+  "┘è╪│╪º┘ç┘à",
+  "╪¬╪╣┘â╪│",
+  "┘è╪╣┘â╪│",
 ];
 
 const ARABIC_HUMAN_MARKERS = [
-  "يعني",
-  "والله",
-  "بصراحة",
-  "صراحة",
-  "شوي",
-  "شوية",
-  "مره",
-  "مرة",
-  "كثير",
-  "كتير",
-  "كذا",
-  "بس",
-  "مو",
-  "مش",
-  "عشان",
-  "ليش",
-  "ايش",
-  "إيش",
-  "وش",
-  "ما ادري",
-  "ما أدري",
-  "احس",
-  "أحس",
-  "اليوم",
-  "امس",
-  "أمس",
-  "بكرة",
-  "هههه",
-  "ههههه",
-  "ههه",
-  "يا جماعة",
-  "ترى",
-  "طيب",
+  "┘è╪╣┘å┘è",
+  "┘ê╪º┘ä┘ä┘ç",
+  "╪¿╪╡╪▒╪º╪¡╪⌐",
+  "╪╡╪▒╪º╪¡╪⌐",
+  "╪┤┘ê┘è",
+  "╪┤┘ê┘è╪⌐",
+  "┘à╪▒┘ç",
+  "┘à╪▒╪⌐",
+  "┘â╪½┘è╪▒",
+  "┘â╪¬┘è╪▒",
+  "┘â╪░╪º",
+  "╪¿╪│",
+  "┘à┘ê",
+  "┘à╪┤",
+  "╪╣╪┤╪º┘å",
+  "┘ä┘è╪┤",
+  "╪º┘è╪┤",
+  "╪Ñ┘è╪┤",
+  "┘ê╪┤",
+  "┘à╪º ╪º╪»╪▒┘è",
+  "┘à╪º ╪ú╪»╪▒┘è",
+  "╪º╪¡╪│",
+  "╪ú╪¡╪│",
+  "╪º┘ä┘è┘ê┘à",
+  "╪º┘à╪│",
+  "╪ú┘à╪│",
+  "╪¿┘â╪▒╪⌐",
+  "┘ç┘ç┘ç┘ç",
+  "┘ç┘ç┘ç┘ç┘ç",
+  "┘ç┘ç┘ç",
+  "┘è╪º ╪¼┘à╪º╪╣╪⌐",
+  "╪¬╪▒┘ë",
+  "╪╖┘è╪¿",
 ];
 
 function normalizeArabicText(text) {
   return (text || "")
     .replace(/[\u064B-\u065F\u0670]/g, "")
-    .replace(/ـ/g, "")
-    .replace(/[إأآٱ]/g, "ا")
-    .replace(/ى/g, "ي");
+    .replace(/┘Ç/g, "")
+    .replace(/[╪Ñ╪ú╪ó┘▒]/g, "╪º")
+    .replace(/┘ë/g, "┘è");
 }
 
 function arabicRatio(text) {
@@ -2762,7 +2837,7 @@ function scoreArabicText(text) {
     };
 
   const sentences = (text || "")
-    .split(/[.!?؟؛।]+\s*|\n+/)
+    .split(/[.!?╪ƒ╪¢αÑñ]+\s*|\n+/)
     .map((s) => s.trim())
     .filter(Boolean);
   const normalized = normalizeArabicText((text || "").toLowerCase());
@@ -2791,16 +2866,16 @@ function scoreArabicText(text) {
     ? starts.filter(
         (s) =>
           ARABIC_AI_TRANSITIONS.includes(s) ||
-          ["كما", "لذلك", "وبالتالي", "ختاما"].includes(s),
+          ["┘â┘à╪º", "┘ä╪░┘ä┘â", "┘ê╪¿╪º┘ä╪¬╪º┘ä┘è", "╪«╪¬╪º┘à╪º"].includes(s),
       ).length / starts.length
     : 0;
   const balanceHits = [
-    "من ناحية",
-    "من جهة",
-    "في المقابل",
-    "على الرغم",
-    "ومع ذلك",
-    "إلا أن",
+    "┘à┘å ┘å╪º╪¡┘è╪⌐",
+    "┘à┘å ╪¼┘ç╪⌐",
+    "┘ü┘è ╪º┘ä┘à┘é╪º╪¿┘ä",
+    "╪╣┘ä┘ë ╪º┘ä╪▒╪║┘à",
+    "┘ê┘à╪╣ ╪░┘ä┘â",
+    "╪Ñ┘ä╪º ╪ú┘å",
   ].filter((p) => normalized.includes(normalizeArabicText(p))).length;
   const tashkeelDensity =
     ((text || "").match(/[\u064B-\u065F\u0670]/g) || []).length /
@@ -3263,7 +3338,7 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     if (forensics.flatBlockNoise < 0.65) {
       aiScoreCount += 4.0;
       reasons.push(
-        `Quantized mathematically perfect flat surfaces (σ = ${forensics.flatBlockNoise} LSB, zero camera grain)`,
+        `Quantized mathematically perfect flat surfaces (╧â = ${forensics.flatBlockNoise} LSB, zero camera grain)`,
       );
     } else if (forensics.flatBlockNoise < 0.85) {
       aiScoreCount += 2.0;
@@ -3496,7 +3571,7 @@ function computeAdvancedTextForensics(text) {
     .filter(Boolean);
   const wordCount = words.length;
   const sentences = raw
-    .split(/[.!?؟؛।]+\s*|\n+/)
+    .split(/[.!?╪ƒ╪¢αÑñ]+\s*|\n+/)
     .map((s) => s.trim())
     .filter(Boolean);
   if (!wordCount) return { success: false, reason: "empty text" };
@@ -3763,30 +3838,30 @@ function computeAdvancedTextForensics(text) {
     "in essence",
   ];
   const arabicFormalWords = [
-    "محوري",
-    "استراتيجي",
-    "شامل",
-    "مستدام",
-    "مبتكر",
-    "منظومة",
-    "تعزيز",
-    "تحسين",
-    "تطوير",
-    "تحقيق",
-    "الكفاءة",
-    "الجودة",
-    "الابتكار",
-    "التحديات",
-    "الفرص",
-    "المجالات",
-    "حيوي",
-    "بالغ",
-    "إطار",
-    "نهج",
-    "حلول",
-    "متطورة",
-    "متسارعة",
-    "أساسي",
+    "┘à╪¡┘ê╪▒┘è",
+    "╪º╪│╪¬╪▒╪º╪¬┘è╪¼┘è",
+    "╪┤╪º┘à┘ä",
+    "┘à╪│╪¬╪»╪º┘à",
+    "┘à╪¿╪¬┘â╪▒",
+    "┘à┘å╪╕┘ê┘à╪⌐",
+    "╪¬╪╣╪▓┘è╪▓",
+    "╪¬╪¡╪│┘è┘å",
+    "╪¬╪╖┘ê┘è╪▒",
+    "╪¬╪¡┘é┘è┘é",
+    "╪º┘ä┘â┘ü╪º╪í╪⌐",
+    "╪º┘ä╪¼┘ê╪»╪⌐",
+    "╪º┘ä╪º╪¿╪¬┘â╪º╪▒",
+    "╪º┘ä╪¬╪¡╪»┘è╪º╪¬",
+    "╪º┘ä┘ü╪▒╪╡",
+    "╪º┘ä┘à╪¼╪º┘ä╪º╪¬",
+    "╪¡┘è┘ê┘è",
+    "╪¿╪º┘ä╪║",
+    "╪Ñ╪╖╪º╪▒",
+    "┘å┘ç╪¼",
+    "╪¡┘ä┘ê┘ä",
+    "┘à╪¬╪╖┘ê╪▒╪⌐",
+    "┘à╪¬╪│╪º╪▒╪╣╪⌐",
+    "╪ú╪│╪º╪│┘è",
   ].map(normalizeAr);
 
   const aiTermHits = AI_VOCAB.reduce((sum, term) => sum + countWord(term), 0);
@@ -3848,7 +3923,7 @@ function computeAdvancedTextForensics(text) {
         name.split(/\s+/)[0].toLowerCase(),
       ),
   ).length;
-  const punctuationMess = (raw.match(/!|\.\.\.|…|\?\?|!!/g) || []).length;
+  const punctuationMess = (raw.match(/!|\.\.\.|ΓÇª|\?\?|!!/g) || []).length;
   const typoLike = (
     lower.match(
       /\b(?:teh|recieve|seperate|definately|occured|alot|wich|thier)\b/g,
@@ -3856,7 +3931,7 @@ function computeAdvancedTextForensics(text) {
   ).length;
   const emojiNoise =
     (raw.match(/[\u{1F300}-\u{1FAFF}]/gu) || []).length +
-    (raw.match(/[•◕ಠツ¯]{1,}/g) || []).length;
+    (raw.match(/[ΓÇóΓùòα▓áπâä┬»]{1,}/g) || []).length;
   const narrativeHits = narrativePhrases.reduce(
     (sum, term) => sum + countPhrase(term),
     0,
@@ -4400,7 +4475,7 @@ function computeAdvancedTextForensics(text) {
 }
 // =========================================================================
 //  SERVER-GRADE CLIENT-SIDE IMAGE CLASSIFIER
-//  Ported from server.js classifyImage() — identical scoring logic
+//  Ported from server.js classifyImage() ΓÇö identical scoring logic
 //  Uses exifr browser build for EXIF parsing (same library as server)
 // =========================================================================
 
@@ -4889,7 +4964,7 @@ async function classifyImageClient(file, clientMetadata, clientForensics) {
 
 // =========================================================================
 //  SERVER-GRADE CLIENT-SIDE VIDEO CLASSIFIER
-//  Ported from server.js classifyVideo() — identical scoring logic
+//  Ported from server.js classifyVideo() ΓÇö identical scoring logic
 //  Uses client-side binary text scan since music-metadata isn't available
 // =========================================================================
 
@@ -5055,7 +5130,7 @@ function classifyText(text) {
 
   // Splitting to sentences:
   const sentences = text
-    .split(/[.!?؟।]+\s+|\n+/)
+    .split(/[.!?╪ƒαÑñ]+\s+|\n+/)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
