@@ -305,7 +305,7 @@
               <!-- File Input (Image/Video) -->
               <div
                 id="tab-content-file"
-                class="media-upload-zone flex-col items-center justify-center hidden border border-solid border-slate-700 bg-slate-900/50 rounded-xl hover:border-[var(--accent-1)] hover:bg-[var(--accent-1)]/5 transition-all duration-300 cursor-pointer group relative overflow-hidden p-6"
+                class="media-upload-zone flex-col items-center justify-center hidden border border-solid bg-transparent rounded-xl transition-all duration-300 cursor-pointer group relative overflow-hidden p-6"
               >
                 <input
                   type="file"
@@ -362,7 +362,7 @@
                   <i
                     id="file-upload-icon"
                     data-lucide="image-up"
-                    class="w-12 h-12 text-gray-600 group-hover:text-[var(--accent-1)] mb-4 transition-colors"
+                    class="w-12 h-12 text-gray-600 mb-4 transition-colors upload-icon-dynamic"
                   ></i>
                   <p
                     class="font-bold text-gray-400 group-hover:text-white transition-colors text-center"
@@ -553,6 +553,24 @@
                         <!-- Populated dynamically -->
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Text Features Analysis Breakdown -->
+                <div
+                  id="text-features-section"
+                  class="mt-8 pt-6 border-t border-white/10 hidden"
+                >
+                  <h4
+                    class="text-xs font-black tracking-[0.2em] text-gray-500 mb-6 uppercase text-center"
+                  >
+                    Linguistic & Stylometry Metadata
+                  </h4>
+                  <div
+                    id="text-features-content"
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border border-[var(--accent-1)]/20 bg-[var(--accent-1)]/5 rounded-2xl p-6"
+                  >
+                    <!-- Populated dynamically -->
                   </div>
                 </div>
 
@@ -783,5 +801,6 @@
     <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
+    <script src="js/welcome-modal.js?v=20260816-v1"></script>
   </body>
 </html>

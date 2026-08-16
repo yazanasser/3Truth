@@ -38,11 +38,11 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
 
     def _determine_hierarchy_category(self, signal: DetectionSignal) -> str:
         name = signal.detector_name.lower()
-        if "c2pa" in name or "provenance" in name:
+        if "c2pa" in name or "cryptographic" in name or "provenance" in name:
             return "verified_cryptographic_provenance"
-        elif "watermark" in name:
+        elif "watermark" in name or "steganography" in name:
             return "verified_watermark"
-        elif "metadata" in name or "exif" in name or "software" in name:
+        elif "metadata" in name or "exif" in name or "software" in name or "container" in name or "bitstream" in name:
             return "signed_metadata"
         elif any(
             k in name
@@ -57,6 +57,24 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
                 "burstiness",
                 "sync",
                 "forensic",
+                "prnu",
+                "fourier",
+                "azimuthal",
+                "spectral",
+                "bayer",
+                "demosaicing",
+                "biometric",
+                "specular",
+                "rppg",
+                "cardiac",
+                "pulse",
+                "blink",
+                "warping",
+                "zipfian",
+                "syntactic",
+                "markov",
+                "clause",
+                "dialectal"
             ]
         ):
             return "forensic_evidence"
@@ -75,7 +93,13 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
             return "ml_classifier"
         return "heuristics"
 
-    def _prob_to_logit(self, p: float) -> float:
+    def _prob_to_logit(self, p: Any) -> float:
+        if isinstance(p, dict):
+            p = p.get("ai_probability", p.get("score", 0.5))
+        try:
+            p = float(p)
+        except Exception:
+            p = 0.5
         # Clip to prevent infinity
         p = max(0.001, min(0.999, p))
         return math.log(p / (1.0 - p))
@@ -150,6 +174,16 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
             ai_probability = 0.5
         # Compute Overall Confidence mathematically based on total accumulated weight
         final_confidence = min(1.0, math.log10(1 + total_weight))
+        
+        # Cross-cluster disagreement suppression
+        if contradictions:
+            final_confidence *= 0.5  # Strongly penalize confidence on disagreement
+            
+            # Pull probability closer to 0.5 (uncertainty)
+            if ai_probability > 0.5:
+                ai_probability = 0.5 + (ai_probability - 0.5) * 0.5
+            else:
+                ai_probability = 0.5 - (0.5 - ai_probability) * 0.5
 
         # Classification strictly preserves user-facing standards
         classification = "AI Generated" if ai_probability >= 0.50 else "Human"
@@ -184,6 +218,8 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
         contradictions: List[str],
         warnings: List[str],
     ) -> Dict[str, Any]:
+        recommend_human_review = 0.35 <= ai_probability <= 0.65 or len(contradictions) > 0
+
         return {
             "classification": classification,
             "ai_probability": round(ai_probability, 4),
@@ -194,4 +230,10 @@ class EvidenceFusionEngine(BaseFusionEngine, BaseDecisionEngine):
             "fused_evidence_summary": "Fusion completed via calibrated log-odds accumulation.",
             "contradictions": contradictions,
             "warnings": warnings,
+            "recommend_human_review": recommend_human_review,
+            "known_limitations": [
+                "100% accuracy is impossible. Always verify critical findings.",
+                "Adversarial compression can strip provenance signatures.",
+                "Extensive manual editing of physical photos can trigger pixel anomaly alarms."
+            ]
         }

@@ -538,7 +538,7 @@
           </div>
           <div class="w-full lg:w-1/2 relative" id="code-card-container">
             <div
-              class="absolute inset-4 bg-[var(--accent-2)] blur-[60px] opacity-10"
+              class="absolute inset-4 bg-[var(--accent-2)] blur-[60px] hidden"
               id="code-glow"
             ></div>
             <div
@@ -775,24 +775,30 @@
               </div>
             </div>
 
-            <div class="panel-inner">
-              <span
-                class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-1)] inline-block px-3 py-1"
-                style="background-color: rgba(47, 238, 204, 0.1)"
-              >
-                PHASE 01: INGESTION</span
-              >
-              <h3
-                class="text-white font-outfit text-6xl font-black mb-6 uppercase text-glow"
-              >
-                Target Acquisition
-              </h3>
-              <p
-                class="text-[var(--accent-1)] opacity-80 text-xl leading-relaxed"
-              >
-                Input target data vector. Accepts raw text, documents, or direct
-                API streams. Capacity up to 500,000 parameters per cycle.
-              </p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full max-w-[1400px] z-10 px-4 md:px-12 relative">
+              <div class="w-full md:w-1/2 max-w-[600px] relative shrink-0 mix-blend-screen">
+                <img src="assets/phase_1.jpg" alt="Phase 1 Ingestion" class="w-full h-auto object-cover opacity-90 transition-opacity hover:opacity-100" style="filter: contrast(1.2);" />
+              </div>
+              
+              <div class="panel-inner w-full md:w-1/2">
+                <span
+                  class="text-[var(--accent-1)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-1)] inline-block px-3 py-1"
+                  style="background-color: rgba(47, 238, 204, 0.1)"
+                >
+                  PHASE 01: INGESTION</span
+                >
+                <h3
+                  class="text-white font-outfit text-5xl font-black mb-6 uppercase text-glow"
+                >
+                  Target Acquisition
+                </h3>
+                <p
+                  class="text-[var(--accent-1)] opacity-80 text-lg leading-relaxed"
+                >
+                  Input target data vector. Accepts raw text, documents, or direct
+                  API streams. Capacity up to 500,000 parameters per cycle.
+                </p>
+              </div>
             </div>
             <div class="panel-number text-[var(--accent-1)] opacity-5">01</div>
           </div>
@@ -835,26 +841,32 @@
               </div>
             </div>
 
-            <div class="panel-inner">
-              <span
-                class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-3)] inline-block px-3 py-1"
-                style="background-color: rgba(223, 255, 248, 0.1)"
-              >
-                PHASE 02: ANALYSIS</span
-              >
-              <h3
-                class="text-white font-outfit text-6xl font-black mb-6 uppercase"
-                style="text-shadow: 0 0 15px var(--accent-3)"
-              >
-                Neural Dissection
-              </h3>
-              <p
-                class="text-[var(--accent-3)] opacity-80 text-xl leading-relaxed"
-              >
-                Running 47 parallel heuristic models. Cross-referencing token
-                entropy and structural repetition against known LLM
-                architectures.
-              </p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full max-w-[1400px] z-10 px-4 md:px-12 relative">
+              <div class="w-full md:w-1/2 max-w-[600px] relative shrink-0 mix-blend-screen">
+                <img src="assets/phase_2.jpg" alt="Phase 2 Analysis" class="w-full h-auto object-cover opacity-90 transition-opacity hover:opacity-100" style="filter: contrast(1.2);" />
+              </div>
+
+              <div class="panel-inner w-full md:w-1/2">
+                <span
+                  class="text-[var(--accent-3)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-3)] inline-block px-3 py-1"
+                  style="background-color: rgba(223, 255, 248, 0.1)"
+                >
+                  PHASE 02: ANALYSIS</span
+                >
+                <h3
+                  class="text-white font-outfit text-5xl font-black mb-6 uppercase"
+                  style="text-shadow: 0 0 15px var(--accent-3)"
+                >
+                  Neural Dissection
+                </h3>
+                <p
+                  class="text-[var(--accent-3)] opacity-80 text-lg leading-relaxed"
+                >
+                  Running 47 parallel heuristic models. Cross-referencing token
+                  entropy and structural repetition against known LLM
+                  architectures.
+                </p>
+              </div>
             </div>
             <div class="panel-number text-[var(--accent-3)] opacity-5">02</div>
           </div>
@@ -897,25 +909,31 @@
               </div>
             </div>
 
-            <div class="panel-inner">
-              <span
-                class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-2)] inline-block px-3 py-1"
-                style="background-color: rgba(168, 255, 240, 0.1)"
-              >
-                PHASE 03: EXECUTION</span
-              >
-              <h3
-                class="text-white font-outfit text-6xl font-black mb-6 uppercase"
-                style="text-shadow: 0 0 15px var(--accent-2)"
-              >
-                Terminal Verdict
-              </h3>
-              <p
-                class="text-[var(--accent-2)] opacity-80 text-xl leading-relaxed"
-              >
-                Generate absolute forensic confidence score. Heatmap pinpointing
-                exact synthetic injection points down to the character.
-              </p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full max-w-[1400px] z-10 px-4 md:px-12 relative">
+              <div class="w-full md:w-1/2 max-w-[600px] relative shrink-0 mix-blend-screen">
+                <img src="assets/phase_3.jpg" alt="Phase 3 Execution" class="w-full h-auto object-cover opacity-90 transition-opacity hover:opacity-100" style="filter: contrast(1.2);" />
+              </div>
+
+              <div class="panel-inner w-full md:w-1/2">
+                <span
+                  class="text-[var(--accent-2)] text-sm font-bold tracking-widest uppercase mb-6 border border-[var(--accent-2)] inline-block px-3 py-1"
+                  style="background-color: rgba(168, 255, 240, 0.1)"
+                >
+                  PHASE 03: EXECUTION</span
+                >
+                <h3
+                  class="text-white font-outfit text-5xl font-black mb-6 uppercase"
+                  style="text-shadow: 0 0 15px var(--accent-2)"
+                >
+                  Terminal Verdict
+                </h3>
+                <p
+                  class="text-[var(--accent-2)] opacity-80 text-lg leading-relaxed"
+                >
+                  Generate absolute forensic confidence score. Heatmap pinpointing
+                  exact synthetic injection points down to the character.
+                </p>
+              </div>
             </div>
             <div class="panel-number text-[var(--accent-2)] opacity-5">03</div>
           </div>
@@ -1030,5 +1048,6 @@
     <script src="js/nav-state.js?v=20260623-modal"></script>
     <script src="js/aurora-fix.js?v=20260613-ui1"></script>
     <script src="js/language-contact-fixes.js?v=20260613-i18n1"></script>
+    <script src="js/welcome-modal.js?v=20260816-v1"></script>
   </body>
 </html>

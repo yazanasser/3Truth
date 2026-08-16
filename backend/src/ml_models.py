@@ -301,6 +301,33 @@ def count_phrase_hits(text, phrases):
             found.append(phrase)
     return count, found
 
+def compute_arabic_ai_heuristics(text):
+    ar_ratio = arabic_ratio(text)
+    is_arabic_dominant = ar_ratio >= 0.45
+    words = arabic_words(text)
+    word_count = len(words)
+    
+    if not is_arabic_dominant or word_count < 5:
+        return {"is_arabic_dominant": False, "is_arabic": False, "score": 0.5, "wordCount": word_count}
+        
+    ai_phrase_count, _ = count_phrase_hits(text, ARABIC_AI_PHRASES)
+    ai_trans_count, _ = count_phrase_hits(text, ARABIC_AI_TRANSITIONS)
+    human_marker_count, _ = count_phrase_hits(text, ARABIC_HUMAN_MARKERS)
+    
+    score = 0.5
+    if ai_phrase_count > 0 or ai_trans_count > 0:
+        score = 0.6 + (0.1 * ai_phrase_count) + (0.05 * ai_trans_count)
+    if human_marker_count > 0:
+        score -= (0.2 * human_marker_count)
+        
+    score = max(0.01, min(0.99, score))
+    return {
+        "is_arabic_dominant": True,
+        "is_arabic": True,
+        "score": score,
+        "wordCount": word_count
+    }
+
 
 
 
@@ -586,10 +613,12 @@ class TextDetectorModel:
             return 0.52
         elif ppl < 80.0:
             return 0.38
-        elif ppl < 150.0:
+        elif ppl < 120.0:
             return 0.25
+        elif ppl < 300.0:
+            return 0.15 # Normal chaotic human
         else:
-            return 0.15
+            return 0.88 # Extremely high perplexity: AI Humanizer/Spinbot signature
 
     def predict_strong_english(self, text):
         if not self.transformer_model or not self.tokenizer:
@@ -801,13 +830,15 @@ class TextDetectorModel:
 
         # AI text: very uniform lengths (CV < 0.35). Humans: erratic (CV > 0.5)
         if cv < 0.25:
-            scores["burstiness"] = 0.92
-        elif cv < 0.35:
-            scores["burstiness"] = 0.78
-        elif cv < 0.50:
-            scores["burstiness"] = 0.50
+            scores["burstiness"] = 0.85
+        elif cv < 0.40:
+            scores["burstiness"] = 0.60
+        elif cv > 1.1:
+            scores["burstiness"] = 0.92  # Extreme burstiness: classic AI Humanizer trick
+        elif cv > 0.80:
+            scores["burstiness"] = 0.05
         else:
-            scores["burstiness"] = 0.15
+            scores["burstiness"] = 0.25
 
         # ── Signal 3: Contraction Absence ────────────────────────────────
         # AI almost never uses contractions; humans use them constantly

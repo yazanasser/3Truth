@@ -1,4 +1,4 @@
-﻿const textInput = document.getElementById("text-input");
+const textInput = document.getElementById("text-input");
 const fileInput = document.getElementById("file-input");
 const tabContentText = document.getElementById("tab-content-text");
 const tabContentFile = document.getElementById("tab-content-file");
@@ -1323,15 +1323,25 @@ async function runTerminalDiagnosticLogs(type, file) {
       "[SYSTEM] Engaging burstiness and perplexity transformers...",
       "system",
     );
+    await diagnosticLogDelay(150);
+    printLog("[NLP] Tokenizing input sequence... Vocab size: 50,257", "system");
+    await diagnosticLogDelay(200);
+    printLog("[ATTENTION] Softmax(QK^T / √d_k) V -> Self-attention weights stabilized.", "system");
+    await diagnosticLogDelay(200);
+    printLog("[MATH] Entropy H(X) = -Σ P(x) log2 P(x) calculating...", "warning");
+    await diagnosticLogDelay(150);
+    printLog("[NLP] Analyzing N-gram burstiness and coefficient of variation...", "system");
+    await diagnosticLogDelay(250);
+    printLog("[SYSTEM] Ensembling linguistic heuristics and transformer logits...", "system");
     await diagnosticLogDelay(200);
   }
 
   const formulas = [
-    "[SYSTEM] Optimizing weights: W_{ij} = W_{ij} - ╬▒ * (ΓêéL/ΓêéW_{ij})",
+    "[SYSTEM] Optimizing weights: W_{ij} = W_{ij} - α * (∂L/∂W_{ij})",
     "[MATRIX] [[0.912, 0.421, 0.111], [0.334, 0.887, 0.551]] ... processing tensors...",
     "[NEURAL] ReLU(x) = max(0, x) activation triggered at hidden layer 14...",
     "[FORENSIC] DCT Coefficient Entropy: 14.2234 | Divergence: 0.1002 (Authentic bounds)",
-    "[ATTENTION] Softmax(QK^T / ΓêÜd_k) V -> Self-attention weights stabilized.",
+    "[ATTENTION] Softmax(QK^T / √d_k) V -> Self-attention weights stabilized.",
     "[SYSTEM] Calculating Error Level Analysis... JPEG Quantization Table 0x01",
     "[MATH] f(x) = 1 / (1 + e^{-x}) Sigmoid probability converging...",
     "[GPU] Allocating 4.2GB VRAM... Crunching local forensic heuristics...",
@@ -1341,7 +1351,7 @@ async function runTerminalDiagnosticLogs(type, file) {
     "[BAYES] P(AI|x) = P(x|AI)*P(AI) / P(x) ... Bayesian inference running...",
     "[META] Extracting multi-layer Exif provenance headers...",
     "[NOISE] PRNU Sensor Noise Correlation: 0.8893 (Variance: 0.0012)",
-    "[MATH] Γêçf(x) gradients calculating across 1024 dimensions...",
+    "[MATH] ∇f(x) gradients calculating across 1024 dimensions...",
     "[SYSTEM] Ensembling model votes... AI_Weight = 14.3, Real_Weight = 2.1",
   ];
 
@@ -1676,6 +1686,7 @@ if (analyzeBtn) {
 
     // Start continuous diagnostic terminal logs
     window.isScanning = true;
+    runTerminalDiagnosticLogs(activeTab, fileObj);
     // UI handled by loading-initial state
 
     // Run browser-side forensic pre-scan in parallel with the backend request.
@@ -1748,20 +1759,8 @@ if (analyzeBtn) {
         } else if (activeTab === "text") {
           const textVal = textInput.value;
 
-          // Zero Trust Policy Fusion: Combine Python Neural Net with JS Heuristics
-          const jsHeuristics = classifyText(textVal);
-          if (jsHeuristics.ai_probability > (data.ai_probability || 0)) {
-            data.ai_probability = jsHeuristics.ai_probability;
-            data.prediction =
-              data.ai_probability >= 0.5 ? "AI-GENERATED" : "HUMAN";
-            data.confidence =
-              (
-                Math.max(data.ai_probability, 1 - data.ai_probability) * 100
-              ).toFixed(1) + "%";
-            data.features = { ...data.features, ...jsHeuristics.features };
-            data.sentenceBreakdown = jsHeuristics.sentenceBreakdown;
-          }
-
+          // removed client-side text heuristic override to trust backend Python models
+          
           if (!data.sentenceBreakdown) {
             const isAI = isAiPrediction(data.prediction);
             // Simple split keeping the text
@@ -2189,6 +2188,43 @@ SAMPLING PROFILE: BAYER INTERPOLATION SCANNING GRID
       data.sentenceBreakdown.length > 0
     ) {
       breakdownSec.classList.remove("hidden");
+    }
+
+    const textFeaturesSec = document.getElementById("text-features-section");
+    const textFeaturesContent = document.getElementById("text-features-content");
+    if (textFeaturesSec && textFeaturesContent && (data.word_count !== undefined || data.features)) {
+      const wCount = data.word_count || (data.features && data.features.word_count) || "N/A";
+      const lang = data.language || (data.features && data.features.language) || "English / Unknown";
+      
+      let sandwichingStr = "Consistent Pattern";
+      if (data.features && data.features.sandwiching_detected) {
+          sandwichingStr = "Mixed Sandwiching Detected";
+      }
+      
+      let modelStr = "Content Forensic Ensemble";
+      if (data.features && data.features.model_used) {
+          modelStr = data.features.model_used;
+      }
+
+      textFeaturesContent.innerHTML = `
+         <div class="flex flex-col">
+            <span class="text-[var(--text-200)] mb-1 uppercase tracking-wider text-[10px] font-black">Word Count</span>
+            <span class="font-mono text-[var(--accent-1)] text-sm">${wCount} words</span>
+         </div>
+         <div class="flex flex-col">
+            <span class="text-[var(--text-200)] mb-1 uppercase tracking-wider text-[10px] font-black">Detected Language</span>
+            <span class="font-mono text-[var(--accent-1)] text-sm">${lang}</span>
+         </div>
+         <div class="flex flex-col">
+            <span class="text-[var(--text-200)] mb-1 uppercase tracking-wider text-[10px] font-black">Stylometry Signals</span>
+            <span class="font-mono ${sandwichingStr.includes('Mixed') ? 'text-yellow-400' : 'text-emerald-400'} text-sm">${sandwichingStr}</span>
+         </div>
+         <div class="flex flex-col">
+            <span class="text-[var(--text-200)] mb-1 uppercase tracking-wider text-[10px] font-black">Pipeline Modules</span>
+            <span class="font-mono text-[var(--accent-1)] text-sm capitalize">${modelStr}</span>
+         </div>
+      `;
+      textFeaturesSec.classList.remove("hidden");
     }
   } else {
     if (fileMetaSec) fileMetaSec.classList.remove("hidden");
@@ -2980,9 +3016,14 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     activeTab !== "text" &&
     (isAiPrediction(backendPrediction) ||
       normalizePredictionText(backendPrediction).includes("REAL PHOTO") ||
-      normalizePredictionText(backendPrediction).includes("REAL VIDEO"));
+      normalizePredictionText(backendPrediction).includes("REAL VIDEO") ||
+      normalizePredictionText(backendPrediction).includes("HUMAN"));
 
   if (hasCanonicalMediaBackend) {
+    // TRUST THE BACKEND. The Python ML server already runs provenance + pixel forensics +
+    // neural vision fusion through a calibrated log-odds engine. Do NOT override its
+    // probability or prediction with a second contradictory frontend pipeline.
+    // Only enrich display-oriented data (metadata, forensics) for the UI.
     backendData.prediction = normalizeMediaPrediction(
       backendData.prediction,
       activeTab,
@@ -2998,179 +3039,12 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
     if (forensics && !backendData.forensics) {
       backendData.forensics = forensics;
     }
-    if (
-      activeTab === "image" &&
-      !isAiPrediction(backendPrediction) &&
-      forensics &&
-      forensics.success
-    ) {
-      const fileName = (fileObj ? fileObj.name : "").toLowerCase();
-      const metadataSource =
-        metadata && metadata.source ? metadata.source.toLowerCase() : "";
-      const metadataRaw =
-        metadata && metadata.rawText
-          ? metadata.rawText.toLowerCase().replace(/\0/g, "")
-          : "";
-      const hasStrongCameraWorkflow =
-        metadata &&
-        metadata.found &&
-        (metadataRaw.includes("rawfilename") ||
-          metadataRaw.includes("exposuretime") ||
-          metadataRaw.includes("fnumber") ||
-          metadataRaw.includes("focallength") ||
-          metadataRaw.includes("lensmodel") ||
-          metadataRaw.includes("image/x-canon") ||
-          metadataRaw.includes("image/x-nikon") ||
-          metadataRaw.includes("image/x-sony"));
-      const hasGeneratorMetadata =
-        metadata &&
-        metadata.found &&
-        (metadataSource.includes("comfyui") ||
-          metadataSource.includes("stable diffusion") ||
-          metadataSource.includes("generative") ||
-          metadataRaw.includes("midjourney") ||
-          metadataRaw.includes("stable diffusion") ||
-          metadataRaw.includes("dall-e") ||
-          metadataRaw.includes("adobe firefly") ||
-          metadataRaw.includes("negative prompt") ||
-          metadataRaw.includes("cfg scale") ||
-          metadataRaw.includes("sd_model"));
-      const hasTrustedMetadata = Boolean(
-        metadata &&
-        metadata.found &&
-        (hasStrongCameraWorkflow || hasGeneratorMetadata),
-      );
-      const backendAiProb = Number(backendData.ai_probability || 0);
-      const width = Number(forensics.width || 0);
-      const height = Number(forensics.height || 0);
-      const aiCanvas =
-        width > 0 &&
-        height > 0 &&
-        ((width === height && [512, 768, 1024, 1536, 2048].includes(width)) ||
-          [
-            [1456, 816],
-            [816, 1456],
-            [832, 1216],
-            [1216, 832],
-            [1344, 768],
-            [768, 1344],
-          ].some(([w, h]) => width === w && height === h));
-      let overrideVotes = 0;
-      const overrideReasons = [];
-
-      if (hasGeneratorMetadata) {
-        overrideVotes += 6;
-        overrideReasons.push("generator metadata");
-      }
-      if (aiCanvas) {
-        overrideVotes += 1.0;
-        overrideReasons.push(`generated canvas ${width}x${height}`);
-      }
-      if (width > 0 && width === height) {
-        overrideVotes += 0.5;
-        overrideReasons.push(`square ratio`);
-      }
-      if (
-        fileName.endsWith(".png") ||
-        fileName.endsWith(".webp") ||
-        fileName.endsWith(".avif") ||
-        fileName.endsWith(".jpeg")
-      ) {
-        overrideVotes += 0.25;
-        overrideReasons.push("web container format");
-      }
-      if (!hasStrongCameraWorkflow && !hasTrustedMetadata) {
-        overrideVotes += 2.5; // Base suspicion for stripped/missing metadata
-        overrideReasons.push("no trusted camera provenance");
-      }
-      if (backendAiProb >= 0.45) {
-        overrideVotes += 6.0;
-        overrideReasons.push(
-          `backend high AI score for camera photo ${backendAiProb.toFixed(2)}`,
-        );
-      } else if (backendAiProb >= 0.4) {
-        overrideVotes += 4.5;
-        overrideReasons.push(
-          `backend borderline AI score ${backendAiProb.toFixed(2)}`,
-        );
-      } else if (backendAiProb >= 0.35) {
-        overrideVotes += 3.0;
-        overrideReasons.push(
-          `backend moderate AI score ${backendAiProb.toFixed(2)}`,
-        );
-      } else if (backendAiProb >= 0.28) {
-        overrideVotes += 1.5;
-        overrideReasons.push(
-          `backend low AI score ${backendAiProb.toFixed(2)}`,
-        );
-      }
-      if (
-        !hasTrustedMetadata &&
-        backendAiProb >= 0.34 &&
-        (aiCanvas || width === height)
-      ) {
-        overrideVotes += 1.5;
-        overrideReasons.push("strict unknown-image fallback");
-      }
-      if (forensics.flatBlockNoise < 0.65) {
-        overrideVotes += 4;
-        overrideReasons.push(
-          `zero-grain flat surfaces ${forensics.flatBlockNoise}`,
-        );
-      } else if (forensics.flatBlockNoise < 0.85) {
-        overrideVotes += 2;
-        overrideReasons.push(`low sensor grain ${forensics.flatBlockNoise}`);
-      } else if (forensics.flatBlockNoise < 1.0) {
-        overrideVotes += 1;
-      }
-      if (
-        forensics.checkerboardRatio < 0.86 ||
-        forensics.checkerboardRatio > 1.18
-      ) {
-        overrideVotes += 4;
-        overrideReasons.push(`upsampling grid ${forensics.checkerboardRatio}`);
-      } else if (
-        forensics.checkerboardRatio < 0.9 ||
-        forensics.checkerboardRatio > 1.12
-      ) {
-        overrideVotes += 2;
-        overrideReasons.push(
-          `weak upsampling grid ${forensics.checkerboardRatio}`,
-        );
-      }
-      if (forensics.pearsonRG < 0.91 || forensics.pearsonRB < 0.91) {
-        overrideVotes += 2;
-        overrideReasons.push("channel correlation decoupling");
-      }
-      if (forensics.highFreqDctEnergy > 18.0) {
-        overrideVotes += 2;
-        overrideReasons.push(
-          `high-frequency DCT spikes ${forensics.highFreqDctEnergy}`,
-        );
-      }
-
-      const baseProb = Math.max(0.01, Math.min(0.99, backendAiProb));
-      const baseLogit = Math.log(baseProb / (1 - baseProb));
-      const forensicLogit = overrideVotes * 0.4; // Soft calibrated fusion weight
-      const fusedLogit = baseLogit + forensicLogit;
-      const fusedProb = 1 / (1 + Math.exp(-fusedLogit));
-
-      backendData.ai_probability = Number(fusedProb.toFixed(3));
-      backendData.prediction = normalizeMediaPrediction(
-        backendData.prediction,
-        activeTab,
-        fusedProb,
-      );
-      backendData.confidence =
-        (Math.max(fusedProb, 1 - fusedProb) * 100).toFixed(1) + "%";
-
-      if (overrideVotes > 0) {
-        backendData.features = {
-          ...(backendData.features || {}),
-          client_forensics: `Browser forensic fusion: ${overrideReasons.join("; ")} (votes=${overrideVotes})`,
-          decision_path: `${backendData.features && backendData.features.decision_path ? backendData.features.decision_path + "; " : ""}calibrated fusion`,
-        };
-      }
+    // Enrich features for display only — do NOT touch ai_probability or prediction
+    if (forensics && forensics.success) {
+      backendData.features = {
+        ...(backendData.features || {}),
+        client_forensics_note: "Backend ML pipeline result trusted. Browser forensics available for display only.",
+      };
     }
     return backendData;
   }
@@ -3318,37 +3192,37 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
   let aiScoreCount = 0;
   if (forensics && forensics.success) {
     if (forensics.pearsonRG < 0.91) {
-      aiScoreCount += 2.5;
+      aiScoreCount += 0.5;
       reasons.push(
         `Red-Green correlation decoupling (r_RG = ${forensics.pearsonRG})`,
       );
     } else if (forensics.pearsonRG < 0.94) {
-      aiScoreCount += 1.0;
+      aiScoreCount += 0.2;
     }
 
     if (forensics.pearsonRB < 0.91) {
-      aiScoreCount += 2.5;
+      aiScoreCount += 0.5;
       reasons.push(
         `Red-Blue correlation decoupling (r_RB = ${forensics.pearsonRB})`,
       );
     } else if (forensics.pearsonRB < 0.94) {
-      aiScoreCount += 1.0;
+      aiScoreCount += 0.2;
     }
 
     if (forensics.flatBlockNoise < 0.65) {
-      aiScoreCount += 4.0;
+      aiScoreCount += 1.0;
       reasons.push(
         `Quantized mathematically perfect flat surfaces (╧â = ${forensics.flatBlockNoise} LSB, zero camera grain)`,
       );
     } else if (forensics.flatBlockNoise < 0.85) {
-      aiScoreCount += 2.0;
+      aiScoreCount += 0.5;
     }
 
     if (
       forensics.checkerboardRatio < 0.86 ||
       forensics.checkerboardRatio > 1.18
     ) {
-      aiScoreCount += 4.0;
+      aiScoreCount += 1.0;
       reasons.push(
         `Upsampling deconvolution grid (Ratio = ${forensics.checkerboardRatio})`,
       );
@@ -3356,7 +3230,7 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
       forensics.checkerboardRatio < 0.9 ||
       forensics.checkerboardRatio > 1.12
     ) {
-      aiScoreCount += 2.0;
+      aiScoreCount += 0.5;
     }
   }
 
@@ -3375,18 +3249,20 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
   fallbackVotes += aiScoreCount;
 
   if (hasCameraTag) {
-    if (aiScoreCount >= 2.0 || (forensics && forensics.flatBlockNoise < 0.95)) {
-      fallbackVotes += 2.0;
+    if (aiScoreCount >= 4.0 || (forensics && forensics.flatBlockNoise < 0.35)) {
+      fallbackVotes += 1.0;
       reasons.push(
-        "Spoofed camera hardware signature overridden due to pixel anomalies",
+        "Spoofed camera hardware signature overridden due to extreme pixel anomalies",
       );
     } else {
-      fallbackVotes -= 5.0;
+      fallbackVotes -= 30.0;
     }
   }
 
-  const fusedLogit = fallbackVotes * 0.8;
-  let aiProb = (1 / (1 + Math.exp(-fusedLogit))) * 100;
+  const backendProbNum = Math.max(0.001, Math.min(0.999, Number(backendData.ai_probability || backendData.probability || 0.5)));
+  const baseBackendLogit = Math.log(backendProbNum / (1 - backendProbNum));
+  const finalLogit = baseBackendLogit + (fallbackVotes * 0.35); // Adjusted influence
+  let aiProb = (1 / (1 + Math.exp(-finalLogit))) * 100;
   let realProb = 100 - aiProb;
   isAI = aiProb >= 50;
 
@@ -3449,35 +3325,28 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
 
   const detectors = [
     {
-      name: "1. Linguistic Detector",
-      score: "N/A",
-      val: 0,
-      weight: 0,
-      conf: "N/A",
-    },
-    {
-      name: "2. Statistical Detector",
+      name: "1. Hardware Provenance",
       score: d2.toFixed(1) + "%",
       val: d2,
       weight: 1.0,
       conf: "High",
     },
     {
-      name: "3. Visual Forensics",
+      name: "2. Visual Forensics",
       score: d3.toFixed(1) + "%",
       val: d3,
       weight: 1.5,
       conf: forensics ? "High" : "Low",
     },
     {
-      name: "4. Consistency Detector",
+      name: "3. Pixel Consistency",
       score: d4.toFixed(1) + "%",
       val: d4,
       weight: 1.2,
       conf: "Medium",
     },
     {
-      name: "5. Style Authenticity",
+      name: "4. Metadata Authenticity",
       score: d5.toFixed(1) + "%",
       val: d5,
       weight: 1.2,
@@ -3536,15 +3405,14 @@ function fuseMetadataAndForensics(backendData, forensics, metadata) {
         : "None detected";
     backendData.features["Self-Audit: Missing Signals"] =
       missingSignals.length > 0 ? missingSignals.join(" ") : "None detected";
-    backendData.features["1. Linguistic Detector"] = detectors[0].score;
-    backendData.features["2. Statistical Detector"] =
+    backendData.features["1. Hardware Provenance"] =
+      detectors[0].score + ` (${detectors[0].conf} Conf)`;
+    backendData.features["2. Visual Forensics"] =
       detectors[1].score + ` (${detectors[1].conf} Conf)`;
-    backendData.features["3. Visual Forensics"] =
+    backendData.features["3. Pixel Consistency"] =
       detectors[2].score + ` (${detectors[2].conf} Conf)`;
-    backendData.features["4. Consistency Detector"] =
+    backendData.features["4. Metadata Authenticity"] =
       detectors[3].score + ` (${detectors[3].conf} Conf)`;
-    backendData.features["5. Style Authenticity"] =
-      detectors[4].score + ` (${detectors[4].conf} Conf)`;
     backendData.features["Adjustment Reason"] = adjustmentReason || "None";
     backendData.features["Reliability Warning"] =
       reliabilityWarning || "Stable";

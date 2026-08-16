@@ -277,13 +277,13 @@ class AdversarialImageMetaAnalyzer(BaseDetector):
         for sig in signals:
             if sig.detector_name == "Neural Vision Analyzer" and sig.score > 0.8:
                 vision_ai = True
-            elif sig.detector_name == "Pixel Noise Analyzer" and sig.score < 0.2:
+            elif (sig.detector_name in ["Pixel Noise Analyzer", "PRNU Hardware Sensor Noise Analyzer", "Bayer CFA Demosaicing Invariance Analyzer"]) and sig.score < 0.25:
                 pixel_human = True
             elif sig.detector_name == "Hardware Provenance Analyzer" and sig.score < 0.2:
                 provenance_human = True
                 
         if vision_ai and (pixel_human or provenance_human):
-            return {"flag": "HIGH_MODEL_DISAGREEMENT", "details": "Vision model strongly predicts AI, but physical/provenance signals strongly indicate Human."}
+            return {"flag": "HIGH_MODEL_DISAGREEMENT", "details": "Vision model strongly predicts AI, but physical sensor PRNU / Bayer demosaicing / provenance signals strongly confirm authentic camera capture."}
             
         return {"flag": "NONE"}
 

@@ -382,6 +382,8 @@ window._initSigninModal = function (modalRoot) {
                   email: userEmail,
                   plan: "Basic",
                   scans_used: 0,
+                  isClickedConfirm: false,
+                  clickedConfirm: false,
                   createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 },
                 { merge: true },

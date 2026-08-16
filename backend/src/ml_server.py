@@ -3364,26 +3364,54 @@ def run_text_detection(text, requested_language="auto"):
         language = "English / Latin"
 
     words = re.findall(r"[A-Za-z\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF0-9']+", text)
+    adv_text = compute_advanced_text_forensics(text)
+    adv_metrics = adv_text.get("metrics", {}) if adv_text.get("success") else {}
+
+    features_dict = {
+        "model_used": "availability-aware content forensic ensemble",
+        "language": language,
+        "arabic_character_ratio": coverage["arabic_character_ratio"],
+        "arabizi_token_ratio": coverage["arabizi_token_ratio"],
+        "mixed_arabic_english": coverage["mixed_arabic_english"],
+        "dialect_support": coverage["dialect_support"],
+        "sandwiching_detected": (
+            f"Yes (max paragraph score: {max_p_score:.1f}%)"
+            if sandwiching_detected
+            else "No"
+        ),
+        "keyword_lists_used_for_decision": "no",
+        "burstiness_cv": adv_metrics.get("cv", "N/A"),
+        "ai_phrase_density": adv_metrics.get("ai_density", "N/A"),
+        "formal_density": adv_metrics.get("formal_density", "N/A"),
+        "personal_specificity": adv_metrics.get("personal_specificity", "N/A"),
+        "average_word_length": adv_metrics.get("avg_word_len", "N/A"),
+    }
+
+    try:
+        from text_detector import AdvancedTextOrchestrator
+        text_signals = AdvancedTextOrchestrator().analyze(text)
+        for sig in text_signals:
+            if "Zipfian" in sig.detector_name and isinstance(sig.evidence, dict):
+                features_dict["zipfian_decay_alpha"] = sig.evidence.get("alpha", "N/A")
+                features_dict["zipfian_r2_fit"] = sig.evidence.get("r_squared", "N/A")
+            elif "Syntactic" in sig.detector_name and isinstance(sig.evidence, dict):
+                features_dict["pos_markov_entropy"] = sig.evidence.get("pos_entropy", "N/A")
+                features_dict["clausal_symmetry_cv"] = sig.evidence.get("clause_cv", "N/A")
+            elif "Steganography" in sig.detector_name and isinstance(sig.evidence, dict):
+                features_dict["hidden_watermarks_detected"] = sig.evidence.get("invisible_watermark_count", 0)
+                features_dict["homoglyph_substitutions"] = sig.evidence.get("homoglyph_substitutions", 0)
+            elif "Arabic" in sig.detector_name and isinstance(sig.evidence, dict):
+                features_dict["dialect_markers_found"] = sig.evidence.get("dialect_marker_count", 0)
+    except Exception as e:
+        logger.error(f"Advanced text signals integration error: {e}")
+
     fusion.update(
         {
             "language": language,
             "word_count": len(words),
             "language_coverage": coverage,
             "sentenceBreakdown": [],
-            "features": {
-                "model_used": "availability-aware content forensic ensemble",
-                "language": language,
-                "arabic_character_ratio": coverage["arabic_character_ratio"],
-                "arabizi_token_ratio": coverage["arabizi_token_ratio"],
-                "mixed_arabic_english": coverage["mixed_arabic_english"],
-                "dialect_support": coverage["dialect_support"],
-                "sandwiching_detected": (
-                    f"Yes (max paragraph score: {max_p_score:.1f}%)"
-                    if sandwiching_detected
-                    else "No"
-                ),
-                "keyword_lists_used_for_decision": "no",
-            },
+            "features": features_dict,
         }
     )
     
@@ -3476,7 +3504,12 @@ def run_image_detection(img_pil, file_size, original_name, raw_bytes=None):
     }
 
 
+@Profiler.profile("run_video_detection")
 def run_video_detection(video_path, file_size, original_name):
+    from security_validator import FileValidator
+    if file_size > FileValidator.MAX_VIDEO_SIZE_BYTES:
+        return {"error": "Video exceeds max size."}
+        
     import sys
     import os
     sys.path.append(os.path.abspath(os.path.dirname(__file__)))
@@ -3486,12 +3519,39 @@ def run_video_detection(video_path, file_size, original_name):
     ctx = {"filename": original_name, "file_size": file_size}
     fusion_result = orchestrator.analyze(video_path, context=ctx)
     
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    
     return {
         "probability": fusion_result.get("ai_probability", 0.5),
         "classification": fusion_result.get("classification", "Human"),
         "reasons": fusion_result.get("evidence_summary", [])[:8],
         "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
-        "review_flags": []
+        "review_flags": [],
+        "profiling": profiling_metrics
+    }
+
+@Profiler.profile("run_audio_detection")
+def run_audio_detection(audio_path, file_size, original_name):
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    from audio_detector import AudioTemporalOrchestrator
+    
+    orchestrator = AudioTemporalOrchestrator()
+    ctx = {"filename": original_name, "file_size": file_size}
+    fusion_result = orchestrator.analyze(audio_path, context=ctx)
+    
+    profiling_metrics = Profiler.get_metrics()
+    Profiler.clear()
+    
+    return {
+        "probability": fusion_result.get("ai_probability", 0.5),
+        "classification": fusion_result.get("classification", "Human"),
+        "reasons": fusion_result.get("evidence_summary", [])[:8],
+        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
+        "review_flags": [],
+        "profiling": profiling_metrics
     }
 
 
@@ -3675,6 +3735,39 @@ def api_analyze():
 
             return jsonify(res)
 
+        elif analysis_type == "audio":
+            file = request.files.get("file")
+            if not file:
+                return jsonify({"error": "No audio file provided"}), 400
+
+            temp_path = os.path.join(
+                os.environ.get("TEMP", "."), f"temp_upload_{file.filename}"
+            )
+            file.save(temp_path)
+            size = os.path.getsize(temp_path)
+
+            try:
+                verify_balance(uid, 500)  # Check for 500 words
+            except Exception as e:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                return jsonify({"error": str(e)}), 403
+
+            try:
+                res = run_audio_detection(temp_path, size, file.filename)
+
+                # Consume words only after successful detection
+                try:
+                    consume_words(uid, 500)
+                except Exception as e:
+                    logger.error(f"Failed to consume words for audio: {e}")
+
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+            return jsonify(res)
+
         else:
             return jsonify({"error": "Invalid analysis type"}), 400
 
@@ -3721,52 +3814,3 @@ if __name__ == "__main__":
     )
     app.run(host="0.0.0.0", port=PORT)
 
-@Profiler.profile("run_video_detection")
-def run_video_detection(video_path, file_size, original_name):
-    from security_validator import FileValidator
-    if file_size > FileValidator.MAX_VIDEO_SIZE_BYTES:
-        return {"error": "Video exceeds max size."}
-        
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-    from video_detector import VideoTemporalOrchestrator
-    
-    orchestrator = VideoTemporalOrchestrator()
-    ctx = {"filename": original_name, "file_size": file_size}
-    fusion_result = orchestrator.analyze(video_path, context=ctx)
-    
-    profiling_metrics = Profiler.get_metrics()
-    Profiler.clear()
-    
-    return {
-        "probability": fusion_result.get("ai_probability", 0.5),
-        "classification": fusion_result.get("classification", "Human"),
-        "reasons": fusion_result.get("evidence_summary", [])[:8],
-        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
-        "review_flags": [],
-        "profiling": profiling_metrics
-    }
-
-@Profiler.profile("run_audio_detection")
-def run_audio_detection(audio_path, file_size, original_name):
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-    from audio_detector import AudioTemporalOrchestrator
-    
-    orchestrator = AudioTemporalOrchestrator()
-    ctx = {"filename": original_name, "file_size": file_size}
-    fusion_result = orchestrator.analyze(audio_path, context=ctx)
-    
-    profiling_metrics = Profiler.get_metrics()
-    Profiler.clear()
-    
-    return {
-        "probability": fusion_result.get("ai_probability", 0.5),
-        "classification": fusion_result.get("classification", "Human"),
-        "reasons": fusion_result.get("evidence_summary", [])[:8],
-        "signals": fusion_result.get("raw_outputs", []) + fusion_result.get("calibrated_outputs", []),
-        "review_flags": [],
-        "profiling": profiling_metrics
-    }

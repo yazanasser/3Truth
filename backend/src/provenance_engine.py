@@ -20,19 +20,17 @@ class C2PAMetadataAnalyzer(BaseDetector):
         return {
             "success": True,
             "has_c2pa": has_c2pa,
-            "is_valid": has_c2pa  # Mocking cryptographic validation
+            "is_valid": False,  # Mocking cryptographic validation (currently stubbed)
+            "stubbed": True
         }
 
     def evaluate_signal_quality(self, features: dict, context: dict) -> float:
         if not features.get("success"): return 0.0
-        # If it has a C2PA marker, we are 100% confident in the signal's quality.
-        # If it's missing, it's totally inapplicable as proof of human.
-        return 1.0 if features.get("has_c2pa") else 0.0
+        # Reduced quality because cryptographic validation is stubbed
+        return 0.1 if features.get("has_c2pa") else 0.0
 
     def predict_raw(self, features: dict, context: dict) -> float:
-        # C2PA is Content Credentials. If present, it's AI (or edited by AI).
-        if features.get("has_c2pa") and features.get("is_valid"):
-            return 0.99
+        # Since validation is stubbed, we cannot confidently assert it's 0.99 AI
         return 0.5
 
     def calibrate(self, raw_score: float, context: dict) -> float:

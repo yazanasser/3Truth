@@ -6,24 +6,80 @@
 (function () {
   "use strict";
 
+  // ── Custom Cursor (Always Load) ─────────────────────────────────
+  const IS_MOBILE = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+
+  function setupCustomCursor() {
+    if (IS_MOBILE || document.getElementById("custom-cursor")) return;
+
+    const cursorWrapper = document.createElement("div");
+    cursorWrapper.id = "custom-cursor";
+    const cursorInner = document.createElement("div");
+    cursorInner.className = "cursor-inner";
+    cursorWrapper.appendChild(cursorInner);
+    document.body.appendChild(cursorWrapper);
+
+    let mx = -100, my = -100, cx = -100, cy = -100;
+    let isVisible = false;
+
+    window.addEventListener("mousemove", (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      if (!isVisible) {
+        isVisible = true;
+        cursorWrapper.style.opacity = "1";
+      }
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", () => {
+      cursorWrapper.style.opacity = "0";
+      isVisible = false;
+    });
+
+    document.addEventListener("mouseenter", () => {
+      cursorWrapper.style.opacity = "1";
+      isVisible = true;
+    });
+
+    (function tickCursor() {
+      cx += (mx - cx) * 0.32;
+      cy += (my - cy) * 0.32;
+      cursorWrapper.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+      requestAnimationFrame(tickCursor);
+    })();
+
+    document.addEventListener("mouseover", (e) => {
+      if (e.target && e.target.closest && e.target.closest("a, button, input, textarea, select, .cursor-pointer, [role='button'], .modal-confirm-btn, .tab-btn")) {
+        cursorWrapper.classList.add("active");
+      }
+    }, true);
+
+    document.addEventListener("mouseout", (e) => {
+      if (e.target && e.target.closest && e.target.closest("a, button, input, textarea, select, .cursor-pointer, [role='button'], .modal-confirm-btn, .tab-btn")) {
+        cursorWrapper.classList.remove("active");
+      }
+    }, true);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupCustomCursor);
+  } else {
+    setupCustomCursor();
+  }
+
   // ── Reduced Motion Gate ──────────────────────────────────────────
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const IS_MOBILE = /Mobi|Android/i.test(navigator.userAgent);
 
   if (REDUCED) {
     document.documentElement.classList.add("reduced-motion");
     // Still allow basic content to show (remove opacity:0 from reveal classes)
     document.addEventListener("DOMContentLoaded", () => {
-      document
-        .querySelectorAll(
-          ".reveal-up, .reveal-blur, .reveal-scale, .clip-reveal, .reveal-mask",
-        )
-        .forEach((el) => {
-          el.style.opacity = "1";
-          el.style.transform = "none";
-          el.style.clipPath = "none";
-          el.style.filter = "none";
-        });
+      document.querySelectorAll(".reveal-up, .reveal-blur, .reveal-scale, .clip-reveal, .reveal-mask").forEach((el) => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+        el.style.clipPath = "none";
+        el.style.filter = "none";
+      });
     });
     return; // Exit — no animations
   }
@@ -44,6 +100,7 @@
         smooth: true,
         smoothTouch: false,
       });
+      window.lenis = lenis;
 
       function raf(time) {
         lenis.raf(time);
@@ -85,62 +142,7 @@
       });
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  3. CUSTOM CURSOR (desktop only)
-    // ════════════════════════════════════════════════════════════════
-    if (!IS_MOBILE && !document.getElementById("custom-cursor")) {
-      const cursor = document.createElement("div");
-      cursor.id = "custom-cursor";
-      document.body.appendChild(cursor);
 
-      let mx = -100,
-        my = -100,
-        cx = -100,
-        cy = -100;
-      document.addEventListener(
-        "mousemove",
-        (e) => {
-          mx = e.clientX;
-          my = e.clientY;
-        },
-        { passive: true },
-      );
-
-      (function tickCursor() {
-        cx += (mx - cx) * 0.18;
-        cy += (my - cy) * 0.18;
-        cursor.style.transform = `translate3d(${cx - 6}px, ${cy - 6}px, 0)`;
-        requestAnimationFrame(tickCursor);
-      })();
-
-      // Expand cursor on interactive elements
-      document.addEventListener(
-        "mouseover",
-        (e) => {
-          if (
-            e.target.closest(
-              "a, button, input, textarea, select, .cursor-pointer, [role='button']",
-            )
-          ) {
-            cursor.classList.add("active");
-          }
-        },
-        true,
-      );
-      document.addEventListener(
-        "mouseout",
-        (e) => {
-          if (
-            e.target.closest(
-              "a, button, input, textarea, select, .cursor-pointer, [role='button']",
-            )
-          ) {
-            cursor.classList.remove("active");
-          }
-        },
-        true,
-      );
-    }
 
     // ════════════════════════════════════════════════════════════════
     //  4. SPOTLIGHT FOLLOW (desktop only)
