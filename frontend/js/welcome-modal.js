@@ -530,8 +530,13 @@
     if (!user || !user.uid) return;
 
     const userKey = "3truth_disclaimer_confirmed_" + user.uid;
-    const localConfirmed = localStorage.getItem(userKey) === "true";
+    
+    // 1. Fast path: Instant check from local cache (0ms delay)
+    if (localStorage.getItem(userKey) === "true") {
+      return;
+    }
 
+    // 2. Database path: Verify with Firestore in case user confirmed on another device
     let isFirestoreConfirmed = false;
     if (typeof firebase !== "undefined" && firebase.firestore) {
       try {
@@ -550,12 +555,12 @@
       }
     }
 
-    // If already confirmed by this user, do not show modal
-    if (isFirestoreConfirmed || localConfirmed) {
+    // If confirmed in Firestore database, do NOT show modal
+    if (isFirestoreConfirmed) {
       return;
     }
 
-    // Show modal for this signed-in user
+    // Show modal once for this signed-in user
     showWelcomeModalForUser(user);
   }
 
