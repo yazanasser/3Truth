@@ -537,6 +537,7 @@ div[class*="fixed top-0"] {
   }
 }
 
+
 /* Performance tuning: keep animations, but lower paint/reflow cost. */
 .detector-workspace,
 .detector-result-pane,
@@ -571,11 +572,32 @@ div[class*="fixed top-0"] {
   }
 }
 
-/* Aggressive cursor hiding */
-html, body, *, *:hover, *:active, *:focus {
-  cursor: none !important;
+/* Native OS Mouse Pointer System */
+html,
+body,
+*,
+*::before,
+*::after {
+  cursor: auto !important;
 }
- 
- / *   H i d e   r e a l   m o u s e   c u r s o r   c o m p l e t e l y   * /  
- * ,   * : : b e f o r e ,   * : : a f t e r ,   a ,   b u t t o n ,   i n p u t ,   t e x t a r e a ,   s e l e c t   {   c u r s o r :   n o n e   ! i m p o r t a n t ;   }  
- 
+
+a,
+button,
+input[type='button'],
+input[type='submit'],
+input[type='reset'],
+select,
+[role='button'],
+.btn-magnetic,
+.btn-glass,
+.cursor-pointer,
+.tab-btn {
+  cursor: pointer !important;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+textarea {
+  cursor: text !important;
+}
