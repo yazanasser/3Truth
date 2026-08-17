@@ -533,6 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hTrigger = document.getElementById("horizontal-trigger");
     if (hTrack && hTrigger) {
       const panels = Array.from(hTrack.querySelectorAll(".horizontal-panel"));
+      if (panels.length > 0) {
         const horizontalTween = gsap.to(hTrack, {
           x: () => -(hTrack.scrollWidth - window.innerWidth),
           ease: "none",
@@ -576,10 +577,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     }
+  });
 
-    // ========================================
-    // 15. COUNTER ANIMATIONS (if exists)
-    // ========================================
+  // ========================================
+  // 15. COUNTER ANIMATIONS (if exists)
+  // ========================================
     gsap.utils.toArray(".counter-anim").forEach((counter) => {
       const target = parseFloat(counter.getAttribute("data-target"));
       gsap.to(counter, {
@@ -593,7 +595,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
     });
-  });
 
   // ========================================
   // 16. SCRAMBLE HOVER EFFECT

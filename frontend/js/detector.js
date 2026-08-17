@@ -1917,8 +1917,7 @@ async function executeScan() {
         scannerBar.classList.add("hidden");
       }
     }
-  });
-}
+  }
 
 function renderResult(data) {
   const forensics = data ? data.forensics : null;

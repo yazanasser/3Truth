@@ -51,6 +51,45 @@
   background-color: var(--accent-purple-bg) !important;
 }
 
+/* Standard Native OS Mouse Cursor System */
+html,
+body {
+  cursor: auto !important;
+}
+
+*,
+*::before,
+*::after {
+  cursor: auto;
+}
+
+a,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+[role="button"],
+.btn-magnetic,
+.btn-glass,
+.cursor-pointer,
+.tab-btn {
+  cursor: pointer !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  cursor: text !important;
+}
+
+button:disabled,
+input:disabled,
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
 body {
   transition:
     background-color 0.5s ease,
