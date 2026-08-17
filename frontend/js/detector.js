@@ -1645,39 +1645,53 @@ if (analyzeBtn) {
       return;
     }
 
-    // Removed Beta Access logic that wrote directly to Firestore.
-    const currentUser =
-      typeof firebase !== "undefined" ? firebase.auth().currentUser : null;
-    let idToken = null;
-
-    if (!currentUser) {
-      const freeScanUsed = localStorage.getItem("3truth_free_scan_used");
-      if (freeScanUsed) {
-        if (typeof window.openAuthModal === "function") {
-          window.openAuthModal();
-        }
-        return;
-      } else {
-        localStorage.setItem("3truth_free_scan_used", "true");
-      }
-    } else {
-      try {
-        idToken = await currentUser.getIdToken();
-      } catch (e) {
-        console.warn("Failed to get ID token", e);
-      }
+    if (typeof window.ensureDisclaimerAccepted === "function") {
+      const isAccepted = await window.ensureDisclaimerAccepted(() => {
+        executeScan();
+      });
+      if (!isAccepted) return;
     }
 
-    // UI Loading state
-    stateIdle.classList.add("hidden");
-    stateResult.classList.add("hidden");
-    stateLoading.classList.remove("hidden");
-    analyzeBtn.disabled = true;
-    analyzeBtn.querySelector("span").textContent = tr(
-      "detector.analyzing",
-      null,
-      "ANALYZING...",
-    );
+    await executeScan();
+  });
+}
+
+async function executeScan() {
+  if (window.isScanning) return;
+
+  // Removed Beta Access logic that wrote directly to Firestore.
+  const currentUser =
+    typeof firebase !== "undefined" ? firebase.auth().currentUser : null;
+  let idToken = null;
+
+  if (!currentUser) {
+    const freeScanUsed = localStorage.getItem("3truth_free_scan_used");
+    if (freeScanUsed) {
+      if (typeof window.openAuthModal === "function") {
+        window.openAuthModal();
+      }
+      return;
+    } else {
+      localStorage.setItem("3truth_free_scan_used", "true");
+    }
+  } else {
+    try {
+      idToken = await currentUser.getIdToken();
+    } catch (e) {
+      console.warn("Failed to get ID token", e);
+    }
+  }
+
+  // UI Loading state
+  stateIdle.classList.add("hidden");
+  stateResult.classList.add("hidden");
+  stateLoading.classList.remove("hidden");
+  analyzeBtn.disabled = true;
+  analyzeBtn.querySelector("span").textContent = tr(
+    "detector.analyzing",
+    null,
+    "ANALYZING...",
+  );
 
     if (scannerBar) {
       scannerBar.classList.remove("hidden");
@@ -1941,7 +1955,7 @@ function renderResult(data) {
   if (isAiPrediction(canonicalPrediction)) {
     verdictEl.textContent = tr("detector.verdictAi", null, "AI GENERATED");
     verdictEl.className =
-      "text-5xl font-black mb-2 uppercase text-red-500 text-glow";
+      "text-5xl font-black mb-2 uppercase text-red-500";
     confEl.className =
       "inline-block px-4 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-xs font-black text-red-500";
   } else if (isRealPrediction(canonicalPrediction)) {
@@ -1961,13 +1975,13 @@ function renderResult(data) {
       verdictEl.textContent = tr("detector.verdictHuman", null, "HUMAN");
     }
     verdictEl.className =
-      "text-5xl font-black mb-2 uppercase text-green-400 text-glow";
+      "text-5xl font-black mb-2 uppercase text-green-400";
     confEl.className =
       "inline-block px-4 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-xs font-black text-green-400";
   } else {
     verdictEl.textContent = tr("detector.verdictMixed", null, "MIXED");
     verdictEl.className =
-      "text-5xl font-black mb-2 uppercase text-yellow-400 text-glow";
+      "text-5xl font-black mb-2 uppercase text-yellow-400";
     confEl.className =
       "inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-xs font-black text-yellow-400";
   }

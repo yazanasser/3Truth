@@ -6,66 +6,7 @@
 (function () {
   "use strict";
 
-  // ── Custom Cursor (Always Load) ─────────────────────────────────
   const IS_MOBILE = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-
-  function setupCustomCursor() {
-    if (IS_MOBILE || document.getElementById("custom-cursor")) return;
-
-    const cursorWrapper = document.createElement("div");
-    cursorWrapper.id = "custom-cursor";
-    const cursorInner = document.createElement("div");
-    cursorInner.className = "cursor-inner";
-    cursorWrapper.appendChild(cursorInner);
-    document.body.appendChild(cursorWrapper);
-
-    let mx = -100, my = -100, cx = -100, cy = -100;
-    let isVisible = false;
-
-    window.addEventListener("mousemove", (e) => {
-      mx = e.clientX;
-      my = e.clientY;
-      if (!isVisible) {
-        isVisible = true;
-        cursorWrapper.style.opacity = "1";
-      }
-    }, { passive: true });
-
-    document.addEventListener("mouseleave", () => {
-      cursorWrapper.style.opacity = "0";
-      isVisible = false;
-    });
-
-    document.addEventListener("mouseenter", () => {
-      cursorWrapper.style.opacity = "1";
-      isVisible = true;
-    });
-
-    (function tickCursor() {
-      cx += (mx - cx) * 0.32;
-      cy += (my - cy) * 0.32;
-      cursorWrapper.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
-      requestAnimationFrame(tickCursor);
-    })();
-
-    document.addEventListener("mouseover", (e) => {
-      if (e.target && e.target.closest && e.target.closest("a, button, input, textarea, select, .cursor-pointer, [role='button'], .modal-confirm-btn, .tab-btn")) {
-        cursorWrapper.classList.add("active");
-      }
-    }, true);
-
-    document.addEventListener("mouseout", (e) => {
-      if (e.target && e.target.closest && e.target.closest("a, button, input, textarea, select, .cursor-pointer, [role='button'], .modal-confirm-btn, .tab-btn")) {
-        cursorWrapper.classList.remove("active");
-      }
-    }, true);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupCustomCursor);
-  } else {
-    setupCustomCursor();
-  }
 
   // ── Reduced Motion Gate ──────────────────────────────────────────
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -685,18 +626,13 @@
       requestAnimationFrame(tick);
     };
 
-    // ════════════════════════════════════════════════════════════════
-    //  GLOBAL CLEANUP: Hide cursor on mobile / touch
-    // ════════════════════════════════════════════════════════════════
     if (IS_MOBILE) {
-      const c = document.getElementById("custom-cursor");
       const s = document.getElementById("spotlight");
-      if (c) c.style.display = "none";
       if (s) s.style.display = "none";
     }
 
     console.log(
-      "[MOTION] Premium Motion System v2 loaded — 30 techniques active.",
+      "[MOTION] Premium Motion System v2 loaded.",
     );
   });
 })();

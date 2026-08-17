@@ -363,8 +363,8 @@
     document.head.appendChild(style);
   }
 
-  // Show the Disclaimer Modal for a specific authenticated user
-  function showWelcomeModalForUser(user) {
+  // Show the Disclaimer Modal and execute onConfirmed callback when acknowledged
+  function showDisclaimerModal(onConfirmed) {
     if (document.getElementById("mandatory-welcome-overlay")) return;
 
     injectStyles();
@@ -375,7 +375,7 @@
     const subtitle = isAr ? WELCOME_NOTICE_CONFIG.subtitleAr : WELCOME_NOTICE_CONFIG.subtitleEn;
     const bodyHtml = isAr ? WELCOME_NOTICE_CONFIG.bodyHtmlAr : WELCOME_NOTICE_CONFIG.bodyHtmlEn;
     const btnText = isAr ? WELCOME_NOTICE_CONFIG.confirmBtnTextAr : WELCOME_NOTICE_CONFIG.confirmBtnTextEn;
-    const lockText = isAr ? "إقرار إلزامي للمتابعة إلى المنصة" : "Mandatory acknowledgment required to proceed";
+    const lockText = isAr ? "إقرار إلزامي للمتابعة إلى الفحص" : "Mandatory acknowledgment required to proceed with scan";
 
     // Create Modal HTML
     const overlay = document.createElement("div");
@@ -481,15 +481,18 @@
 
     // 3. Confirm button action
     confirmBtn.addEventListener("click", async function () {
-      const userKey = "3truth_disclaimer_confirmed_" + user.uid;
+      const user = typeof firebase !== "undefined" && firebase.auth ? firebase.auth().currentUser : null;
       try {
-        localStorage.setItem(userKey, "true");
+        localStorage.setItem("3truth_disclaimer_confirmed_global", "true");
+        if (user && user.uid) {
+          localStorage.setItem("3truth_disclaimer_confirmed_" + user.uid, "true");
+        }
       } catch (err) {
         console.warn("Could not write to localStorage:", err);
       }
 
-      // Update Firestore user document with isClickedConfirm: true
-      if (typeof firebase !== "undefined" && firebase.firestore) {
+      // Update Firestore user document if logged in
+      if (user && typeof firebase !== "undefined" && firebase.firestore) {
         try {
           const timestamp = firebase.firestore.FieldValue && firebase.firestore.FieldValue.serverTimestamp
             ? firebase.firestore.FieldValue.serverTimestamp()
@@ -521,33 +524,41 @@
       overlay.classList.remove("active");
       setTimeout(() => {
         overlay.remove();
-      }, 450);
+        // Trigger the detection immediately upon confirmation
+        if (typeof onConfirmed === "function") {
+          onConfirmed();
+        }
+      }, 350);
     });
   }
 
-  // Check confirmation status for an authenticated user
-  async function checkAndShowForUser(user) {
-    if (!user || !user.uid) return;
-
-    const userKey = "3truth_disclaimer_confirmed_" + user.uid;
+  // Global helper: Ensure disclaimer is accepted before starting detection
+  window.ensureDisclaimerAccepted = async function (onAcceptedCallback) {
+    const user = typeof firebase !== "undefined" && firebase.auth ? firebase.auth().currentUser : null;
     
-    // 1. Fast path: Instant check from local cache (0ms delay)
-    if (localStorage.getItem(userKey) === "true") {
-      return;
+    // 1. Fast path: check global or user-specific local storage
+    if (localStorage.getItem("3truth_disclaimer_confirmed_global") === "true") {
+      if (typeof onAcceptedCallback === "function") onAcceptedCallback();
+      return true;
+    }
+    if (user && user.uid && localStorage.getItem("3truth_disclaimer_confirmed_" + user.uid) === "true") {
+      if (typeof onAcceptedCallback === "function") onAcceptedCallback();
+      return true;
     }
 
-    // 2. Database path: Verify with Firestore in case user confirmed on another device
-    let isFirestoreConfirmed = false;
-    if (typeof firebase !== "undefined" && firebase.firestore) {
+    // 2. Database path: check Firestore if user is signed in
+    if (user && user.uid && typeof firebase !== "undefined" && firebase.firestore) {
       try {
         const docSnap = await firebase.firestore().collection("users").doc(user.uid).get();
         if (docSnap.exists) {
           const data = docSnap.data();
           if (data && (data.isClickedConfirm === true || data.clickedConfirm === true)) {
-            isFirestoreConfirmed = true;
             try {
-              localStorage.setItem(userKey, "true");
+              localStorage.setItem("3truth_disclaimer_confirmed_" + user.uid, "true");
+              localStorage.setItem("3truth_disclaimer_confirmed_global", "true");
             } catch (e) {}
+            if (typeof onAcceptedCallback === "function") onAcceptedCallback();
+            return true;
           }
         }
       } catch (err) {
@@ -555,27 +566,11 @@
       }
     }
 
-    // If confirmed in Firestore database, do NOT show modal
-    if (isFirestoreConfirmed) {
-      return;
-    }
+    // 3. Not confirmed yet: display disclaimer modal; start scan on close
+    showDisclaimerModal(onAcceptedCallback);
+    return false;
+  };
 
-    // Show modal once for this signed-in user
-    showWelcomeModalForUser(user);
-  }
-
-  // Listen to Firebase Auth state
-  if (typeof firebase !== "undefined" && firebase.auth) {
-    firebase.auth().onAuthStateChanged(function (user) {
-      if (!user) {
-        // User is logged out -> Do NOT show modal, remove if present
-        const existing = document.getElementById("mandatory-welcome-overlay");
-        if (existing) existing.remove();
-        return;
-      }
-
-      // User is logged in -> Check confirmation status
-      checkAndShowForUser(user);
-    });
-  }
+  // Expose show modal
+  window.showDisclaimerModal = showDisclaimerModal;
 })();

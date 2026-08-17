@@ -533,21 +533,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const hTrigger = document.getElementById("horizontal-trigger");
     if (hTrack && hTrigger) {
       const panels = Array.from(hTrack.querySelectorAll(".horizontal-panel"));
-      if (panels.length > 0) {
         const horizontalTween = gsap.to(hTrack, {
           x: () => -(hTrack.scrollWidth - window.innerWidth),
           ease: "none",
           scrollTrigger: {
             trigger: hTrigger,
             pin: true,
-            scrub: 1,
+            scrub: 0.3,
             start: "top top",
-            end: () => "+=" + hTrack.scrollWidth,
+            end: () => "+=" + Math.min(window.innerWidth * 1.25, 1500),
             invalidateOnRefresh: true,
           },
         });
 
-        // Animate panel content on scroll (chunked)
+        // Animate panel content on scroll (fast, snappy entry)
         if (typeof processChunked === "function") {
           processChunked(
             panels,
@@ -556,15 +555,16 @@ document.addEventListener("DOMContentLoaded", () => {
               if (inner) {
                 gsap.fromTo(
                   inner,
-                  { x: 50, opacity: 0 },
+                  { x: 20, opacity: 0.3 },
                   {
                     x: 0,
                     opacity: 1,
-                    duration: 1,
+                    duration: 0.3,
+                    ease: "power2.out",
                     scrollTrigger: {
                       trigger: panel,
                       containerAnimation: horizontalTween,
-                      start: "left 80%",
+                      start: "left 95%",
                       toggleActions: "play none none reverse",
                     },
                   },
